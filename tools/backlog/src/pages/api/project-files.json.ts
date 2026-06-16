@@ -122,8 +122,8 @@ export const GET: APIRoute = async () => {
 
   try {
     const [conventions, knowledge, claudeMd, rules] = await Promise.all([
-      readEntry(root, '.claude/conductor/conventions.md'),
-      readEntry(root, '.claude/conductor/knowledge.md'),
+      readEntry(root, 'docs/caw/conventions.md'),
+      readEntry(root, 'docs/caw/knowledge.md'),
       readEntry(root, 'CLAUDE.md'),
       readRules(root),
     ]);

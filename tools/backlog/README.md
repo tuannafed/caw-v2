@@ -1,7 +1,7 @@
-# backlog-viewer
+# backlog
 
-Astro + React + shadcn UI app that renders caw tasks
-(`.claude/conductor/tasks/task-*/`) as a stage-based Kanban board.
+Astro + React + shadcn UI app that renders caw stories
+(`docs/caw/stories/<story-id>/`) as a stage-based Kanban board.
 
 ## Stack
 
@@ -17,13 +17,13 @@ Two build targets share one source tree.
 
 ### Local (live SSR — default)
 
-Live filesystem read of `.claude/conductor/tasks/`. Polling + SSE updates the
+Live filesystem read of `docs/caw/stories/`. Polling + SSE updates the
 UI as you commit caw work.
 
 ```bash
-cd .claude/backlog-viewer
+cd backlog
 pnpm install
-CAW_PROJECT_ROOT="$(pwd)/../.." pnpm dev
+CAW_PROJECT_ROOT="$(pwd)/.." pnpm dev
 # open http://localhost:4321
 ```
 
@@ -32,13 +32,13 @@ CAW_PROJECT_ROOT="$(pwd)/../.." pnpm dev
 ### Vercel (static snapshot)
 
 `DEPLOY_TARGET=vercel` flips every API route to `prerender = true`. Astro
-walks `.claude/conductor/` at build time and emits flat JSON files into
+walks `docs/caw/` at build time and emits flat JSON files into
 `.vercel/output/static/api/*.json` — no serverless functions, no runtime
 filesystem access.
 
 ```bash
 pnpm build:vercel
-# output: ../../.vercel/output/  (copied to repo root for Vercel pickup)
+# output: ../.vercel/output/  (copied to repo root for Vercel pickup)
 ```
 
 **Deploy:** Connect the repo gốc to Vercel. The `vercel.json` at repo root
@@ -49,7 +49,7 @@ Static mode trade-offs:
 
 - No live updates — UI is frozen at the commit Vercel built from.
 - `/api/events` (SSE) and `/api/system.json` are inert stubs.
-- No auth — anything in `.claude/conductor/` is publicly visible.
+- No auth — anything in `docs/caw/` is publicly visible.
 
 > **Why pnpm?** npm has a known bug with optional dependencies
 > ([npm/cli#4828](https://github.com/npm/cli/issues/4828)) that prevents

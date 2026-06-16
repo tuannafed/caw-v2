@@ -6,7 +6,7 @@ let cached: string | null = null;
 /**
  * Resolve the caw project root:
  *   1. `CAW_PROJECT_ROOT` env var if set
- *   2. Walk up from cwd looking for `.claude/conductor/` (caw marker)
+ *   2. Walk up from cwd looking for `docs/caw/` (caw marker)
  *   3. Fall back to cwd
  *
  * Cached on first call — restart `pnpm dev` to re-detect.
@@ -23,7 +23,7 @@ export function getProjectRoot(): string {
   const start = process.cwd();
   let dir = start;
   while (true) {
-    const marker = resolve(dir, '.claude', 'conductor');
+    const marker = resolve(dir, 'docs', 'caw');
     try {
       if (statSync(marker).isDirectory()) {
         cached = dir;

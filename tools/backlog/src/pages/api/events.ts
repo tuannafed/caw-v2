@@ -20,11 +20,11 @@ interface WatchSpec {
 }
 
 const WATCH_SPECS: WatchSpec[] = [
-  // Task lifecycle: .claude/conductor/tasks/task-*/{overview.yaml, plan.md, code.md, tests.md, review.md}
-  { path: '.claude/conductor/tasks', topic: 'tasks', recursive: true },
+  // Story lifecycle: docs/caw/stories/<story-id>/{overview.yaml, plan.md, code.md, tests.md, review.md}
+  { path: 'docs/caw/stories', topic: 'tasks', recursive: true },
   // Project knowledge files served via /api/project-files.json
-  { path: '.claude/conductor/conventions.md', topic: 'project-files' },
-  { path: '.claude/conductor/knowledge.md', topic: 'project-files' },
+  { path: 'docs/caw/conventions.md', topic: 'project-files' },
+  { path: 'docs/caw/knowledge.md', topic: 'project-files' },
   { path: 'CLAUDE.md', topic: 'project-files' },
   { path: '.claude/rules', topic: 'project-files', recursive: true },
   // Skills installed via /caw-setup

@@ -30,7 +30,7 @@ export const GET: APIRoute = async () => {
 
   const [agents, tasks, skills, commands, rules] = await Promise.all([
     countFiles(join(claudeDir, 'agents')),
-    countDirs(join(claudeDir, 'conductor', 'tasks')),
+    countDirs(join(root, 'docs', 'caw', 'stories')),
     countDirs(join(claudeDir, 'skills')),
     countFiles(join(claudeDir, 'commands')),
     countFiles(join(claudeDir, 'rules')),

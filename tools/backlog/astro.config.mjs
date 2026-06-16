@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // Two build targets share one source tree:
 //
-//   1. Local SSR (default) — Node adapter, reads .claude/conductor/tasks/
+//   1. Local SSR (default) — Node adapter, reads docs/caw/stories/
 //      live via filesystem. Run:
 //        CAW_PROJECT_ROOT=/path/to/project pnpm dev
 //

@@ -142,7 +142,9 @@ async function parseTask(taskDir: string): Promise<Task | null> {
 }
 
 export async function parseTasks(projectRoot: string): Promise<Task[]> {
-  const tasksDir = join(projectRoot, '.claude', 'conductor', 'tasks');
+  // caw v2: each unit of work is a story folder under docs/caw/stories/.
+  // Accept both `story-` (v2) and `task-` (legacy) prefixes for back-compat.
+  const tasksDir = join(projectRoot, 'docs', 'caw', 'stories');
   let entries: string[];
   try {
     entries = await readdir(tasksDir);
@@ -152,7 +154,7 @@ export async function parseTasks(projectRoot: string): Promise<Task[]> {
 
   const taskDirs: string[] = [];
   for (const name of entries) {
-    if (!name.startsWith('task-')) continue;
+    if (!name.startsWith('story-') && !name.startsWith('task-')) continue;
     const full = join(tasksDir, name);
     try {
       const s = await stat(full);

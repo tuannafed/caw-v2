@@ -13,7 +13,7 @@ export const prerender = IS_STATIC;
 // re-run /caw-setup --refresh since the YAML pipeline shipped).
 async function resolveNameLegacy(root: string): Promise<string> {
   const [conventions, claudeMd] = await Promise.all([
-    readFile(join(root, '.claude', 'conductor', 'conventions.md'), 'utf8').catch(() => ''),
+    readFile(join(root, 'docs', 'caw', 'conventions.md'), 'utf8').catch(() => ''),
     readFile(join(root, 'CLAUDE.md'), 'utf8').catch(() => ''),
   ]);
   const convH1 = conventions.match(/^#\s+(.+?)\s*$/m);

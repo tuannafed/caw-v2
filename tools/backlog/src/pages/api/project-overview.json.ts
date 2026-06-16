@@ -293,7 +293,7 @@ export const GET: APIRoute = async () => {
   }
 
   try {
-    const conventionsPath = join(root, '.claude', 'conductor', 'conventions.md');
+    const conventionsPath = join(root, 'docs', 'caw', 'conventions.md');
     const claudeMdPath = join(root, 'CLAUDE.md');
 
     const [conventionsRaw, claudeMdRaw] = await Promise.all([

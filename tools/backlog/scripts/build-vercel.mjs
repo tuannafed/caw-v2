@@ -2,7 +2,7 @@
 // Vercel build entry — wraps `astro build` with explicit env + output relocation.
 //
 // Why a Node script instead of an inline shell one-liner?
-//   1. POSIX subshell substitution (`$(cd ../.. && pwd)`) is fragile on
+//   1. POSIX subshell substitution (`$(cd .. && pwd)`) is fragile on
 //      Vercel's build container. Node resolves paths deterministically.
 //   2. We need to copy the adapter's `.vercel/output/` from this subfolder
 //      up to the repo root so Vercel's runtime picks it up.
@@ -16,7 +16,8 @@ import { fileURLToPath } from 'node:url';
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const viewerDir = resolve(scriptDir, '..');
-const repoRoot = resolve(viewerDir, '..', '..');
+// Viewer installs at <project>/backlog/, so the project root is one level up.
+const repoRoot = resolve(viewerDir, '..');
 
 function log(msg) {
   console.log(`[build-vercel] ${msg}`);
