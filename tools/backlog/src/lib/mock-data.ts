@@ -1,0 +1,343 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { Task } from './task-parser';
+
+export function isDevMode(root: string): boolean {
+  return !existsSync(join(root, '.claude', 'conductor'));
+}
+
+export const MOCK_TASKS: Task[] = [
+  {
+    id: 'task-001-user-auth',
+    title: 'Implement JWT Authentication with Refresh Tokens',
+    status: 'done',
+    lane: 'standard',
+    type: 'feature',
+    next_phase: '',
+    created: '2026-05-10T09:00:00Z',
+    updated: '2026-05-18T23:59:00Z',
+    phases: [
+      { id: 'phase-1', status: 'done', files: 'src/auth/auth.service.ts' },
+      { id: 'phase-2', status: 'done', files: 'src/auth/auth.controller.ts' },
+      { id: 'phase-3', status: 'done', files: 'src/auth/strategies/*.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-002-email-service',
+    title: 'Transactional Email Service (SMTP + AWS SES)',
+    status: 'done',
+    lane: 'risky',
+    type: 'feature',
+    next_phase: '',
+    created: '2026-05-12T10:00:00Z',
+    updated: '2026-05-19T23:50:00Z',
+    phases: [
+      { id: 'phase-1', status: 'done', files: 'src/email/email.service.ts' },
+      { id: 'phase-2', status: 'done', files: 'src/email/templates/*.hbs' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-003-stripe-webhooks',
+    title: 'Stripe Webhook Integration & Payment Event Processing',
+    status: 'done',
+    lane: 'risky',
+    type: 'feature',
+    next_phase: '',
+    created: '2026-05-13T08:30:00Z',
+    updated: '2026-05-20T17:00:00Z',
+    phases: [
+      { id: 'phase-1', status: 'done', files: 'src/payments/stripe.service.ts' },
+      { id: 'phase-2', status: 'done', files: 'src/payments/webhooks.controller.ts' },
+      { id: 'phase-3', status: 'done', files: 'src/payments/events/*.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-004-file-upload',
+    title: 'S3 File Upload with Presigned URLs and Access Control',
+    status: 'blocked',
+    lane: 'standard',
+    type: 'feature',
+    next_phase: 'phase-2',
+    created: '2026-05-14T11:00:00Z',
+    updated: '2026-05-21T15:00:00Z',
+    phases: [
+      { id: 'phase-1', status: 'done', files: 'src/storage/s3.service.ts' },
+      { id: 'phase-2', status: 'blocked', files: 'src/storage/upload.controller.ts' },
+      { id: 'phase-3', status: 'pending', files: 'src/storage/policies/*.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-005-websocket',
+    title: 'Real-time Notifications via Socket.io Gateway',
+    status: 'blocked',
+    lane: 'risky',
+    type: 'feature',
+    next_phase: 'phase-1',
+    created: '2026-05-15T09:00:00Z',
+    updated: '2026-05-21T19:00:00Z',
+    phases: [
+      { id: 'phase-1', status: 'blocked', files: 'src/gateway/notifications.gateway.ts' },
+      { id: 'phase-2', status: 'pending', files: 'src/gateway/rooms.service.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-006-rbac',
+    title: 'Role-Based Access Control with CASL Permissions',
+    status: 'blocked',
+    lane: 'standard',
+    type: 'refactor',
+    next_phase: 'phase-3',
+    created: '2026-05-16T10:00:00Z',
+    updated: '2026-05-22T11:15:00Z',
+    phases: [
+      { id: 'phase-1', status: 'done', files: 'src/casl/casl-ability.factory.ts' },
+      { id: 'phase-2', status: 'done', files: 'src/casl/policies.guard.ts' },
+      { id: 'phase-3', status: 'blocked', files: 'src/casl/prisma-ability.ts' },
+      { id: 'phase-4', status: 'pending', files: 'src/casl/decorators/*.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-007-audit-log',
+    title: 'Audit Log System for Compliance Tracking',
+    status: 'coding',
+    lane: 'standard',
+    type: 'feature',
+    next_phase: 'phase-2',
+    created: '2026-05-17T08:00:00Z',
+    updated: '2026-05-22T10:00:00Z',
+    phases: [
+      { id: 'phase-1', status: 'done', files: 'src/audit/audit.entity.ts' },
+      { id: 'phase-2', status: 'in-progress', files: 'src/audit/audit.service.ts' },
+      { id: 'phase-3', status: 'pending', files: 'src/audit/audit.interceptor.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-008-search',
+    title: 'Full-Text Search with PostgreSQL tsvector',
+    status: 'plan-done',
+    lane: 'standard',
+    type: 'feature',
+    next_phase: 'phase-1',
+    created: '2026-05-20T09:00:00Z',
+    updated: '2026-05-22T09:00:00Z',
+    phases: [
+      { id: 'phase-1', status: 'pending', files: 'src/search/search.service.ts' },
+      { id: 'phase-2', status: 'pending', files: 'src/search/search.controller.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-009-rate-limit',
+    title: 'API Rate Limiting with Redis + BullMQ',
+    status: 'review-pending',
+    lane: 'risky',
+    type: 'feature',
+    next_phase: '',
+    created: '2026-05-18T08:00:00Z',
+    updated: '2026-05-21T14:00:00Z',
+    phases: [
+      { id: 'phase-1', status: 'done', files: 'src/throttle/throttle.guard.ts' },
+      { id: 'phase-2', status: 'done', files: 'src/throttle/throttle.service.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+  {
+    id: 'task-010-health',
+    title: 'Health Check Endpoint with DB + Redis probes',
+    status: 'tests-done',
+    lane: 'standard',
+    type: 'chore',
+    next_phase: '',
+    created: '2026-05-19T10:00:00Z',
+    updated: '2026-05-21T16:00:00Z',
+    phases: [
+      { id: 'phase-1', status: 'done', files: 'src/health/health.controller.ts' },
+    ],
+    sections: { plan: '', code: '', tests: '', review: '', overview: '' },
+  },
+];
+
+export const MOCK_SKILLS = [
+  {
+    name: 'api-contract',
+    folder: 'api-contract',
+    description: 'REST conventions, URL structure, HTTP methods. For BA → Backend → Frontend handoff.',
+    metadata: { domain: 'engineering', version: '1.2' },
+    path: '.claude/skills/api-contract/SKILL.md',
+  },
+  {
+    name: 'better-context',
+    folder: 'better-context',
+    description: 'CLI for codebase intelligence. PageRank centrality, token-budget optimization.',
+    metadata: { domain: 'engineering', version: '2.0' },
+    path: '.claude/skills/better-context/SKILL.md',
+  },
+  {
+    name: 'error-handling-patterns',
+    folder: 'error-handling-patterns',
+    description: 'CAW error envelope spec. NestJS/FastAPI exception filters with status→code mapping.',
+    metadata: { domain: 'engineering' },
+    path: '.claude/skills/error-handling-patterns/SKILL.md',
+  },
+  {
+    name: 'accessibility',
+    folder: 'accessibility',
+    description: 'Audit and improve web accessibility following WCAG 2.2 guidelines.',
+    metadata: { domain: 'quality', version: '1.1' },
+    path: '.claude/skills/accessibility/SKILL.md',
+  },
+  {
+    name: 'code-review-excellence',
+    folder: 'code-review-excellence',
+    description: 'Effective code review practices. Constructive feedback, catch bugs early.',
+    metadata: { domain: 'quality' },
+    path: '.claude/skills/code-review-excellence/SKILL.md',
+  },
+  {
+    name: 'javascript-testing',
+    folder: 'javascript-testing',
+    description: 'Testing patterns and best practices. Jest, Vitest, Playwright setup and conventions.',
+    metadata: { domain: 'quality' },
+    path: '.claude/skills/javascript-testing/SKILL.md',
+  },
+  {
+    name: 'business-analyst',
+    folder: 'business-analyst',
+    description: 'Product discovery and requirements analysis. Stakeholder interviews, product specs.',
+    metadata: { domain: 'product' },
+    path: '.claude/skills/business-analyst/SKILL.md',
+  },
+  {
+    name: 'create-specification',
+    folder: 'create-specification',
+    description: 'Create new specification files for the solution, optimized for AI consumption.',
+    metadata: { domain: 'product' },
+    path: '.claude/skills/create-specification/SKILL.md',
+  },
+  {
+    name: 'find-skills',
+    folder: 'find-skills',
+    description: 'Discover and install agent skills. Helps when extending capabilities.',
+    metadata: { domain: 'workflow' },
+    path: '.claude/skills/find-skills/SKILL.md',
+  },
+  {
+    name: 'nextjs-feature',
+    folder: 'nextjs-feature',
+    description: 'Next.js 15 App Router feature implementation patterns with React Server Components.',
+    metadata: { domain: 'engineering', version: '1.0' },
+    path: '.claude/skills/nextjs-feature/SKILL.md',
+  },
+  {
+    name: 'react-component-testing',
+    folder: 'react-component-testing',
+    description: 'React Testing Library patterns, mocking strategies, and snapshot testing.',
+    metadata: { domain: 'quality' },
+    path: '.claude/skills/react-component-testing/SKILL.md',
+  },
+  {
+    name: 'prisma-orm',
+    folder: 'prisma-orm',
+    description: 'Prisma schema design, migrations, relation queries, and performance optimization.',
+    metadata: { domain: 'engineering' },
+    path: '.claude/skills/prisma-orm/SKILL.md',
+  },
+  {
+    name: 'nestjs-patterns',
+    folder: 'nestjs-patterns',
+    description: 'NestJS module architecture, dependency injection, pipes, guards and interceptors.',
+    metadata: { domain: 'engineering', version: '1.3' },
+    path: '.claude/skills/nestjs-patterns/SKILL.md',
+  },
+  {
+    name: 'security-hardening',
+    folder: 'security-hardening',
+    description: 'OWASP Top 10 mitigations, input validation, rate limiting, and secret management.',
+    metadata: { domain: 'security' },
+    path: '.claude/skills/security-hardening/SKILL.md',
+  },
+  {
+    name: 'docker-compose',
+    folder: 'docker-compose',
+    description: 'Docker Compose setup for local dev, multi-stage builds, and CI environments.',
+    metadata: { domain: 'devops' },
+    path: '.claude/skills/docker-compose/SKILL.md',
+  },
+  {
+    name: 'github-actions',
+    folder: 'github-actions',
+    description: 'CI/CD pipelines with GitHub Actions. Test, build, deploy, and release workflows.',
+    metadata: { domain: 'devops', version: '2.1' },
+    path: '.claude/skills/github-actions/SKILL.md',
+  },
+];
+
+export const MOCK_OVERVIEW = {
+  name: 'caw-backlog-viewer',
+  description: 'Astro + React Kanban UI for the CAW agent workflow. Displays tasks, skills, and project health.',
+  team: 'CAW',
+  archetype: 'nestjs-rest-api-monolith',
+  generatedAt: '2026-05-10 09:00 UTC',
+  lastUpdated: '2026-05-22',
+  tags: ['Backend API', 'TypeScript', 'NestJS', 'PostgreSQL'],
+  stack: [
+    { name: 'TypeScript', version: '5.9', role: 'Language', icon: 'typescript' },
+    { name: 'NestJS', version: '11', role: 'Backend', icon: 'nestjs' },
+    { name: 'PostgreSQL', version: '14', role: 'Database', icon: 'postgresql' },
+    { name: 'Redis', version: '7', role: 'Cache', icon: 'redis' },
+    { name: 'Prisma', version: '6', role: 'ORM', icon: 'prisma' },
+    { name: 'AWS', version: 'S3/SES', role: 'Cloud', icon: 'aws' },
+  ],
+};
+
+export const MOCK_PROJECT_FILES = {
+  conventions: {
+    path: '.claude/conductor/conventions.md',
+    exists: true,
+    content: `# Project Conventions — caw-backlog-viewer\n\n> Generated by /caw-setup at 2026-05-10T09:00:00Z\n\n**Project:** caw-backlog-viewer\n**Team type:** Frontend Tool\n**Archetype:** \`astro-react-app\`\n\n---\n\n## Stack\n\n- **Language:** TypeScript 5.9\n- **Framework:** Astro 6 + React 19\n- **Styling:** Tailwind CSS v4\n- **UI:** shadcn/ui + Radix UI\n- **Package manager:** pnpm\n\n---\n\n## Folder Contract\n\n- \`src/components/\` — React components\n- \`src/pages/api/\` — Astro API routes\n- \`src/lib/\` — Shared utilities\n`,
+  },
+  knowledge: {
+    path: '.claude/conductor/knowledge.md',
+    exists: true,
+    content: `# Project Knowledge\n\n## Tailwind v4 + CSS Variables\n\nUse \`@theme inline\` to expose CSS variables to Tailwind. The \`oklch\` color space is used throughout for perceptual uniformity.\n\n## Card Border Glow\n\nThe \`.card-border-glow\` pattern uses \`background-clip: padding-box, border-box\` with two background layers — solid card color + gradient — to achieve the orange gradient border effect without pseudo-elements.\n\n## Hydration\n\nAlways initialize React state with SSR-safe values (no \`window\` access). Sync from \`localStorage\`/\`location.hash\` in \`useEffect\`.\n`,
+  },
+  claudeMd: {
+    path: 'CLAUDE.md',
+    exists: true,
+    content: `# CLAUDE.md\n\nThis file provides guidance to Claude Code when working in this repository.\n\n## What This Is\n\nThe \`backlog-viewer\` tool is an Astro 6 + React 19 Kanban UI that ships inside the \`caw\` template hub.\n\n## Dev Setup\n\n\`\`\`bash\ncd tools/backlog-viewer\npnpm install\npnpm dev\n# open http://localhost:4321\n\`\`\`\n`,
+  },
+  rules: [
+    {
+      layer: 'common',
+      files: [
+        {
+          path: '.claude/rules/common/commit-conventions.md',
+          exists: true,
+          content: `# Commit Conventions\n\nUse conventional commits: \`feat:\`, \`fix:\`, \`refactor:\`, \`docs:\`, \`chore:\`\n`,
+        },
+        {
+          path: '.claude/rules/common/harness-contract.md',
+          exists: true,
+          content: `# Harness Contract\n\nAgents emit structured decisions to \`.claude/conductor/decisions/\`.\n`,
+        },
+      ],
+    },
+    {
+      layer: 'project',
+      files: [
+        {
+          path: '.claude/rules/project.md',
+          exists: true,
+          content: `# Project Rules\n\n- Always use pnpm, never npm/yarn\n- Tailwind v4 only — no \`@apply\` for new styles\n- No \`bg-card\` on \`.card-border-glow\` elements\n`,
+        },
+      ],
+    },
+  ],
+};

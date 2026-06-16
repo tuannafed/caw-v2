@@ -1,0 +1,15 @@
+# better-context scan exclusions for the caw repo.
+# Caw is a template hub — only its own source (agents, commands, scripts,
+# rules) is worth indexing. Vendored skills and the sub-project UI are not.
+
+# Vendor-curated hub skills — large, not caw's own source.
+template/skills/
+
+# Backlog-viewer is a self-contained Astro sub-project with its own structure.
+tools/
+
+# Generated / non-source.
+.git/
+.better-context/
+node_modules/
+.pytest_cache

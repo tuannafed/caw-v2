@@ -1,0 +1,36 @@
+name: tests
+
+# Run the durable-layer test suite on every push and PR so a change that breaks
+# harness-cli can't reach main. The CLI is stdlib-only; pytest is the only dep.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cli/**"
+      - "template/durable/**"
+      - "requirements-dev.txt"
+      - ".github/workflows/test.yml"
+  pull_request:
+    paths:
+      - "cli/**"
+      - "template/durable/**"
+      - "requirements-dev.txt"
+      - ".github/workflows/test.yml"
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dev deps
+        run: pip install -r requirements-dev.txt
+      - name: Run tests
+        run: python -m pytest cli/tests -q

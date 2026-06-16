@@ -1,0 +1,29 @@
+# Claude Code working dir for caw's own development — machine-local, not shipped.
+# (caw's *templates* for projects live in templates/ and conductor/, not here.)
+.claude/
+.gstack/
+
+# Backlog viewer (tools/backlog-viewer/) — build artifacts + local install
+tools/backlog-viewer/node_modules/
+tools/backlog-viewer/dist/
+tools/backlog-viewer/.astro/
+tools/backlog-viewer/.vercel/
+
+# Vercel build output (generated when testing tools/backlog-viewer/build:vercel)
+.vercel/
+
+# Durable layer (caw v2) — operational state is per-instance, never committed.
+# The schema (scripts/schema/*.sql) and the CLI (scripts/harness/, scripts/bin/)
+# ARE committed; only the generated DB + Python bytecode are ignored.
+harness.db
+harness.db-wal
+harness.db-shm
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Test + tooling caches (auto-generated)
+.pytest_cache
+.better-context/

@@ -1,0 +1,50 @@
+# Canonical list of mandatory default skills (caw v2).
+#
+# SINGLE SOURCE OF TRUTH. The setup agent reads THIS file to build its install
+# list — it does NOT hardcode the list in its prompt. Adding/removing a default
+# means editing only this file (no prompt drift).
+#
+# Rule: every project gets workflow + product defaults unconditionally. The
+# cross-cutting group is conditional (see `condition`). The setup agent's
+# pre-flight check asserts the installed count >= the unconditional total.
+#
+# Validate with:  scripts/check-defaults.py <project-path>
+
+workflow:
+  # Every project gets these — the agent-workflow backbone.
+  - to-prd
+  - webapp-testing
+  - javascript-testing-patterns
+  - react-component-testing        # caw-owned: leak-free RTL + QueryClient patterns
+  - test-driven-development        # red → green → refactor (obra/superpowers)
+  - verification-before-completion # evidence before claiming done
+  - code-review-excellence
+  - performance
+  - accessibility
+  - refactor
+  - improve-codebase-architecture  # architecture deepening + module consolidation
+  - systematic-debugging
+  - find-skills
+  - validate-skills
+
+product:
+  # planner depends on these — absence makes /caw-plan abort.
+  - prd-development
+  - user-story
+  - user-story-splitting
+  - prioritization-advisor
+  - business-analyst
+  - create-specification
+  - roadmap-planning
+
+cross_cutting:
+  # Conditional — added when the condition holds.
+  - name: typescript-advanced-types
+    condition: "typescript in deps OR tsconfig.json at root"
+  - name: github
+    condition: "always (every shipped project uses GitHub)"
+  - name: github-actions
+    condition: ".github/workflows/ exists OR project ships CI"
+
+# Unconditional minimum the pre-flight check enforces: len(workflow) + len(product).
+# cross_cutting is conditional so it is not part of the hard floor.

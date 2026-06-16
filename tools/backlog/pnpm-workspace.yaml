@@ -1,0 +1,7 @@
+# Standalone workspace marker for .claude/backlog-viewer/.
+# When this folder is copied into a project that has its own pnpm workspace
+# at the repo root, pnpm would otherwise climb up and install at the parent's
+# root. Declaring an empty workspace here makes pnpm treat this folder as the
+# nearest workspace root, so `pnpm install` resolves to local node_modules.
+packages:
+  - '.'

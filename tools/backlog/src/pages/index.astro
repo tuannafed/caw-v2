@@ -1,0 +1,32 @@
+---
+import '@/styles/globals.css';
+import { App } from '@/components/app';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude Agent Workflow — Backlog Viewer</title>
+    <!--
+      Pre-hydration theme script. Reads the persisted choice and sets the
+      `dark` class on <html> before paint to avoid a flash. Default is dark
+      when nothing is stored — only an explicit 'light' choice opts out.
+      Runs synchronously, so it must stay tiny.
+    -->
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem('caw-bv-theme-v2');
+          if (t !== 'light') document.documentElement.classList.add('dark');
+        } catch (_) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-background text-foreground">
+    <App client:load />
+  </body>
+</html>

@@ -1,0 +1,10 @@
+# Dev-only dependencies for the caw durable layer.
+# The harness CLI itself is stdlib-only — these are needed ONLY to run the tests.
+#
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r requirements-dev.txt
+#   .venv/bin/python -m pytest scripts/tests -q
+#
+# Pinned (not floating) per the supply-chain policy: do not auto-pull newer
+# releases without review.
+pytest==8.3.4

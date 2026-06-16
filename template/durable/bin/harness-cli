@@ -1,0 +1,268 @@
+#!/usr/bin/env python3
+"""caw v2 durable-layer CLI.
+
+Entry point for agents and humans to record and query operational state in
+harness.db. Stdlib only. Stable command path: scripts/caw/bin/harness-cli <command>
+(kept identical to repository-harness so a Rust rewrite is a drop-in).
+
+Usage examples:
+  harness-cli init
+  harness-cli intake add --input-type change_request --risk-lane normal --summary "..."
+  harness-cli story add --id story-001 --title "..." --risk-lane normal
+  harness-cli task add --story-id story-001 --task-key backend --verify "pnpm test"
+  harness-cli trace --summary "..." --outcome completed --agent coder
+  harness-cli backlog add --title "..." --risk tiny --predicted "..."
+  harness-cli backlog close --id 1 --outcome "..."
+  harness-cli query trace --summary
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# Make `scripts/` importable so `harness` package resolves regardless of CWD.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from harness import __version__, commands, db, domain  # noqa: E402
+
+
+def build_parser():
+    p = argparse.ArgumentParser(prog="harness-cli", description="caw durable layer")
+    p.add_argument("--db", help="path to harness.db (default: auto-resolve)")
+    p.add_argument("--version", action="version", version=f"harness-cli {__version__}")
+    sub = p.add_subparsers(dest="command", required=True)
+
+    # group -> its verb-subparsers, scoped to THIS parser instance (re-entrant).
+    groups = {}
+
+    def _nest(group, verb):
+        gp = groups.get(group)
+        if gp is None:
+            parser = sub.add_parser(group, help=f"{group} commands")
+            gp = parser.add_subparsers(dest=f"{group}_verb", required=True)
+            groups[group] = gp
+        return gp.add_parser(verb, help=f"{group} {verb}")
+
+    sub.add_parser("init", help="create/migrate harness.db")
+
+    # intake add
+    ia = _nest("intake", "add")
+    ia.add_argument("--input-type", dest="input_type", required=True)
+    ia.add_argument("--summary", required=True)
+    ia.add_argument("--risk-lane", dest="risk_lane", required=True)
+    ia.add_argument("--risk-flags", dest="risk_flags")
+    ia.add_argument("--affected-docs", dest="affected_docs")
+    ia.add_argument("--story-id", dest="story_id")
+    ia.add_argument("--notes")
+    ia.set_defaults(_fn=commands.intake_add)
+
+    # story add / update
+    ta = _nest("story", "add")
+    ta.add_argument("--id", dest="id", required=True)
+    ta.add_argument("--title", required=True)
+    ta.add_argument("--risk-lane", dest="risk_lane", required=True)
+    ta.add_argument("--contract-doc", dest="contract_doc")
+    ta.add_argument("--status")
+    ta.add_argument("--notes")
+    ta.set_defaults(_fn=commands.story_add)
+
+    tu = _nest("story", "update")
+    tu.add_argument("--id", required=True)
+    tu.add_argument("--status")
+    tu.add_argument("--title")
+    tu.add_argument("--contract-doc", dest="contract_doc")
+    tu.add_argument("--evidence")
+    tu.add_argument("--notes")
+    for pf in ("unit", "integration", "e2e", "platform"):
+        tu.add_argument(f"--{pf}-proof", dest=f"{pf}_proof", type=int)
+    tu.set_defaults(_fn=commands.story_update)
+
+    tg = _nest("story", "gate")
+    tg.add_argument("--story-id", dest="story_id", required=True)
+    tg.set_defaults(_fn=commands.story_gate)
+
+    va = _nest("story", "verify-all")
+    va.add_argument("--story-id", dest="story_id", help="limit to one story (default: all)")
+    va.set_defaults(_fn=commands.story_verify_all)
+
+    # task add / update / verify (a step within a story)
+    pa = _nest("task", "add")
+    pa.add_argument("--story-id", dest="story_id", required=True)
+    pa.add_argument("--task-key", dest="task_key", required=True)
+    pa.add_argument("--description")
+    pa.add_argument("--verify", dest="verify_command")
+    pa.add_argument("--notes")
+    pa.set_defaults(_fn=commands.task_add)
+
+    pu = _nest("task", "update")
+    pu.add_argument("--story-id", dest="story_id", required=True)
+    pu.add_argument("--task-key", dest="task_key", required=True)
+    pu.add_argument("--status")
+    pu.add_argument("--description")
+    pu.add_argument("--verify", dest="verify_command")
+    pu.add_argument("--notes")
+    pu.set_defaults(_fn=commands.task_update)
+
+    pv = _nest("task", "verify")
+    pv.add_argument("--story-id", dest="story_id", required=True)
+    pv.add_argument("--task-key", dest="task_key", required=True)
+    pv.set_defaults(_fn=commands.task_verify)
+
+    # decision add
+    da = _nest("decision", "add")
+    da.add_argument("--id", required=True)
+    da.add_argument("--title", required=True)
+    da.add_argument("--status")
+    da.add_argument("--doc-path", dest="doc_path")
+    da.add_argument("--verify", dest="verify_command")
+    da.add_argument("--predicted", dest="predicted_impact")
+    da.add_argument("--notes")
+    da.set_defaults(_fn=commands.decision_add)
+
+    dv = _nest("decision", "verify")
+    dv.add_argument("--id", required=True)
+    dv.set_defaults(_fn=commands.decision_verify)
+
+    # backlog add / close
+    ba = _nest("backlog", "add")
+    ba.add_argument("--title", required=True)
+    ba.add_argument("--discovered-while", dest="discovered_while")
+    ba.add_argument("--pain", dest="current_pain")
+    ba.add_argument("--suggested", dest="suggested_improvement")
+    ba.add_argument("--risk")
+    ba.add_argument("--predicted", dest="predicted_impact")
+    ba.add_argument("--notes")
+    ba.set_defaults(_fn=commands.backlog_add)
+
+    bc = _nest("backlog", "close")
+    bc.add_argument("--id", required=True, type=int)
+    bc.add_argument("--status")
+    bc.add_argument("--outcome")
+    bc.set_defaults(_fn=commands.backlog_close)
+
+    # trace (flat, no sub-verb — matches repository-harness)
+    tr = sub.add_parser("trace", help="record an agent execution trace")
+    tr.add_argument("--summary", required=True)
+    tr.add_argument("--outcome", required=True)
+    tr.add_argument("--intake-id", dest="intake_id", type=int)
+    tr.add_argument("--story-id", dest="story_id")
+    tr.add_argument("--agent")
+    tr.add_argument("--actions")
+    tr.add_argument("--files-read", dest="files_read")
+    tr.add_argument("--files-changed", dest="files_changed")
+    tr.add_argument("--decisions")
+    tr.add_argument("--errors")
+    tr.add_argument("--duration-seconds", dest="duration_seconds", type=int)
+    tr.add_argument("--token-estimate", dest="token_estimate", type=int)
+    tr.add_argument("--friction")
+    tr.add_argument("--notes")
+    tr.set_defaults(_fn=commands.trace_add)
+
+    # query <table>
+    q = sub.add_parser("query", help="query a table")
+    q.add_argument("table")
+    q.add_argument("--json", action="store_true")
+    q.add_argument("--summary", action="store_true")
+    q.add_argument("--open", action="store_true", help="backlog: proposed+accepted only")
+    q.add_argument("--closed", action="store_true", help="backlog: implemented+rejected only")
+    q.add_argument("--limit", type=int, help="max rows (default 20; protects context)")
+    q.add_argument("--all", action="store_true", help="no row cap (overrides --limit)")
+    q.set_defaults(_fn=commands.query)
+
+    # propose — friction + audit drift -> backlog proposals
+    pr = sub.add_parser("propose", help="generate improvement proposals from friction+drift")
+    pr.add_argument("--conductor", help="path to docs/caw (default: auto)")
+    pr.add_argument("--commit", action="store_true", help="file proposals as backlog items")
+    pr.set_defaults(_fn=commands.propose_cmd)
+
+    # intervention add — record a human/reviewer/CI override
+    iv = _nest("intervention", "add")
+    iv.add_argument("--source", required=True, help="human|reviewer|ci|agent")
+    iv.add_argument("--summary", required=True)
+    iv.add_argument("--story-id", dest="story_id")
+    iv.add_argument("--trace-id", dest="trace_id", type=int)
+    iv.add_argument("--rationale")
+    iv.add_argument("--notes")
+    iv.set_defaults(_fn=commands.intervention_add)
+
+    # tool register / remove — user-registered external tools
+    tre = _nest("tool", "register")
+    tre.add_argument("--name", required=True)
+    tre.add_argument("--command", required=True)
+    tre.add_argument("--responsibility")
+    tre.add_argument("--description")
+    tre.set_defaults(_fn=commands.tool_register)
+
+    trm = _nest("tool", "remove")
+    trm.add_argument("--name", required=True)
+    trm.set_defaults(_fn=commands.tool_remove)
+
+    # query matrix — test-matrix generated from story+task
+    qm = sub.add_parser("matrix", help="test-matrix (generated from story+task)")
+    qm.add_argument("--json", action="store_true")
+    qm.add_argument("--summary", action="store_true")
+    qm.set_defaults(_fn=commands.matrix)
+
+    # score-trace — assess a trace against its lane's required tier
+    st = sub.add_parser("score-trace", help="score a trace's quality tier")
+    st.add_argument("--id", type=int, help="trace id (default: most recent)")
+    st.set_defaults(_fn=commands.score_trace)
+
+    # audit — entropy/drift score over DB + conductor files
+    au = sub.add_parser("audit", help="entropy/drift score (lower is better)")
+    au.add_argument(
+        "--conductor",
+        help="path to docs/caw for file-level checks "
+        "(default: auto-detect ./docs/caw)",
+    )
+    au.add_argument("--json", action="store_true")
+    au.set_defaults(_fn=commands.audit_cmd)
+
+    # import — migrate caw v1 markdown state into the DB (one-time)
+    im = sub.add_parser("import", help="migrate v1 markdown state (overview.yaml/decisions/backlog) into the DB")
+    im.add_argument("--conductor", help="path to docs/caw (default: auto)")
+    im.add_argument("--dry-run", action="store_true", help="show what would import, write nothing")
+    im.set_defaults(_fn=commands.import_cmd)
+
+    # lint — bounded-growth guard over conductor markdown
+    li = sub.add_parser("lint", help="enforce bounded-growth rules (exits non-zero on findings)")
+    li.add_argument("--conductor", help="path to docs/caw (default: auto)")
+    li.set_defaults(_fn=commands.lint_cmd)
+
+    # maturity — estimate the harness maturity level (H0-H5)
+    ma = sub.add_parser("maturity", help="estimate harness maturity level")
+    ma.set_defaults(_fn=commands.maturity_cmd)
+
+    return p
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+
+    if args.command == "init":
+        path = db.resolve_db_path(args.db)
+        conn = db.connect(path)
+        ver = db.migrate(conn)
+        conn.close()
+        print(f"✅ harness.db ready at {path} (schema v{ver})")
+        return 0
+
+    # audit/propose/lint/import auto-detect the conductor dir when not given.
+    # caw v2 layout: conductor seed files are flattened under docs/caw (root project), not .claude/.
+    if args.command in ("audit", "propose", "lint", "import") and not args.conductor:
+        default_conductor = Path.cwd() / "docs" / "caw"
+        args.conductor = str(default_conductor) if default_conductor.is_dir() else None
+
+    conn = db.connect(db.resolve_db_path(args.db))
+    try:
+        print(args._fn(conn, args))
+    except domain.ValidationError as e:
+        print(f"❌ {e}", file=sys.stderr)
+        return 2
+    finally:
+        conn.close()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

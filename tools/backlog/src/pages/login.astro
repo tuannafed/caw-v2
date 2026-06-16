@@ -1,0 +1,144 @@
+---
+// Client-side login form for the backlog viewer.
+//
+// 100% static — no middleware, no server. Compares credentials against
+// PUBLIC_AUTH_USER / PUBLIC_AUTH_PASS (build-time inlined into the JS bundle
+// by Vite). On match, sets localStorage.caw_auth = "<expected user>" and
+// redirects to ?next (default /).
+//
+// SECURITY TRADE-OFF: credentials are visible to anyone who views the JS
+// bundle. Acceptable for low-stakes internal tools — deterrent for casual
+// visitors, not a security boundary. Do not use for anything sensitive.
+
+import '@/styles/globals.css';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in — Claude Agent Workflow</title>
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem('caw-bv-theme-v2');
+          if (t !== 'light') document.documentElement.classList.add('dark');
+        } catch (_) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
+    <main class="w-full max-w-sm">
+      <!-- Brand mark -->
+      <div class="flex flex-col items-center gap-3 mb-8">
+        <div
+          class="size-12 rounded-2xl flex items-center justify-center"
+          style="background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="size-6 text-white">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+          </svg>
+        </div>
+        <div class="text-center">
+          <h1 class="text-2xl font-bold tracking-tight">Claude</h1>
+          <p class="text-[12px] uppercase tracking-wider text-muted-foreground/70 mt-0.5">
+            Agent Workflow
+          </p>
+        </div>
+      </div>
+
+      <!-- Card -->
+      <div class="rounded-2xl border border-border/60 bg-card/40 backdrop-blur p-6 shadow-xl">
+        <div class="mb-5">
+          <h2 class="text-base font-semibold">Sign in</h2>
+          <p class="text-[13px] text-muted-foreground/70 mt-1">
+            Enter your credentials to access the backlog viewer.
+          </p>
+        </div>
+
+        <div
+          id="error-banner"
+          role="alert"
+          class="hidden mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive"
+        >
+          Invalid username or password. Please try again.
+        </div>
+
+        <form id="login-form" class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label for="user" class="text-[12px] font-medium text-foreground/80">
+              Username
+            </label>
+            <input
+              id="user"
+              name="user"
+              type="text"
+              autocomplete="username"
+              required
+              autofocus
+              class="h-10 px-3 rounded-lg text-[14px] bg-background border border-border/60 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-colors"
+            />
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label for="pass" class="text-[12px] font-medium text-foreground/80">
+              Password
+            </label>
+            <input
+              id="pass"
+              name="pass"
+              type="password"
+              autocomplete="current-password"
+              required
+              class="h-10 px-3 rounded-lg text-[14px] bg-background border border-border/60 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/40 transition-colors"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="h-10 mt-1 rounded-lg text-[13px] font-semibold bg-primary text-primary-foreground hover:brightness-110 active:brightness-95 transition-all"
+          >
+            Sign in
+          </button>
+        </form>
+      </div>
+
+      <p class="text-center text-[11px] text-muted-foreground/50 mt-6">
+        Session stored locally in your browser.
+      </p>
+    </main>
+
+    <script>
+      import { isAuthConfigured, isAuthenticated, signIn } from '@/lib/auth';
+
+      function getNextPath(): string {
+        const params = new URLSearchParams(window.location.search);
+        const next = params.get('next');
+        if (next && next.startsWith('/') && !next.startsWith('//')) return next;
+        return '/';
+      }
+
+      // If creds not configured, or already authenticated, skip the form.
+      if (!isAuthConfigured() || isAuthenticated()) {
+        window.location.replace(getNextPath());
+      }
+
+      const form = document.getElementById('login-form') as HTMLFormElement | null;
+      const errorBanner = document.getElementById('error-banner');
+
+      form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const userInput = (document.getElementById('user') as HTMLInputElement).value;
+        const passInput = (document.getElementById('pass') as HTMLInputElement).value;
+        if (signIn(userInput, passInput)) {
+          window.location.replace(getNextPath());
+        } else {
+          errorBanner?.classList.remove('hidden');
+        }
+      });
+    </script>
+  </body>
+</html>

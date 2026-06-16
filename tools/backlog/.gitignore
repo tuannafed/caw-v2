@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.vercel/
+.DS_Store
+*.log
+
+# Local env (commit .env.example only — never .env)
+.env
+.env.local
+.env.*.local
