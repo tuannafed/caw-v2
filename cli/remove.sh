@@ -23,9 +23,9 @@ set -euo pipefail
 #   .claude/skill-map.yaml    — stack→skill map (from /caw-setup)
 #   skills-lock.json          — npx-skills CLI lockfile at project root (if caw added skills)
 #   .claude/gitleaks.toml     — secret-scan config
-#   .github/PULL_REQUEST_TEMPLATE.md — PR template
+#   .github/PULL_REQUEST_TEMPLATE.md — PR template (legacy — older caw versions)
 #   .claudeignore             — caw-owned (init only creates it when absent)
-#   commitlint.config.cjs     — caw-owned commit-lint config
+#   commitlint.config.cjs     — caw-owned commit-lint config (legacy)
 #   AGENTS.md                 — Codex CLI + Antigravity cross-tool rules
 #   vercel.json               — Vercel deploy config (init's backlog Vercel opt-in)
 #   CLAUDE.md                 — project context file (prompts for confirmation)
@@ -254,7 +254,8 @@ if [[ -f "$DOTCLAUDE/settings.json" ]]; then
   TO_REMOVE_LABELS+=(".claude/settings.json")
 fi
 
-# .github/PULL_REQUEST_TEMPLATE.md
+# .github/PULL_REQUEST_TEMPLATE.md — legacy (no longer scaffolded by init;
+# kept here so `caw remove` still cleans projects from older caw versions).
 if [[ -f "$PROJECT_PATH/.github/PULL_REQUEST_TEMPLATE.md" ]]; then
   TO_REMOVE+=("$PROJECT_PATH/.github/PULL_REQUEST_TEMPLATE.md")
   TO_REMOVE_LABELS+=(".github/PULL_REQUEST_TEMPLATE.md")
@@ -262,6 +263,8 @@ fi
 
 # Caw-owned cross-IDE / tooling files at project root (init copies these only
 # when absent, never overwriting user files — so removing them is symmetric).
+# commitlint.config.cjs is legacy (no longer scaffolded) but still cleaned for
+# projects from older caw versions.
 for rel in .claudeignore commitlint.config.cjs AGENTS.md; do
   if [[ -f "$PROJECT_PATH/$rel" ]]; then
     TO_REMOVE+=("$PROJECT_PATH/$rel")

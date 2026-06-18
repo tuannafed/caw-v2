@@ -51,7 +51,6 @@ templates/          # Files copied verbatim into target projects
   ├── skills/       # 65 caw-owned skills (test-driven-development, api-contract, error-handling-patterns, react-component-testing, …)
   ├── advisories/   # Supply-chain advisory templates scaffolded into target projects
   ├── settings.json
-  ├── PULL_REQUEST_TEMPLATE.md
   └── ...
 tools/backlog/      # Astro + React + shadcn Kanban UI (source — copied to <project>/backlog/ on opt-in)
 .agents/skills/     # Hub skills pulled via skills.sh (external, not caw-owned)

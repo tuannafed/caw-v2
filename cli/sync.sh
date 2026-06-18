@@ -19,15 +19,13 @@ set -euo pipefail
 #   docs/caw/adr.md             — ADR format template
 #   docs/caw/intake.md          — feature-intake format template
 #   .claude/README.md              — caw README copy for in-project reference
-#   commitlint.config.cjs          — commit rules (if already present)
-#   AGENTS.md                      — Codex CLI + Antigravity rules (if already present)
+#   AGENTS.md                      — Codex CLI + Antigravity rules
 #
 # What is created only if MISSING (never overwritten):
 #   docs/caw/conventions.md
 #   docs/caw/decisions/
 #   docs/caw/harness-backlog.md
 #   .claudeignore
-#   .github/PULL_REQUEST_TEMPLATE.md
 #
 # What is NEVER touched:
 #   CLAUDE.md                              — user's project context
@@ -352,34 +350,12 @@ if [[ -f "$REPO_ROOT/README.md" ]]; then
   update_file "$REPO_ROOT/README.md" "$DOTCLAUDE/README.md" ".claude/README.md"
 fi
 
-# ── 13. GitHub PR template (create only if missing) ───────────────────────────
+# ── 13. Cross-IDE AI rules ────────────────────────────────────────────────────
+# Strategy: ALWAYS ensure the file exists (auto-create missing, overwrite
+# existing). This makes sync idempotent and brings older projects up to the
+# latest cross-IDE rule set.
 echo ""
-echo "Updating GitHub PR template..."
-PR_TEMPLATE_SRC="$TEMPLATE_DIR/PULL_REQUEST_TEMPLATE.md"
-PR_TEMPLATE_DEST="$PROJECT_PATH/.github/PULL_REQUEST_TEMPLATE.md"
-if [[ -f "$PR_TEMPLATE_SRC" ]] && [[ ! -f "$PR_TEMPLATE_DEST" ]]; then
-  if [[ "$DRY_RUN" == true ]]; then
-    echo "   would create: .github/PULL_REQUEST_TEMPLATE.md"
-    (( UPDATED++ )) || true
-  else
-    mkdir -p "$PROJECT_PATH/.github"
-    cp "$PR_TEMPLATE_SRC" "$PR_TEMPLATE_DEST"
-    echo "   ✅ .github/PULL_REQUEST_TEMPLATE.md (created)"
-    (( UPDATED++ )) || true
-  fi
-elif [[ -f "$PR_TEMPLATE_DEST" ]]; then
-  echo "   ⏭️  .github/PULL_REQUEST_TEMPLATE.md (already exists — not overwritten)"
-fi
-
-# ── 14. Commit + cross-IDE AI rules ───────────────────────────────────────────
-# Strategy: for Node/JS projects, ALWAYS ensure the full set of files exists
-# (auto-create missing, overwrite existing). This makes sync idempotent and
-# brings older projects up to the latest cross-IDE rule set.
-#
-# Exception: .vscode/settings.json is never overwritten — users have personal
-# settings there. We only create it if missing; otherwise print a hint.
-echo ""
-echo "Updating commit + cross-IDE AI rules (VS Code, Cursor, Codex, Antigravity)..."
+echo "Updating cross-IDE AI rules (VS Code, Cursor, Codex, Antigravity)..."
 
 # Helper: copy-or-create with {{PROJECT_NAME}} substitution
 ensure_file() {
@@ -416,27 +392,11 @@ ensure_file() {
   (( UPDATED++ )) || true
 }
 
-if [[ -f "$PROJECT_PATH/package.json" ]]; then
-  # commitlint config — prefer .cjs; warn if legacy .js exists
-  if [[ -f "$PROJECT_PATH/commitlint.config.js" ]] && [[ ! -f "$PROJECT_PATH/commitlint.config.cjs" ]]; then
-    printf "   ${C_YELLOW:-}⚠️${C_RESET:-}  commitlint.config.js detected (legacy). caw template uses .cjs.\n"
-    printf "      ${C_DIM:-}Options: rename to .cjs (\`mv commitlint.config.js commitlint.config.cjs\`)\n"
-    printf "      ${C_DIM:-}or manually align rules with: $TEMPLATE_DIR/commitlint.config.cjs${C_RESET:-}\n"
-  fi
-  ensure_file \
-    "$TEMPLATE_DIR/commitlint.config.cjs" \
-    "$PROJECT_PATH/commitlint.config.cjs" \
-    "commitlint.config.cjs" \
-    "false"
-
-  # AGENTS.md — Codex CLI + Antigravity + cross-tool
-  ensure_file \
-    "$TEMPLATE_DIR/AGENTS.md" \
-    "$PROJECT_PATH/AGENTS.md" \
-    "AGENTS.md"
-else
-  echo "   ⏭️  (no package.json — commit + AI rules skipped)"
-fi
+# AGENTS.md — Codex CLI + Antigravity + cross-tool
+ensure_file \
+  "$TEMPLATE_DIR/AGENTS.md" \
+  "$PROJECT_PATH/AGENTS.md" \
+  "AGENTS.md"
 
 # ── 15. Backlog viewer (sync source if already installed) ─────────────────────
 # The viewer is opt-in at `caw init`. If a project has it, refresh the Astro/React
@@ -477,6 +437,5 @@ echo "  docs/caw/conventions.md (if already present)"
 echo "  docs/caw/harness-backlog.md (if already present)"
 echo "  .claude/harness.db (story/task state — never overwritten)"
 echo "  docs/caw/decisions/ (existing ADRs preserved)"
-echo "  .github/PULL_REQUEST_TEMPLATE.md (if already present)"
 echo "  .vscode/settings.json (never overwritten — merge AI snippet manually)"
 echo "  backlog/{node_modules,dist,.astro} (local build artifacts)"

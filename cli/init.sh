@@ -796,61 +796,22 @@ if [[ -f "$REPO_ROOT/README.md" ]]; then
   echo "   ✅ .claude/README.md (claude agent workflow usage reference)"
 fi
 
-# 8. GitHub PR template
-echo ""
-printf "${C_GREEN}📝${C_RESET} ${C_BOLD}Copying${C_RESET} ${C_DIM}GitHub PR template...${C_RESET}\n"
-PR_TEMPLATE_SRC="$TEMPLATE_DIR/PULL_REQUEST_TEMPLATE.md"
-PR_TEMPLATE_DEST="$PROJECT_PATH/.github/PULL_REQUEST_TEMPLATE.md"
-if [[ -f "$PR_TEMPLATE_SRC" ]]; then
-  if [[ ! -f "$PR_TEMPLATE_DEST" ]]; then
-    mkdir -p "$PROJECT_PATH/.github"
-    cp "$PR_TEMPLATE_SRC" "$PR_TEMPLATE_DEST"
-    echo "   ✅ .github/PULL_REQUEST_TEMPLATE.md"
-  else
-    echo "   ⏭️  .github/PULL_REQUEST_TEMPLATE.md (already exists)"
-  fi
-fi
-
-# 9. Commit message tooling — commitlint config + cross-IDE AI rules
+# 8. Cross-IDE AI rules (AGENTS.md)
 # Targets: VS Code Copilot, Cursor AI, OpenAI Codex CLI, Google Antigravity.
-# Only relevant for JS/TS projects (commitlint runs on node). Skip if Python-only.
 echo ""
-printf "${C_BRIGHT_CYAN}📝${C_RESET} ${C_BOLD}Setting up${C_RESET} ${C_DIM}commit tooling + cross-IDE AI rules (VS Code, Cursor, Codex, Antigravity)...${C_RESET}\n"
+printf "${C_BRIGHT_CYAN}📝${C_RESET} ${C_BOLD}Setting up${C_RESET} ${C_DIM}cross-IDE AI rules (VS Code, Cursor, Codex, Antigravity)...${C_RESET}\n"
 
-if [[ -f "$PROJECT_PATH/package.json" ]]; then
-  # 9a. commitlint.config.cjs (root)
-  COMMITLINT_SRC="$TEMPLATE_DIR/commitlint.config.cjs"
-  COMMITLINT_DEST="$PROJECT_PATH/commitlint.config.cjs"
-  if [[ -f "$COMMITLINT_SRC" ]]; then
-    if [[ ! -f "$COMMITLINT_DEST" ]]; then
-      cp "$COMMITLINT_SRC" "$COMMITLINT_DEST"
-      echo "   ✅ commitlint.config.cjs"
-    else
-      echo "   ⏭️  commitlint.config.cjs (already exists, kept)"
-    fi
+# AGENTS.md (cross-tool: Codex CLI, Antigravity, other AGENTS.md consumers)
+AGENTS_SRC="$TEMPLATE_DIR/AGENTS.md"
+AGENTS_DEST="$PROJECT_PATH/AGENTS.md"
+if [[ -f "$AGENTS_SRC" ]]; then
+  if [[ ! -f "$AGENTS_DEST" ]]; then
+    cp "$AGENTS_SRC" "$AGENTS_DEST"
+    perl -i -pe "s/\{\{PROJECT_NAME\}\}/$ESCAPED_PROJECT_NAME/g;" "$AGENTS_DEST"
+    echo "   ✅ AGENTS.md ${C_DIM}(Codex CLI + Antigravity + cross-tool)${C_RESET}"
+  else
+    echo "   ⏭️  AGENTS.md (already exists, kept)"
   fi
-
-  # 9b. AGENTS.md (cross-tool: Codex CLI, Antigravity, other AGENTS.md consumers)
-  AGENTS_SRC="$TEMPLATE_DIR/AGENTS.md"
-  AGENTS_DEST="$PROJECT_PATH/AGENTS.md"
-  if [[ -f "$AGENTS_SRC" ]]; then
-    if [[ ! -f "$AGENTS_DEST" ]]; then
-      cp "$AGENTS_SRC" "$AGENTS_DEST"
-      perl -i -pe "s/\{\{PROJECT_NAME\}\}/$ESCAPED_PROJECT_NAME/g;" "$AGENTS_DEST"
-      echo "   ✅ AGENTS.md ${C_DIM}(Codex CLI + Antigravity + cross-tool)${C_RESET}"
-    else
-      echo "   ⏭️  AGENTS.md (already exists, kept)"
-    fi
-  fi
-
-  # 9c. Hint about installing commitlint dependencies
-  if ! grep -q '"@commitlint/cli"' "$PROJECT_PATH/package.json" 2>/dev/null; then
-    printf "   ${C_YELLOW}⚠️${C_RESET}  ${C_DIM}commitlint not installed. To enable enforcement, run:${C_RESET}\n"
-    printf "      ${C_BRIGHT_YELLOW}pnpm add -D @commitlint/cli @commitlint/config-conventional${C_RESET}\n"
-    printf "      ${C_DIM}then add to .husky/commit-msg:${C_RESET} ${C_BRIGHT_YELLOW}pnpm exec commitlint --edit \$1${C_RESET}\n"
-  fi
-else
-  echo "   ⏭️  (skipped — no package.json; commitlint is Node-based)"
 fi
 
 echo ""

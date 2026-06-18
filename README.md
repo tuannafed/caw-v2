@@ -232,7 +232,7 @@ caw repo/
 │   ├── commands/               7 command files (caw-setup, caw-plan, caw-code, ...)
 │   ├── rules/                  Non-overridable coding rules (common/ + typescript/ + react/)
 │   ├── conductor/              ADR / intake templates, knowledge, harness-backlog
-│   ├── config/                 gitleaks, commitlint, AGENTS.md, settings.json, PR template
+│   ├── config/                 gitleaks, AGENTS.md, settings.json, advisories
 │   ├── skills/                 65 caw-owned skills (vendor-curated + workflow + testing)
 │   └── durable/                the harness durable layer
 │       ├── bin/harness-cli     stdlib Python CLI
