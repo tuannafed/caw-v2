@@ -27,11 +27,13 @@ set -euo pipefail
 #   .claudeignore             — caw-owned (init only creates it when absent)
 #   commitlint.config.cjs     — caw-owned commit-lint config
 #   AGENTS.md                 — Codex CLI + Antigravity cross-tool rules
+#   vercel.json               — Vercel deploy config (init's backlog Vercel opt-in)
 #   CLAUDE.md                 — project context file (prompts for confirmation)
 #   backlog/                  — Astro UI source (prompts for confirmation)
 #
 # Also reverted (marker/line-scoped, only the caw-written parts):
-#   .gitignore                — the "# >>> caw ... <<<" block added by init
+#   .gitignore                — the "# CAW-V2 ... <<<" block + the "### Backlog"
+#                                and "# Vercel build output" blocks added by init
 #   ~/.zshrc or ~/.bashrc     — the "export CAW_HOME=..." line added by init
 #   .husky/ or .git/hooks/ pre-commit — the gitleaks block (whole hook if caw-only)
 #   .vscode/settings.json     — removed only if caw is its sole author
@@ -267,6 +269,15 @@ for rel in .claudeignore commitlint.config.cjs AGENTS.md; do
   fi
 done
 
+# vercel.json — written by init's backlog Vercel opt-in. Remove only the
+# caw-generated one (signature: backlog's build:vercel command). If the user
+# has their own vercel.json, the signature won't match — leave it.
+VERCEL_JSON="$PROJECT_PATH/vercel.json"
+if [[ -f "$VERCEL_JSON" ]] && grep -qF "cd backlog && pnpm install" "$VERCEL_JSON"; then
+  TO_REMOVE+=("$VERCEL_JSON")
+  TO_REMOVE_LABELS+=("vercel.json")
+fi
+
 # ── Preview ────────────────────────────────────────────────────────────────────
 if [[ ${#TO_REMOVE[@]} -eq 0 ]] && [[ ! -f "$PROJECT_PATH/CLAUDE.md" ]]; then
   echo "ℹ️  No claude agent workflow files found in: $PROJECT_PATH"
@@ -371,15 +382,38 @@ if [[ -d "$PROJECT_PATH/.github" ]] && [[ -z "$(ls -A "$PROJECT_PATH/.github" 2>
   rmdir "$PROJECT_PATH/.github" && echo "   ✅ .github/ (empty, removed)"
 fi
 
-# Remove the caw block from the project .gitignore (marker-delimited, written by init)
+# Remove caw-written blocks from the project .gitignore. init appends three
+# separate blocks (each prefixed by a blank line):
+#   1. the "# CAW-V2 … <<<" marker block (skills + harness db)
+#   2. the "### Backlog" block (backlog/ build artifacts) — backlog opt-in
+#   3. the "# Vercel build output" block (.vercel/)        — Vercel opt-in
+# Blocks 2 and 3 live outside the markers, so delete each header through the
+# line before the next blank line (the entries have no blanks within them).
 GITIGNORE="$PROJECT_PATH/.gitignore"
-if [[ -f "$GITIGNORE" ]] && grep -qF "# >>> caw (claude-agent-team) >>>" "$GITIGNORE"; then
+if [[ -f "$GITIGNORE" ]] && grep -qE "^# CAW-V2$|^### Backlog$|^# Vercel build output" "$GITIGNORE"; then
   tmp_gi="$(mktemp)"
-  # Delete the marker block (inclusive), then collapse any doubled blank lines.
-  sed '/^# >>> caw (claude-agent-team) >>>$/,/^# <<< caw (claude-agent-team) <<<$/d' "$GITIGNORE" \
-    | awk 'NF{blank=0} !NF{blank++} blank<2' > "$tmp_gi"
+  # Single awk pass (portable across BSD/GNU). A block starts at one of the
+  # three caw headers and ends at the next blank line (the marker block ends
+  # at its explicit "<<<" footer). Skip every line inside a block; the closing
+  # blank line is also dropped to avoid doubled blanks.
+  awk '
+    /^# CAW-V2$/        { skip=1; mode="marker"; next }
+    /^### Backlog$/     { skip=1; mode="blank";  next }
+    /^# Vercel build output/ { skip=1; mode="blank"; next }
+    skip && mode=="marker" {
+      if ($0 == "# <<< caw (claude-agent-team) <<<") skip=0
+      next
+    }
+    skip && mode=="blank" {
+      if ($0 == "") skip=0
+      next
+    }
+    { print }
+  ' "$GITIGNORE" \
+    | awk 'NF{blank=0} !NF{blank++} blank<2' \
+    | awk 'NR>1{print prev} {prev=$0} END{if(NF)print prev}' > "$tmp_gi"
   mv "$tmp_gi" "$GITIGNORE"
-  echo "   ✅ .gitignore (caw block removed)"
+  echo "   ✅ .gitignore (caw blocks removed)"
 fi
 
 # Remove the CAW_HOME export from the user's shell rc (written by init)

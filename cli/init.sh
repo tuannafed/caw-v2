@@ -519,25 +519,22 @@ fi
 # Caw scaffolds skill files into .agents/ and .claude/ which are project-local
 # (regenerated via /caw-setup). Lockfile tracks pulled hub skills.
 GITIGNORE="$PROJECT_PATH/.gitignore"
-CAW_IGNORE_BLOCK_START="# >>> caw (claude-agent-team) >>>"
-CAW_IGNORE_BLOCK_END="# <<< caw (claude-agent-team) <<<"
+CAW_IGNORE_BLOCK_START="# CAW-V2"
 
 if [[ ! -f "$GITIGNORE" ]] || ! grep -qF "$CAW_IGNORE_BLOCK_START" "$GITIGNORE"; then
   {
     [[ -f "$GITIGNORE" ]] && echo ""
     echo "$CAW_IGNORE_BLOCK_START"
-    echo "# Skills + caw config are machine-local — regenerate via caw init / /caw-setup"
+    echo "### Skills"
     echo ".agents/"
     echo ".claude/"
     echo "CLAUDE.md"
     echo "skills-lock.json"
-    echo "# Durable layer: state is per-instance (ignored); the CLI + schema under"
-    echo "# scripts/caw/ and the prose under docs/caw/ ARE committed."
+    echo "### Script"
     echo "harness.db"
     echo "harness.db-wal"
     echo "harness.db-shm"
     echo "scripts/caw/harness/__pycache__/"
-    echo "$CAW_IGNORE_BLOCK_END"
   } >> "$GITIGNORE"
   echo "   ✅ .gitignore (added caw entries)"
 else
@@ -892,7 +889,6 @@ if [[ -n "$RC_FILE" ]] && [[ -f "$RC_FILE" ]]; then
   if ! grep -q "^export CAW_HOME=" "$RC_FILE" 2>/dev/null; then
     {
       echo ""
-      echo "# Caw (claude-agent-team) repo location — fallback for CLI"
       echo "export CAW_HOME=\"$REPO_ROOT\""
     } >> "$RC_FILE"
     printf "${C_DIM}   + CAW_HOME exported to $RC_FILE${C_RESET}\n"
@@ -931,7 +927,7 @@ if [[ -d "$BV_SRC" ]] && [[ ! -d "$BV_DEST" ]]; then
     if ! grep -qF "backlog/node_modules" "$GITIGNORE" 2>/dev/null; then
       {
         echo ""
-        echo "# Backlog (caw) — local install"
+        echo "### Backlog"
         echo "backlog/node_modules/"
         echo "backlog/dist/"
         echo "backlog/.astro/"
