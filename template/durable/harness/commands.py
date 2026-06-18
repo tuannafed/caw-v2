@@ -8,11 +8,13 @@ per-table when this crosses ~600 lines (the ADR-0005 Rust-rewrite trigger).
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 
 from pathlib import Path
 
-from . import audit, domain, importer, lint, maturity, propose, render, scoring, state_drift
+from . import (audit, context_score, domain, importer, lint, maturity, propose,
+               render, scoring, state_drift)
 
 # Fields shown in --summary for each table (compact, agent-friendly).
 SUMMARY_FIELDS = {
@@ -211,6 +213,24 @@ def score_trace(conn, a):
     return scoring.format_assessment(row["id"], row, lane)
 
 
+def score_context(conn, a):
+    """Score a trace's context reads against lane+phase rules (CONTEXT_RULES).
+
+    Ported from repository-harness (Phase 5 US-022). Default: most recent trace."""
+    if getattr(a, "id", None):
+        row = conn.execute("SELECT * FROM trace WHERE id = ?", (a.id,)).fetchone()
+    else:
+        row = conn.execute("SELECT * FROM trace ORDER BY id DESC LIMIT 1").fetchone()
+    if row is None:
+        raise domain.ValidationError("no trace found to score")
+    # The trace row has no risk_lane column — derive it from its story so the
+    # context rules pick the right tier. Pass a dict so we can inject risk_lane.
+    data = {k: row[k] for k in row.keys()}
+    data["risk_lane"] = _lane_for_story(conn, row["story_id"])
+    result = context_score.score_row(data)
+    return context_score.format_assessment(row["id"], result)
+
+
 # ---------------------------------------------------------------- intervention (R1)
 def intervention_add(conn, a):
     domain.require(a.summary, "summary")
@@ -279,9 +299,18 @@ CLOSED_STATUSES = ("implemented", "rejected")
 
 def query(conn, a):
     table = a.table
+    # Pseudo-tables: computed views + raw SQL escape hatch (ported from
+    # repository-harness). These are not real tables, so route them first.
+    if table == "stats":
+        return _query_stats(conn, a)
+    if table == "friction":
+        return _query_friction(conn, a)
+    if table == "sql":
+        return _query_sql(conn, a)
     if table not in QUERYABLE:
         raise domain.ValidationError(
-            f"query: unknown table '{table}'. Choose: {', '.join(sorted(QUERYABLE))}"
+            f"query: unknown table '{table}'. Choose: "
+            f"{', '.join(sorted(QUERYABLE))}, stats, friction, sql"
         )
     sql = f"SELECT * FROM {table}"  # table name validated against allowlist above
     params = ()
@@ -325,6 +354,80 @@ def _resolve_limit(a):
     if limit <= 0:
         raise domain.ValidationError("--limit must be a positive integer")
     return limit
+
+
+# Tables counted by `query stats` (the at-a-glance durable-state summary).
+STATS_TABLES = ("intake", "story", "task", "decision", "backlog", "trace", "intervention")
+
+
+def _query_stats(conn, a):
+    """Row counts per durable table — a one-glance health summary.
+
+    Ported from repository-harness `query stats`."""
+    rows = []
+    for t in STATS_TABLES:
+        n = conn.execute(f"SELECT COUNT(*) AS c FROM {t}").fetchone()["c"]  # noqa: S608 (allowlist)
+        rows.append({"table": t, "count": n})
+    fields = ["table", "count"]
+    fmt = "json" if a.json else ("summary" if a.summary else "table")
+    # render.emit expects sqlite Row-likes; dicts work for json/summary/table here
+    # because render only does dict-style access. Wrap as dicts.
+    return render.emit(rows, fmt, fields)
+
+
+def _query_friction(conn, a):
+    """Traces that recorded harness_friction — the raw signal `propose` clusters.
+
+    Ported from repository-harness `query friction`."""
+    sql = ("SELECT id, story_id, agent, outcome, harness_friction, task_summary "
+           "FROM trace WHERE harness_friction IS NOT NULL AND TRIM(harness_friction) != '' "
+           "ORDER BY id DESC")
+    params = ()
+    limit = _resolve_limit(a)
+    if limit is not None:
+        sql += " LIMIT ?"
+        params = (limit,)
+    rows = conn.execute(sql, params).fetchall()
+    fields = ["id", "story_id", "agent", "outcome", "harness_friction"]
+    fmt = "json" if a.json else ("summary" if a.summary else "table")
+    out = render.emit(rows, fmt, fields)
+    if limit is not None and len(rows) == limit:
+        out += (f"\n\n… showing {limit} rows (default cap). "
+                f"Use --limit N or --all to see more.")
+    return out
+
+
+def _query_sql(conn, a):
+    """Run an ad-hoc READ-ONLY SELECT against harness.db for inspection.
+
+    Ported from repository-harness `query sql`. Read-only by policy: the
+    statement must be a single SELECT (or WITH … SELECT); anything that could
+    mutate state is rejected so an inspection command can never corrupt the DB."""
+    raw = getattr(a, "sql", None)
+    if not raw or not raw.strip():
+        raise domain.ValidationError('query sql needs a statement, e.g. query sql "SELECT * FROM story"')
+    stmt = raw.strip().rstrip(";").strip()
+    lowered = stmt.lower()
+    if not (lowered.startswith("select") or lowered.startswith("with")):
+        raise domain.ValidationError("query sql is read-only: only SELECT / WITH statements are allowed")
+    # Reject multiple statements (defense in depth — a stray ';' could smuggle a write).
+    if ";" in stmt:
+        raise domain.ValidationError("query sql: only a single statement is allowed (no ';')")
+    forbidden = ("insert", "update", "delete", "drop", "alter", "create",
+                 "replace", "attach", "detach", "pragma", "vacuum")
+    # Word-boundary check so column names like 'created_at' don't trip 'create'.
+    tokens = set(re.findall(r"[a-z_]+", lowered))
+    hit = tokens & set(forbidden)
+    if hit:
+        raise domain.ValidationError(
+            f"query sql is read-only: keyword(s) not allowed: {', '.join(sorted(hit))}")
+    try:
+        rows = conn.execute(stmt).fetchall()
+    except Exception as e:  # surface SQLite errors as validation errors, not tracebacks
+        raise domain.ValidationError(f"query sql failed: {e}")
+    fields = list(rows[0].keys()) if rows else []
+    fmt = "json" if a.json else ("summary" if a.summary else "table")
+    return render.emit(rows, fmt, fields)
 
 
 # ---------------------------------------------------------------- propose

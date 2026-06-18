@@ -203,6 +203,77 @@ def test_query_json_and_summary(dbfile, capsys):
     assert "id=t1" in capsys.readouterr().out
 
 
+# --------------------------------------------------- ported: query stats/friction/sql
+def test_query_stats_counts(dbfile, capsys):
+    run(dbfile, "init")
+    run(dbfile, "story", "add", "--id", "s1", "--title", "T", "--risk-lane", "tiny")
+    run(dbfile, "query", "stats")
+    out = capsys.readouterr().out
+    assert "story" in out and "1" in out
+    assert "trace" in out and "intervention" in out
+
+
+def test_query_friction_only_friction_traces(dbfile, capsys):
+    run(dbfile, "init")
+    run(dbfile, "trace", "--summary", "clean run no friction", "--outcome", "completed")
+    run(dbfile, "trace", "--summary", "hit a snag", "--outcome", "partial",
+        "--friction", "skill-map lookup slow")
+    run(dbfile, "query", "friction", "--summary")
+    out = capsys.readouterr().out
+    assert "skill-map lookup slow" in out
+    assert "clean run no friction" not in out
+
+
+def test_query_sql_read_ok(dbfile, capsys):
+    run(dbfile, "init")
+    run(dbfile, "story", "add", "--id", "s1", "--title", "T", "--risk-lane", "tiny")
+    run(dbfile, "query", "sql", "SELECT id FROM story")
+    assert "s1" in capsys.readouterr().out
+
+
+def test_query_sql_write_rejected(dbfile, capsys):
+    run(dbfile, "init")
+    code = run(dbfile, "query", "sql", "DELETE FROM story")
+    assert code == 2
+    assert "read-only" in capsys.readouterr().err
+
+
+def test_query_sql_multi_statement_rejected(dbfile, capsys):
+    run(dbfile, "init")
+    code = run(dbfile, "query", "sql", "SELECT 1; DROP TABLE story")
+    assert code == 2
+    assert "single statement" in capsys.readouterr().err
+
+
+def test_query_sql_empty_rejected(dbfile, capsys):
+    run(dbfile, "init")
+    code = run(dbfile, "query", "sql")
+    assert code == 2
+    assert "needs a statement" in capsys.readouterr().err
+
+
+# --------------------------------------------------- ported: score-context
+def test_score_context_implementation_lane(dbfile, capsys):
+    run(dbfile, "init")
+    run(dbfile, "story", "add", "--id", "s1", "--title", "Auth", "--risk-lane", "normal")
+    run(dbfile, "trace", "--summary", "impl backend phase", "--outcome", "partial",
+        "--story-id", "s1", "--agent", "coder",
+        "--files-read", "docs/caw/stories/s1/plan.md,docs/caw/ARCHITECTURE.md",
+        "--files-changed", "src/auth.ts")
+    code = run(dbfile, "score-context")
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "phase: implementation" in out
+    assert "Relevant story packet" in out
+
+
+def test_score_context_no_trace(dbfile, capsys):
+    run(dbfile, "init")
+    code = run(dbfile, "score-context")
+    assert code == 2
+    assert "no trace found" in capsys.readouterr().err
+
+
 def _seed_stories(dbfile, n):
     run(dbfile, "init")
     conn = sqlite3.connect(dbfile)

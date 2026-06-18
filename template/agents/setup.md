@@ -1,6 +1,6 @@
 ---
 name: setup
-description: PROACTIVELY activate when user runs /caw-setup. Detects project tech stack, copies caw-curated skills, asks user before pulling hub skills, and generates conventions.md + skill-map.yaml. Required as first step after /init.
+description: PROACTIVELY activate when user runs /caw-setup. Detects project tech stack, symlinks caw-curated skills (global core + stack-matched) from the caw repo, asks user before pulling hub skills, and generates conventions.md + skill-map.yaml. Required as first step after /init.
 model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 context: fork
@@ -54,8 +54,8 @@ You run **once** per project (and on-demand via `--refresh` or `--add <skill>`).
 | Invocation | Behavior |
 |---|---|
 | `/caw-setup` (no flags) | First-run: detect, install caw skills, ask re hub skills, generate conventions |
-| `/caw-setup --refresh` | Re-evaluate full install list **from scratch** (workflow + product defaults + stack-mapped) and ensure every entry exists on disk via Phase 4.1's `cp -R -f`. Do not skip skills just because `.agents/skills/<name>` already exists — re-install is idempotent and guarantees latest hub version. Then regenerate `skill-map.yaml` and `conventions.md`. |
-| `/caw-setup --add <skill>` | Install one specific skill (caw or hub) referenced by Plan |
+| `/caw-setup --refresh` | Re-evaluate the install list **from scratch** (`global_core` + applicable `cross_cutting` + stack-mapped — NOT `on_demand`) and ensure every entry is symlinked via Phase 4.1's `ln -sfn`. Do not skip skills just because `.claude/skills/<name>` already exists — re-linking is idempotent. Then regenerate `skill-map.yaml` and `conventions.md`. |
+| `/caw-setup --add <skill>` | Install one specific skill (caw `on_demand`/stack, or hub) referenced by a Plan or task. Caw skills → symlink from `<CAW_HOME>/template/skills/`; hub → `npx skills add`. |
 
 ## Workflow
 
@@ -96,33 +96,35 @@ This scans **all** `package.json` files (root + `apps/*` + `packages/*` + `servi
    - "uses Drizzle, not Prisma" → keep `drizzle-best-practices`, drop any prisma matches the script returned (transitive dep noise)
 3. Optionally drop skills that match by trigger but don't fit the project's true scope (e.g. script may match `native-data-fetching` on a web-only project because `@tanstack/react-query` triggers it; drop if no mobile/Expo). Log each drop with a one-line reason so the user can see the reasoning in skill-map.yaml.
 
-**Do not** add skills outside the script output unless they are mandatory defaults (next sub-section) or user-approved hub skills (Phase 3).
+**Do not** add skills outside the script output unless they are `global_core` (next sub-section), an applicable `cross_cutting` entry, or a user-approved hub skill (Phase 3). **Do NOT install `on_demand` skills** — those are pulled later with `/caw-setup --add <name>` only when a task or Plan needs them. This keeps per-session context small (every installed skill's description is injected every session).
 
-**MANDATORY DEFAULTS — must always be added to the install list, regardless of detected stack, regardless of `--refresh` vs first-run.** These are not "considerations" — every entry must end up in Phase 4.1's batch loop. Missing any from the installed `.agents/skills/` (and from `skill-map.yaml`) is a critical failure.
+**GLOBAL CORE — must always be installed, regardless of detected stack, regardless of `--refresh` vs first-run.** This is the small (~8) universal backbone. Every entry must end up in Phase 4.1's symlink loop. Missing any from `<project>/.claude/skills/` (and from `skill-map.yaml`) is a critical failure.
 
-**The default list is NOT hardcoded here — it lives in `<CAW_HOME>/skills-defaults.yaml` (single source of truth).** Read it at the start of Phase 2 so the list never drifts from the prompt:
+**The core list is NOT hardcoded here — it lives in `<CAW_HOME>/skills-defaults.yaml` (single source of truth).** Read it at the start of Phase 2 so the list never drifts from the prompt:
 
 ```bash
-"$CAW_HOME/cli/check-defaults.py" --list   # prints workflow / product / cross_cutting groups
+"$CAW_HOME/cli/check-defaults.py" --list   # prints global_core / on_demand / cross_cutting tiers
 ```
 
-- **workflow** + **product** defaults: add **unconditionally** (every project).
-- **cross_cutting** defaults: add per each entry's `condition` in the YAML
+- **global_core**: install **unconditionally** (every project — the ~8 backbone).
+- **cross_cutting**: install per each entry's `condition` in the YAML
   (`typescript-advanced-types` only when TS is present; `github`/`github-actions`
   per repo signals).
+- **on_demand**: do NOT install. These are planning/product/breadth skills pulled
+  via `/caw-setup --add <name>` when actually needed.
 
-**How to apply:** at the end of Phase 2, your install list = (a) stack-mapped skills + (b) every `workflow` + `product` entry from `skills-defaults.yaml` + (c) the applicable `cross_cutting` entries — even if some already exist in `.agents/skills/`. Phase 4.1's `cp -R -f` is idempotent. **Refresh re-evaluates the full list from scratch and ensures every entry exists on disk — it does not skip already-installed skills.**
+**How to apply:** at the end of Phase 2, your install list = (a) stack-mapped skills + (b) every `global_core` entry + (c) the applicable `cross_cutting` entries. Phase 4.1's `ln -sfn` is idempotent. **Refresh re-evaluates this list from scratch and ensures every entry is symlinked — it does not skip already-linked skills, and it does NOT add on_demand skills.**
 
 **Pre-flight gate before Phase 3 (mechanical, not by counting in your head).** After building the install list and before Phase 4 finishes, run:
 
 ```bash
-"$CAW_HOME/cli/check-defaults.py" "<project-path>"   # exit 2 = a default is missing
+"$CAW_HOME/cli/check-defaults.py" "<project-path>"   # exit 2 = a global_core skill is missing
 ```
 
-It reads `skills-defaults.yaml` and asserts every unconditional default exists
-under `<project>/.agents/skills/`. Exit 2 ⟶ you missed defaults; do NOT proceed to
-Phase 5 — go back and install the full set. (When the maintainer adds a new
-default, they edit `skills-defaults.yaml` only — this prompt does not change.)
+It reads `skills-defaults.yaml` and asserts every `global_core` skill exists
+under `<project>/.claude/skills/`. Exit 2 ⟶ you missed core skills; do NOT proceed to
+Phase 5 — go back and symlink the full core set. (When the maintainer changes the
+core, they edit `skills-defaults.yaml` only — this prompt does not change.)
 
 ### Phase 3 — Identify hub gaps (PRIORITY 2)
 
@@ -146,83 +148,90 @@ For stack components NOT covered by caw catalog:
 
 ### Phase 4 — Install (MANDATORY EXECUTION)
 
-⚠️ **You MUST actually run the install commands in this task** (`cp -R` for caw skills, `npx skills add` for hub skills). Do not skip to writing `skill-map.yaml` — the map records what was installed, it is not a substitute for installing. Writing the map without copying skill files = critical failure.
+⚠️ **You MUST actually run the install commands in this task** (`ln -sfn` for caw skills, `npx skills add` for hub skills). Do not skip to writing `skill-map.yaml` — the map records what was installed, it is not a substitute for installing. Writing the map without creating symlinks = critical failure.
 
-**Step 4.1 — Install caw-curated skills via `cp` + symlink (offline, fast)**
+**Model: symlink straight from the caw repo — NO per-project copy.**
+The caw repo (`<CAW_HOME>/template/skills/`) is the single source of every skill
+and it travels with the caw repo's git. Each project only creates **symlinks** in
+`.claude/skills/` pointing back into `<CAW_HOME>`. This means:
+- Source of truth = caw repo. `git pull` in caw updates skills for every project.
+- A teammate reproduces the exact set by cloning caw, running `caw2 init` (writes
+  `caw_home` into `.claude/caw.config.json`), then `/caw-setup` — which reads that
+  config and re-creates the symlinks against THEIR `caw_home` path.
+- `.claude/` is gitignored (machine-local), so symlinks never leak absolute paths
+  into the project repo.
 
-Loop through the FULL install list built in Phase 2 — that means stack-mapped skills + 14 workflow defaults + 7 product defaults + 3 cross-cutting defaults (≥ 24 entries total). Do NOT filter to "only stack-mapped" or "only missing". `cp -R` with `-f` is idempotent.
+**Step 4.1 — Symlink caw skills (offline, fast)**
+
+Loop through the install list built in Phase 2 — stack-mapped + `global_core` (~8) + applicable `cross_cutting`. Do NOT add `on_demand` skills. `ln -sfn` is idempotent.
 
 ```bash
 cd <project-path>
-mkdir -p .agents/skills .claude/skills
+mkdir -p .claude/skills
 
-# Repeat per skill:
+# Repeat per skill (absolute symlink into the caw repo):
 SKILL=<skill-name>
-cp -R "$CAW_HOME/template/skills/$SKILL" .agents/skills/
-ln -sfn "../../.agents/skills/$SKILL" ".claude/skills/$SKILL"
+ln -sfn "$CAW_HOME/template/skills/$SKILL" ".claude/skills/$SKILL"
 ```
 
-Batch example for a typical Next.js project (one Bash call — covers stack + all defaults). Skills can come from two source dirs in caw repo:
-
-- `<CAW_HOME>/template/skills/<name>/` — hub skills (most defaults, framework skills)
-- `<CAW_HOME>/templates/skills/<name>/` — caw-owned skills (`api-contract`, `error-handling-patterns`, `nextjs-feature`, `better-context`, `react-component-testing`)
-
-The script auto-resolves whichever path exists:
+Batch example for a typical Next.js project (one Bash call — stack matches + core + cross-cutting). All skills live under `<CAW_HOME>/template/skills/`:
 
 ```bash
 cd /path/to/project
-mkdir -p .agents/skills .claude/skills
+mkdir -p .claude/skills
 for SKILL in \
   next-best-practices vercel-react-best-practices shadcn tanstack-query \
-  to-prd webapp-testing javascript-testing-patterns react-component-testing \
   test-driven-development verification-before-completion \
-  code-review-excellence performance accessibility refactor \
-  improve-codebase-architecture systematic-debugging \
-  find-skills validate-skills \
-  prd-development user-story user-story-splitting prioritization-advisor \
-  business-analyst create-specification roadmap-planning \
+  code-review-excellence systematic-debugging refactor \
+  api-contract error-handling-patterns react-component-testing \
   typescript-advanced-types github github-actions; do
-  if [[ -d "$CAW_HOME/template/skills/$SKILL" ]]; then
-    SRC="$CAW_HOME/template/skills/$SKILL"
-  elif [[ -d "$CAW_HOME/templates/skills/$SKILL" ]]; then
-    SRC="$CAW_HOME/templates/skills/$SKILL"
-  else
+  SRC="$CAW_HOME/template/skills/$SKILL"
+  if [[ ! -d "$SRC" ]]; then
     echo "⚠️  $SKILL not found in caw repo — skipping"
     continue
   fi
-  cp -R "$SRC" .agents/skills/
-  ln -sfn "../../.agents/skills/$SKILL" ".claude/skills/$SKILL"
+  ln -sfn "$SRC" ".claude/skills/$SKILL"
   echo "✅ $SKILL"
 done
 ```
 
-The list is long on purpose. Workflow + product defaults are always present. Stack-mapped skills are added on top.
+The first line (stack matches) varies by project; the rest = `global_core` (8) +
+applicable `cross_cutting`. Keep the list TIGHT — every extra symlink costs
+per-session context. `on_demand` skills are pulled later via `/caw-setup --add`.
 
 What this does:
-1. `cp -R` copies the skill folder → real folder at `.agents/skills/<name>/`
-2. `ln -sfn ../../.agents/skills/<name>` creates relative symlink at `.claude/skills/<name>`
-3. `-f` force (replace if exists), `-n` treat symlink as file (idempotent)
+1. `ln -sfn "$CAW_HOME/template/skills/<name>" .claude/skills/<name>` — absolute
+   symlink into the caw repo (resolved per-machine from `caw.config.json`).
+2. `-f` force (replace if exists), `-n` treat symlink as file (idempotent).
+
+> No `.agents/skills/` copy is made. (Older caw versions copied into `.agents/skills/`
+> then symlinked; the symlink-to-source model replaces that. If a project still has a
+> populated `.agents/skills/`, leave it — `.claude/skills/` symlinks to the repo take
+> precedence and `.agents/` is gitignored.)
 
 **Step 4.2 — Verify (REQUIRED — confirm execution before Phase 5)**
 
-After running ALL copy commands above, run this check:
+After running ALL symlink commands above, run this check:
 
 ```bash
-echo "=== .agents/skills count ==="
-ls .agents/skills/ 2>/dev/null | wc -l
 echo "=== .claude/skills symlinks ==="
-ls -la .claude/skills/ 2>/dev/null | head -5
+ls -la .claude/skills/ 2>/dev/null | head -8
+echo "=== resolve check (a core skill must point into caw repo) ==="
+readlink .claude/skills/test-driven-development
 ```
 
 Expected:
-- `wc -l` ≥ **24** (14 workflow + 7 product + 3 cross-cutting) plus stack matches
-- `ls -la` shows entries starting with `lrwxr-xr-x` (symlinks), NOT `drwxr-xr-x` (folders)
+- `ls -la` shows entries starting with `lrwxr-xr-x` (symlinks), NOT `drwxr-xr-x`.
+- `readlink` resolves into `<CAW_HOME>/template/skills/...`.
+- Total symlink count is SMALL (core 8 + stack 3-8 + cross-cutting ≤3 = ~12-18),
+  not 24+. A large count means on_demand leaked in — remove them.
 
-Spot-check the 7 product defaults specifically:
+Spot-check the global_core specifically:
 ```bash
-for SKILL in prd-development user-story user-story-splitting prioritization-advisor \
-             business-analyst create-specification roadmap-planning; do
-  [[ -d ".agents/skills/$SKILL" ]] && echo "✓ $SKILL" || echo "✗ MISSING: $SKILL"
+for SKILL in test-driven-development verification-before-completion \
+             code-review-excellence systematic-debugging refactor \
+             api-contract error-handling-patterns react-component-testing; do
+  [[ -e ".claude/skills/$SKILL" ]] && echo "✓ $SKILL" || echo "✗ MISSING: $SKILL"
 done
 ```
 
@@ -244,13 +253,14 @@ Example: `npx skills add stripe/agent-toolkit -s stripe-best-practices -y`
 The `npx skills add` CLI creates `.agents/skills/<name>/` + symlink at `.claude/skills/<name>/` automatically.
 
 **Constraints:**
-- ⚠️ For caw skills: use `cp -R` + `ln -sfn` (deterministic, offline). Not `npx skills add` with local path.
-- ⚠️ For hub skills only: use `npx skills add <repo>`.
+- ⚠️ For caw skills (in `<CAW_HOME>/template/skills/`): use `ln -sfn` to symlink
+  straight from the caw repo (deterministic, offline, no copy). Not `npx skills add`.
+- ⚠️ For hub skills only (NOT in the caw repo): use `npx skills add <repo>`.
 
 **Do NOT hand-write a `skills-lock.json`.** The `npx skills add` CLI maintains its
 own `skills-lock.json` at the project root automatically — that is the lockfile
-for hub skills, and caw does not touch it. caw-curated skills (installed via
-`cp -R`) are recorded in `skill-map.yaml` (Phase 5), which is the single
+for hub skills, and caw does not touch it. caw-curated skills (symlinked from the
+caw repo) are recorded in `skill-map.yaml` (Phase 5), which is the single
 caw-owned record of what is installed and where it came from. There is no
 separate caw lockfile.
 
@@ -495,12 +505,11 @@ Durable layer (caw v2):
   ✓ .claude/harness.db initialized + queryable
 
 Generated:
-  ✓ .agents/skills/ (28 skills)
-  ✓ .claude/skills/ (28 symlinks)
+  ✓ .claude/skills/ (~14 symlinks → caw repo: core + stack + cross-cutting)
   ✓ .claude/skill-map.yaml
   ✓ docs/caw/conventions.md
   ✓ .claude/rules/project.md
-  (skills-lock.json at project root is maintained by the `npx skills` CLI)
+  (skills-lock.json at project root is maintained by the `npx skills` CLI, hub skills only)
 
 Next: /caw-plan "<feature description>"
 ```
@@ -515,22 +524,22 @@ If a downstream agent (planner/coder/tester/reviewer) needs a skill not in `.cla
 ```
 
 The user then runs `/caw-setup --add <skill>` which:
-1. If `<skill>` is in caw catalog → copy from caw repo
-2. If not → search hub via `find-skills`, ask user to confirm install
+1. If `<skill>` is in the caw repo (`<CAW_HOME>/template/skills/<skill>`) → symlink it into `.claude/skills/`
+2. If not → search hub via `find-skills`, ask user to confirm install (`npx skills add`)
 
 ## Constraints
 
 - **Always invoke the `Skill` tool for `find-skills` before searching the hub (Phase 3).** Naming hub skills in conversation without loading `find-skills` first leads to hallucinated repo paths.
 - **Never silently pull hub skills.** User must explicitly approve each one.
-- **Caw skills are copies, not symlinks back to caw repo.** Project owns its skills after setup.
+- **Caw skills are symlinks INTO the caw repo, not copies.** The repo (`<CAW_HOME>/template/skills/`) is the source of truth; `git pull` in caw updates every project. Symlinks are re-created per-machine from `caw.config.json` (`.claude/` is gitignored, so paths never leak).
+- **Keep the installed set TIGHT.** Only `global_core` + stack-matched + applicable `cross_cutting`. `on_demand` skills are added later via `--add`. Every extra symlink = per-session context cost.
 - **CLAUDE.md is read-only input.** Don't edit it. If user wants to add custom instructions, they edit CLAUDE.md and re-run `/caw-setup --refresh`.
 - **Idempotent.** Running `/caw-setup` twice with same project state should produce same output.
 
 ## Output
 
 This agent does not write a task file (no `docs/caw/stories/<id>/`). It writes project-level config:
-- `.agents/skills/` — real skill folders (caw-curated via `cp -R`, hub via `npx skills add`)
-- `.claude/skills/` (symlinks)
+- `.claude/skills/` — symlinks into `<CAW_HOME>/template/skills/` (caw-curated); hub skills (if any) go through `npx skills add` into `.agents/skills/` + its own symlink
 - `.claude/skill-map.yaml` — stack → skill map; the single caw-owned record of what is installed (agents read this to verify `skills_hint`)
 - `docs/caw/conventions.md`
 - `.claude/rules/project.md`

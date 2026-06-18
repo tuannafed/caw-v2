@@ -1,6 +1,6 @@
 # Claude Agent Workflow (caw)
 
-> Skill-first agent pipeline for any project. 5 generic agents + 50+ curated skills + 5 caw-owned skills. Agents run natively in Claude Code.
+> Skill-first agent pipeline for any project. 5 generic agents + 50+ curated skills + 4 caw-owned skills. Agents run natively in Claude Code.
 
 ---
 
@@ -80,10 +80,10 @@ Claude Code's built-in command. Scans the codebase and writes `CLAUDE.md`. Requi
 ```
 
 The `setup` agent:
-1. Reads `CLAUDE.md` + caw's `SKILLS-CATALOG.md`
+1. Reads `CLAUDE.md` + caw's `SKILLS-CATALOG.md` and `skills-defaults.yaml`
 2. Detects tech stack from `package.json` + file scan
-3. Copies caw-curated skills (offline copy from caw repo)
-4. Asks before pulling external hub skills (no silent installs)
+3. Symlinks global_core + stack-matched skills (offline from caw repo via `ln -sfn`)
+4. Asks before pulling on-demand / external hub skills (no silent installs)
 5. Generates `.claude/skill-map.yaml` + `.claude/conductor/conventions.md`
 
 After setup, your project knows its stack and has the right skills installed.
@@ -189,18 +189,18 @@ heuristics, and the tester derives its test mode from it (no separate
 
 Two sources, both end up in `.claude/skills/`:
 
-| Source       | Location                              | Purpose                                                                       |
-| ------------ | ------------------------------------- | ----------------------------------------------------------------------------- |
-| **Source**   | `template/skills/<name>/SKILL.md`     | Vendor-curated skill bundles, copied into `<project>/.agents/skills/` on setup |
-| **Installed**| `<project>/.agents/skills/<name>/`    | Where setup copies them; symlinked from `<project>/.claude/skills/`            |
+| Source       | Location                                  | Purpose                                                                          |
+| ------------ | ----------------------------------------- | -------------------------------------------------------------------------------- |
+| **Source**   | `<CAW_HOME>/template/skills/<name>/SKILL.md` | 65 caw-owned skills; symlinked into projects from the caw repo (source of truth) |
+| **Installed**| `<project>/.claude/skills/<name>/`        | Symlinks to caw-owned skills in the caw repo + `.agents/skills/` for hub skills  |
 
-**Caw-owned skills (5):** `api-contract`, `error-handling-patterns`, `nextjs-feature`, `better-context`, `react-component-testing`
+**Caw-owned skills (65):** test-driven-development, verification-before-completion, code-review-excellence, systematic-debugging, refactor, api-contract, error-handling-patterns, react-component-testing, and 57 more.
 
 **Hub skills (50+):** Curated from Anthropic, Vercel, Prisma, Stripe, Cloudflare, TanStack, Auth0, Expo, Software Mansion, Callstack, GitHub, Addy Osmani, Matt Pocock, and more. See [SKILLS-CATALOG.md](SKILLS-CATALOG.md) for the full list.
 
 **Priority rule:** if a topic is covered by a hub skill, prefer hub. Caw-owned skill exists only when no authoritative external source covers it.
 
-**Init flow:** `caw init` ships **no skills** — only agents, commands, rules, and hooks. `/caw-setup` (run after `/init`) reads `<CAW_HOME>/SKILLS-CATALOG.md`, detects stack, copies the 5 caw-owned skills + matched caw-curated hub skills (offline `cp -R` + symlink), then asks before pulling additional skills from the live hub.
+**Init flow:** `caw init` ships **no skills** — only agents, commands, rules, and hooks. `/caw-setup` (run after `/init`) reads `<CAW_HOME>/SKILLS-CATALOG.md` and `<CAW_HOME>/skills-defaults.yaml`, detects stack, symlinks global_core (~8 universal) + stack-matched skills (offline `ln -sfn` from caw repo), then asks before pulling on-demand skills from the live hub. This tiered model keeps per-session context overhead small while maintaining offline-first reproducibility.
 
 ### Adding a hub skill to caw repo
 
@@ -232,8 +232,8 @@ caw repo/
 │   ├── commands/               7 command files (caw-setup, caw-plan, caw-code, ...)
 │   ├── rules/                  Non-overridable coding rules (common/ + typescript/ + react/)
 │   ├── conductor/              ADR / intake templates, knowledge, harness-backlog
-│   ├── config/                 gitleaks, commitlint, cursorrules, settings.json, PR template
-│   ├── skills/                 65 hub skills (vendor-curated)
+│   ├── config/                 gitleaks, commitlint, AGENTS.md, settings.json, PR template
+│   ├── skills/                 65 caw-owned skills (vendor-curated + workflow + testing)
 │   └── durable/                the harness durable layer
 │       ├── bin/harness-cli     stdlib Python CLI
 │       ├── harness/            db, domain, commands, scoring, audit, propose, lint…

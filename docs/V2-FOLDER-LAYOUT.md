@@ -26,7 +26,7 @@ caw/
 │   ├── commands/             (← commands/)
 │   ├── rules/                (← rules/)
 │   ├── conductor/            (← conductor/)
-│   ├── config/               (← templates/  — gitleaks, commitlint, cursorrules…)
+│   ├── config/               (← templates/  — gitleaks, commitlint, AGENTS.md…)
 │   ├── skills/               (← .agents/skills/)
 │   └── durable/              # the harness durable layer (kept together)
 │       ├── bin/harness-cli   (← scripts/bin/)

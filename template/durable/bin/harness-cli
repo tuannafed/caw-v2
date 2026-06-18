@@ -158,9 +158,10 @@ def build_parser():
     tr.add_argument("--notes")
     tr.set_defaults(_fn=commands.trace_add)
 
-    # query <table>
-    q = sub.add_parser("query", help="query a table")
-    q.add_argument("table")
+    # query <table> | query stats | query friction | query sql "<SELECT …>"
+    q = sub.add_parser("query", help="query a table, the stats/friction views, or raw SQL")
+    q.add_argument("table", help="intake|story|task|decision|backlog|trace|intervention|tool|stats|friction|sql")
+    q.add_argument("sql", nargs="?", help="when table=sql: a read-only SELECT to run")
     q.add_argument("--json", action="store_true")
     q.add_argument("--summary", action="store_true")
     q.add_argument("--open", action="store_true", help="backlog: proposed+accepted only")
@@ -207,6 +208,11 @@ def build_parser():
     st = sub.add_parser("score-trace", help="score a trace's quality tier")
     st.add_argument("--id", type=int, help="trace id (default: most recent)")
     st.set_defaults(_fn=commands.score_trace)
+
+    # score-context — assess a trace's context reads against lane+phase rules
+    sc = sub.add_parser("score-context", help="score a trace's context reads (CONTEXT_RULES)")
+    sc.add_argument("--id", type=int, help="trace id (default: most recent)")
+    sc.set_defaults(_fn=commands.score_context)
 
     # audit — entropy/drift score over DB + conductor files
     au = sub.add_parser("audit", help="entropy/drift score (lower is better)")

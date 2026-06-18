@@ -21,15 +21,15 @@ project/
   .claude/            # what Claude Code natively loads
     agents/  commands/  rules/  hooks/  settings.json
   docs/
-    HARNESS.md  FEATURE_INTAKE.md  ARCHITECTURE.md  ...   # policy (this folder)
-    conductor/        # prose the agents read/write
+    caw/              # caw policy + prose the agents read/write
+      HARNESS.md  FEATURE_INTAKE.md  ARCHITECTURE.md  ...   # policy (this folder)
       conventions.md  knowledge.md  intake.md  adr.md
       harness-backlog.md
       decisions/      # ADR markdown (NNNN-*.md)
       stories/<story-id>/  plan.md  code.md  tests.md  review.md
-    advisories/       # security advisories
+      advisories/     # security advisories
   scripts/
-    bin/harness-cli   schema/   harness/   # durable layer (CLI + SQLite)
+    caw/bin/harness-cli   caw/schema/   caw/harness/   # durable layer (CLI + SQLite)
   harness.db          # operational state (gitignored)
 ```
 

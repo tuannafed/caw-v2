@@ -173,13 +173,6 @@ export const MOCK_SKILLS = [
     path: '.claude/skills/api-contract/SKILL.md',
   },
   {
-    name: 'better-context',
-    folder: 'better-context',
-    description: 'CLI for codebase intelligence. PageRank centrality, token-budget optimization.',
-    metadata: { domain: 'engineering', version: '2.0' },
-    path: '.claude/skills/better-context/SKILL.md',
-  },
-  {
     name: 'error-handling-patterns',
     folder: 'error-handling-patterns',
     description: 'CAW error envelope spec. NestJS/FastAPI exception filters with status→code mapping.',

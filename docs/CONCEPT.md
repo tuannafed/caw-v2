@@ -125,22 +125,27 @@ Two sources of skills, both end up in `.claude/skills/` of the target project:
 
 **Source of truth split:**
 
-- `templates/skills/` — caw-owned: workflow handoff (`api-contract`, `error-handling-patterns`), project archetype (`nextjs-feature`), tooling integration (`better-context`). Modify freely.
-- `.agents/skills/` — hub-curated by vendors. Treat as immutable. Update via `npx skills update`.
+- `<CAW_HOME>/templates/skills/` — caw-owned: the authoritative source of all 65 caw-owned skills. Workflow (api-contract, error-handling-patterns), testing (test-driven-development, react-component-testing), debugging, refactoring, etc. Travels with the caw repo's git. Modify freely.
+- `.agents/skills/` — hub-curated by vendors (external). Treat as immutable. Update via `npx skills update`.
 
 **Priority rule:** if a topic is covered by a hub skill, prefer hub. Caw-owned skill exists only when no authoritative external source covers it.
 
-### Mandatory defaults (always installed)
+### Skill Tiers
 
-`setup` agent installs these regardless of detected stack — downstream agents depend on them:
+The setup agent installs skills in tiers, defined in `<CAW_HOME>/skills-defaults.yaml`. This tiered model reduces per-session context overhead (Claude Code injects every installed skill's name+description into context EVERY session).
 
-**Workflow defaults (11):**
-`to-prd`, `webapp-testing`, `javascript-testing-patterns`, `react-component-testing`, `code-review-excellence`, `performance`, `accessibility`, `refactor`, `systematic-debugging`, `find-skills`, `validate-skills`
+**Global Core (~8 universal):** Always symlinked. Every task, every stack. These form the hard floor:
+- `test-driven-development`, `verification-before-completion`, `code-review-excellence`, `systematic-debugging`, `refactor` (caw-owned: `api-contract`, `error-handling-patterns`, `react-component-testing`)
 
-**Product/PM defaults (7):**
-`prd-development`, `user-story`, `user-story-splitting`, `prioritization-advisor`, `business-analyst`, `create-specification`, `roadmap-planning`
+Symlinked directly from `<CAW_HOME>/templates/skills/` into `<project>/.claude/skills/` via `ln -sfn`. Offline, deterministic, idempotent.
 
-Stack-mapped skills are added on top. Minimum install count is 18.
+**Stack-Matched (3-8 per project):** Produced by `cli/match-skills.py` based on detected deps (e.g., `nestjs-best-practices`, `prisma-client-api`). Also symlinked from the caw repo. Typically ~5 per project; combined with global_core gives 13-15 baseline installs.
+
+**On-Demand (~15 planning/breadth skills):** NEVER installed by default. Pulled with `/caw-setup --add <name>` only when a task or Plan actually needs them. Examples: `to-prd`, `prd-development`, `user-story`, `performance`, `accessibility`, `find-skills`.
+
+**Cross-Cutting (3 conditional):** Symlinked when conditions hold (e.g., `typescript-advanced-types` if `tsconfig.json` exists, `github` always). Cheap, near-universal for caw's target stacks.
+
+The hard floor the pre-flight check enforces: every global_core entry must exist under `<project>/.claude/skills/`. Source: `<CAW_HOME>/skills-defaults.yaml`.
 
 ### Skill catalog
 

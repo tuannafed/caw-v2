@@ -34,6 +34,28 @@ If a `Skill` call errors (skill not installed), **abort** the current step with:
 Do not proceed with a missing skill — agents must not silently fall back to
 generic/outdated knowledge. Do not auto-install; the user runs `/caw-setup --add`.
 
+If a **global_core** skill is the one missing (the ~8 universal backbone:
+`test-driven-development`, `verification-before-completion`, `code-review-excellence`,
+`systematic-debugging`, `refactor`, `api-contract`, `error-handling-patterns`,
+`react-component-testing`), it means `/caw-setup` has not run on this machine yet
+(or the symlinks broke). Tell the user to run `/caw-setup` (not `--add`) — it
+re-creates the full core symlink set from the caw repo via `caw.config.json`.
+
+## Skill install tiers (context-optimized model)
+
+caw installs skills as **symlinks** from the caw repo (`<CAW_HOME>/template/skills/`)
+into `.claude/skills/`. Claude Code injects every installed skill's description into
+context every session, so the set is kept deliberately small:
+
+- **global_core** (~8) — always symlinked. The universal backbone above.
+- **stack-matched** (3-8) — symlinked per the project's detected deps.
+- **on_demand** — NOT installed by default (planning/product/breadth skills).
+  Pulled with `/caw-setup --add <name>` when a task or Plan actually needs them.
+
+So a `skills_hint` may name an `on_demand` skill that isn't symlinked yet — that
+is expected. The failed-load path above (`/caw-setup --add`) is the normal way to
+bring one in, not an error in the Plan.
+
 ## Why
 
 Skills carry framework-specific patterns and gotchas that override an agent's

@@ -1,24 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* Geist Sans — variable font from package */
-@font-face {
-  font-family: 'Geist';
-  src: url('/fonts/Geist-Variable.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Geist Mono — variable font from package */
-@font-face {
-  font-family: 'Geist Mono';
-  src: url('/fonts/GeistMono-Variable.woff2') format('woff2');
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -142,18 +124,17 @@
   }
   html {
     font-size: 16px;
-    font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    font-family: ui-sans-serif, system-ui, sans-serif;
   }
   body {
     @apply bg-background text-foreground text-sm leading-relaxed;
-    font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-family: ui-sans-serif, system-ui, sans-serif;
   }
   code,
   pre,
   kbd,
   .font-mono {
-    font-family: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
+    font-family: ui-monospace, 'SF Mono', monospace;
   }
 }
 
@@ -184,10 +165,10 @@
 }
 
 /*
-  Display font for hero headings — Geist with tighter tracking.
+  Display style for hero headings — default sans with tighter tracking.
 */
 .font-display {
-  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  font-family: ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.03em;
   font-weight: 700;
 }

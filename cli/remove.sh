@@ -27,8 +27,6 @@ set -euo pipefail
 #   .claudeignore             — caw-owned (init only creates it when absent)
 #   commitlint.config.cjs     — caw-owned commit-lint config
 #   AGENTS.md                 — Codex CLI + Antigravity cross-tool rules
-#   .cursorrules              — Cursor AI rules
-#   .github/copilot-instructions.md — GitHub Copilot rules
 #   CLAUDE.md                 — project context file (prompts for confirmation)
 #   backlog/                  — Astro UI source (prompts for confirmation)
 #
@@ -111,7 +109,7 @@ echo ""
 DOTCLAUDE="$PROJECT_PATH/.claude"
 # caw v2 layout: conductor/advisories under docs/, durable layer + db at root
 CONDUCTOR_DIR="$PROJECT_PATH/docs/caw"
-ADVISORIES_DIR="$PROJECT_PATH/docs/advisories"
+ADVISORIES_DIR="$PROJECT_PATH/docs/caw/advisories"
 SCRIPTS_DIR_PROJ="$PROJECT_PATH/scripts"
 
 declare -a TO_REMOVE=()
@@ -220,11 +218,13 @@ if [[ -d "$DOTCLAUDE/hooks" ]]; then
   TO_REMOVE_LABELS+=(".claude/hooks/")
 fi
 
-# docs/advisories/ — entire directory
-if [[ -d "$ADVISORIES_DIR" ]]; then
-  TO_REMOVE+=("$ADVISORIES_DIR")
-  TO_REMOVE_LABELS+=("docs/advisories/")
-fi
+# docs/caw/advisories/ — entire directory (also clean legacy docs/advisories/)
+for adv_dir in "$ADVISORIES_DIR" "$PROJECT_PATH/docs/advisories"; do
+  if [[ -d "$adv_dir" ]]; then
+    TO_REMOVE+=("$adv_dir")
+    TO_REMOVE_LABELS+=("${adv_dir#"$PROJECT_PATH"/}/")
+  fi
+done
 
 # Durable layer under scripts/caw/ (caw-owned only — never the whole scripts/).
 for sub in bin/harness-cli harness schema; do
@@ -260,8 +260,7 @@ fi
 
 # Caw-owned cross-IDE / tooling files at project root (init copies these only
 # when absent, never overwriting user files — so removing them is symmetric).
-for rel in .claudeignore commitlint.config.cjs AGENTS.md .cursorrules \
-           .github/copilot-instructions.md; do
+for rel in .claudeignore commitlint.config.cjs AGENTS.md; do
   if [[ -f "$PROJECT_PATH/$rel" ]]; then
     TO_REMOVE+=("$PROJECT_PATH/$rel")
     TO_REMOVE_LABELS+=("$rel")

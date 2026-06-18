@@ -1,34 +1,49 @@
-# Canonical list of mandatory default skills (caw v2).
+# Canonical skill tiers (caw v2 — context-optimized model).
 #
-# SINGLE SOURCE OF TRUTH. The setup agent reads THIS file to build its install
-# list — it does NOT hardcode the list in its prompt. Adding/removing a default
-# means editing only this file (no prompt drift).
+# SINGLE SOURCE OF TRUTH. The setup agent reads THIS file to decide what to
+# install — it does NOT hardcode the list in its prompt. Editing tiers means
+# editing only this file (no prompt drift).
 #
-# Rule: every project gets workflow + product defaults unconditionally. The
-# cross-cutting group is conditional (see `condition`). The setup agent's
-# pre-flight check asserts the installed count >= the unconditional total.
+# ── Why this shape ───────────────────────────────────────────────────────────
+# Claude Code injects every INSTALLED skill's name+description into context
+# EVERY session (only the body is lazy). So install cost = context cost.
+# Previously ~24 defaults were dumped into every project → heavy context bloat.
 #
-# Validate with:  scripts/check-defaults.py <project-path>
+# New model — three tiers:
+#
+#   global_core   Always installed. The universal, stack-agnostic backbone that
+#                 applies to literally every task. Kept SMALL on purpose (~8).
+#                 Symlinked into <project>/.claude/skills/ from the caw repo.
+#
+#   stack_matched NOT listed here — produced by cli/match-skills.py from the
+#                 project's actual deps (e.g. nestjs-best-practices,
+#                 prisma-client-api). Typically 3-8 per project.
+#
+#   on_demand     NEVER installed by default. Relevant only in specific phases
+#                 (mostly planning/product). Pulled with `/caw-setup --add <name>`
+#                 when a task or Plan actually needs them.
+#
+# Install set per project = global_core + stack_matched (+ any --add'd skills).
+# This is the hard floor the pre-flight check enforces: every global_core entry
+# must exist under <project>/.claude/skills/.
+#
+# Validate with:  cli/check-defaults.py <project-path>
 
-workflow:
-  # Every project gets these — the agent-workflow backbone.
-  - to-prd
-  - webapp-testing
-  - javascript-testing-patterns
-  - react-component-testing        # caw-owned: leak-free RTL + QueryClient patterns
+global_core:
+  # The ~8 universal backbone — always symlinked. Every task, every stack.
   - test-driven-development        # red → green → refactor (obra/superpowers)
   - verification-before-completion # evidence before claiming done
   - code-review-excellence
-  - performance
-  - accessibility
-  - refactor
-  - improve-codebase-architecture  # architecture deepening + module consolidation
   - systematic-debugging
-  - find-skills
-  - validate-skills
+  - refactor
+  - api-contract                   # caw-owned: BA → backend/frontend handoff
+  - error-handling-patterns        # caw-owned: error envelope + full-stack handling
+  - react-component-testing        # caw-owned: leak-free RTL + QueryClient patterns
 
-product:
-  # planner depends on these — absence makes /caw-plan abort.
+on_demand:
+  # Pulled with `/caw-setup --add <name>` only when a task/Plan needs them.
+  # Product / planning skills (planner uses these only during /caw-plan):
+  - to-prd
   - prd-development
   - user-story
   - user-story-splitting
@@ -36,9 +51,18 @@ product:
   - business-analyst
   - create-specification
   - roadmap-planning
+  # Quality / breadth skills (load when the task actually exercises them):
+  - webapp-testing
+  - javascript-testing-patterns
+  - performance
+  - accessibility
+  - improve-codebase-architecture
+  - find-skills
+  - validate-skills
 
 cross_cutting:
-  # Conditional — added when the condition holds.
+  # Conditional stack signals — symlinked WHEN the condition holds (alongside
+  # stack_matched). These are cheap, near-universal for the stacks caw targets.
   - name: typescript-advanced-types
     condition: "typescript in deps OR tsconfig.json at root"
   - name: github
@@ -46,5 +70,6 @@ cross_cutting:
   - name: github-actions
     condition: ".github/workflows/ exists OR project ships CI"
 
-# Unconditional minimum the pre-flight check enforces: len(workflow) + len(product).
-# cross_cutting is conditional so it is not part of the hard floor.
+# Hard floor the pre-flight check enforces: every global_core entry must exist
+# under <project>/.claude/skills/. cross_cutting is conditional (not in the floor);
+# on_demand is never in the floor.

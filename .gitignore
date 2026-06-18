@@ -26,4 +26,3 @@ __pycache__/
 
 # Test + tooling caches (auto-generated)
 .pytest_cache
-.better-context/

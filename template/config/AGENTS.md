@@ -3,8 +3,6 @@
 Cross-tool agent instructions. Read by **OpenAI Codex CLI**, **Google Antigravity**, and any other AI coding tool that supports the `AGENTS.md` convention. This file mirrors `.claude/rules/common/commit-conventions.md` and `.claude/rules/common/coding-standards.md` so all tools follow the same rules.
 
 > Tool-specific overlays:
-> - **Cursor AI** → `.cursorrules`
-> - **GitHub Copilot** → `.github/copilot-instructions.md`
 > - **Claude Code** → `CLAUDE.md` + `.claude/`
 
 ---

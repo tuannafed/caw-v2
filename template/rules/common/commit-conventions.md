@@ -136,8 +136,6 @@ To make AI tools generate compliant messages on first try, the same rules are mi
 | -------------------------- | ----------------------------------------------- | -------------------------------------------------- |
 | **OpenAI Codex CLI**       | `AGENTS.md` (project root)                      | Codex CLI walks repo → CWD looking for AGENTS.md   |
 | **Google Antigravity**     | `AGENTS.md` (project root)                      | Antigravity 1.20.3+ reads AGENTS.md natively       |
-| **VS Code GitHub Copilot** | `.github/copilot-instructions.md` + `.vscode/settings.json` | `github.copilot.chat.commitMessageGeneration.instructions` setting |
-| **Cursor AI**              | `.cursorrules` (legacy) or `.cursor/rules/*.mdc` | Cursor reads both; legacy works best for commit gen |
 | **Claude Code**            | `CLAUDE.md` + `.claude/rules/`                  | This file is the source of truth                   |
 
 `AGENTS.md` is the **canonical cross-tool file**. The per-tool overlays exist because each tool's loader looks in a different path; their content is intentionally redundant with `AGENTS.md` so any single tool works standalone.

@@ -48,24 +48,25 @@ conductor/          # Seed files + format templates scaffolded (flattened) into 
                     #   seeds: conventions.md, knowledge.md, backlog.md, test-matrix.md, harness-backlog.md
                     #   templates: adr.md, intake.md, task-test-matrix.md
 templates/          # Files copied verbatim into target projects
-  ├── skills/       # 5 caw-owned skills (api-contract, error-handling-patterns, nextjs-feature, better-context, react-component-testing)
+  ├── skills/       # 65 caw-owned skills (test-driven-development, api-contract, error-handling-patterns, react-component-testing, …)
   ├── advisories/   # Supply-chain advisory templates scaffolded into target projects
   ├── settings.json
   ├── PULL_REQUEST_TEMPLATE.md
   └── ...
 tools/backlog/      # Astro + React + shadcn Kanban UI (source — copied to <project>/backlog/ on opt-in)
-.agents/skills/     # 57 hub skills pulled via skills.sh — used by /caw-setup as source for project copies
+.agents/skills/     # Hub skills pulled via skills.sh (external, not caw-owned)
 SKILLS-CATALOG.md   # Machine-readable index for /caw-setup (auto-generated)
 SKILLS-CHECKLIST.md # Curated source breakdown of all skills
+skills-defaults.yaml # Canonical skill tiers (global_core, stack_matched, on_demand, cross_cutting)
 skills-lock.json    # Lockfile for caw repo's hub skills (maintained by the skills.sh CLI)
 docs/CONCEPT.md     # Architecture design doc
 ```
 
-> **Note:** Folder `templates/skills/` holds caw-owned skills in a flat layout. The folder name (not `skills/`) avoids name collision with the `skills.sh` CLI, which auto-detects a top-level `skills/` folder.
+> **Note:** Folder `templates/skills/` holds all caw-owned skills in a flat layout (65 total). The folder name (not `skills/`) avoids name collision with the `skills.sh` CLI, which auto-detects a top-level `skills/` folder.
 
 ## Architecture
 
-Caw uses a **skill-first architecture**: 5 generic agents load domain knowledge from auto-discovered skills (5 caw-owned + 57 hub-curated). See [docs/CONCEPT.md](docs/CONCEPT.md) for the full design.
+Caw uses a **skill-first architecture**: 5 generic agents load domain knowledge from auto-discovered skills (65 caw-owned + hub-curated, all symlinked from the caw repo). See [docs/CONCEPT.md](docs/CONCEPT.md) for the full design.
 
 ### Agents (5)
 
@@ -73,7 +74,7 @@ Each agent file (`agents/*.md`) has YAML frontmatter (model, tools, maxTurns, pe
 
 | Agent | Stage | Purpose |
 |---|---|---|
-| `setup` | Bootstrap | Detect stack, copy caw-curated skills, ask before pulling hub skills, generate conventions.md + skill-map.yaml |
+| `setup` | Bootstrap | Detect stack, symlink global_core + stack-matched skills, ask before pulling on-demand skills, generate conventions.md + skill-map.yaml |
 | `planner` | Plan + Challenge | Spec, API contract, phases (with test_scenarios + skills_hint), self-challenge, lane |
 | `coder` | Code (per phase) | Implement one phase at a time. Loads skills via `Skill` tool from phase's `skills_hint`. Generic across stack. |
 | `tester` | Test | Test mode derived from Plan's `lane`: tiny=skip / standard=backend-only / risky=all (red+green). Mobile = unit tests only. |
@@ -136,24 +137,24 @@ Two sources of skills end up in `.claude/skills/` of the target project. Rules (
 
 | Source | Location | Role | Examples |
 |---|---|---|---|
-| **caw-owned** | `templates/skills/<name>/SKILL.md` (flat layout) | Workflow / archetype / convention skills caw can't delegate | api-contract, error-handling-patterns, nextjs-feature, better-context, react-component-testing |
-| **hub** | `.agents/skills/<name>/SKILL.md` (vendor-curated) | Framework / library expertise pulled from external hubs via `skills.sh` | Vercel (Next.js, React), Prisma, Expo, Cloudflare, Auth0, Supabase, shadcn, Turborepo, Software Mansion (RN), Callstack |
+| **caw-owned** | `<CAW_HOME>/templates/skills/<name>/SKILL.md` (flat layout) | Workflow / archetype / convention skills caw can't delegate | test-driven-development, api-contract, error-handling-patterns, react-component-testing |
+| **hub** | `.agents/skills/<name>/SKILL.md` (vendor-curated, external) | Framework / library expertise pulled from external hubs via `skills.sh` | Vercel (Next.js, React), Prisma, Expo, Cloudflare, Auth0, Supabase, shadcn, Turborepo, Software Mansion (RN), Callstack |
 
 **Each skill is a folder** containing `SKILL.md` with YAML frontmatter (`name`, `description`) + skill body. The `name` field MUST match the folder name.
 
 **Source of truth split:**
 
-- `templates/skills/` — caw-owned: workflow handoff (`api-contract`, `error-handling-patterns`), project archetype (`nextjs-feature`), tooling integration (`better-context`). Modify freely.
-- `.agents/skills/` — hub-curated by vendors. Treat as immutable. Update via `npx skills update`.
+- `<CAW_HOME>/templates/skills/` — caw-owned: the source of truth. All 65 caw-owned skills (workflow, archetype, testing, debugging, etc.) live here and travel with the caw repo's git. Modify freely.
+- `.agents/skills/` — hub-curated by vendors. Treat as immutable. Updated via `npx skills update`. External to the caw repo.
 - **Priority rule:** if a topic is covered by a hub skill, prefer hub. Caw-owned skill exists only when no authoritative external source covers it.
 
-**Init logic:** `init.sh` does NOT copy skills — it only ships agents/commands/rules/hooks. `/caw-setup` (run after `/init`) reads `<CAW_HOME>/SKILLS-CATALOG.md`, detects stack, copies caw-curated skills (priority 1), and asks user before pulling hub skills (priority 2).
+**Init logic:** `init.sh` does NOT copy skills — it only ships agents/commands/rules/hooks. `/caw-setup` (run after `/init`) reads `<CAW_HOME>/SKILLS-CATALOG.md` and `<CAW_HOME>/skills-defaults.yaml`, detects stack, symlinks global_core + stack-matched skills (priority 1), and asks user before pulling on-demand skills (priority 2).
 
 **`/caw-setup` install pattern:** two paths by skill source.
-- **caw-curated skills** (already vendored in this repo) — `cp -R` the folder from `<CAW_HOME>/.agents/skills/` or `<CAW_HOME>/templates/skills/` into the project, then `ln -sfn` a symlink. Offline, deterministic, idempotent.
-- **hub skills** (not in caw repo, user-approved) — `npx skills add <repo> -s <skill-name> -y`, which needs network.
+- **caw-curated skills** (in `<CAW_HOME>/templates/skills/`) — symlink directly into the project via `ln -sfn "$CAW_HOME/templates/skills/<name>" .claude/skills/<name>`. Offline, deterministic, idempotent. The caw repo is the source of truth.
+- **hub skills** (external, user-approved) — `npx skills add <repo> -s <skill-name> -y`, which copies into `.agents/skills/<name>/` and needs network.
 
-Either way skills end up as a real folder at `.agents/skills/<name>/` plus a symlink at `.claude/skills/<name>/` (verify with `ls -la` — the `.claude/skills/` entries must show `lrwxr-xr-x`).
+Installed caw-curated skills end up as symlinks at `.claude/skills/<name>/` (verify with `ls -la` — the `.claude/skills/` entries must show `lrwxr-xr-x` pointing into `<CAW_HOME>/templates/skills/`). Hub skills end up as real folders at `.agents/skills/<name>/` plus symlinks at `.claude/skills/<name>/`.
 
 **Skills catalog:** `SKILLS-CATALOG.md` (caw repo root) is the LLM-readable index of available skills with `triggers` field for stack matching. Auto-generated via `scripts/generate-catalog.sh`. Maintainer regenerates after `npx skills add` or `npx skills update`.
 
@@ -183,7 +184,7 @@ If you must add one:
 
 ### Caw-owned (workflow / archetype / integration)
 1. Create `templates/skills/<skill-name>/SKILL.md` with YAML frontmatter (flat layout — no layer subfolder)
-2. The skill is automatically picked up by `/caw-setup` and copied to projects
+2. The skill is automatically picked up by `/caw-setup` and symlinked into projects from the caw repo
 3. Only add a caw skill if it's workflow/archetype/convention. For framework expertise, prefer pulling from a hub.
 
 ### Hub-curated (framework / library expertise)

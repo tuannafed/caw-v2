@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# setup.sh — Install caw (Claude Agent Workflow) globally
+# setup.sh — Install CAW-V2 (Claude Agent Workflow) globally
+#
+# This is the v2 repo. It installs under DISTINCT names (alias `caw2`,
+# env `CAW2_HOME`, its own rc marker) so it coexists with a separate v1
+# `claude-agent-team` install that owns `caw` / `CAW_HOME`.
 #
 # Adds shell aliases so you can run from any directory:
-#   caw init    <path>                  → scaffold new project (stack auto-detected)
-#   caw sync <path> [--type <type>] [--dry-run] → sync latest templates
-#   caw remove  <path> [--keep-tasks] [--dry-run]  → remove from project
+#   caw2 init   <path>                  → scaffold new project (stack auto-detected)
+#   caw2 sync <path> [--type <type>] [--dry-run] → sync latest templates
+#   caw2 remove <path> [--keep-tasks] [--dry-run]  → remove from project
 #
 # Usage:
 #   ./setup.sh              → install
@@ -15,8 +19,12 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_DIR="$REPO_DIR/cli"
 
-MARKER_START="# >>> claude-agent-team >>>"
-MARKER_END="# <<< claude-agent-team <<<"
+# Distinct CLI name + env var so v2 never collides with a v1 install.
+CAW_ALIAS="caw2"
+CAW_ENV_VAR="CAW2_HOME"
+
+MARKER_START="####################### CAW-V2 #######################"
+MARKER_END="####################### CAW-V2 #######################"
 
 # ── Detect shell config file ──────────────────────────────────────────────────
 detect_shell_rc() {
@@ -39,7 +47,7 @@ uninstall() {
   rc_file="$(detect_shell_rc)"
 
   if ! grep -q "$MARKER_START" "$rc_file" 2>/dev/null; then
-    echo "ℹ️  claude-agent-team is not installed in $rc_file"
+    echo "ℹ️  CAW-V2 is not installed in $rc_file"
     exit 0
   fi
 
@@ -142,7 +150,7 @@ install() {
   local rc_file
   rc_file="$(detect_shell_rc)"
 
-  echo "🚀 Installing claude-agent-team"
+  echo "🚀 Installing CAW-V2 (alias: $CAW_ALIAS)"
   echo "   Repo: $REPO_DIR"
   echo "   Shell config: $rc_file"
   echo ""
@@ -168,15 +176,12 @@ install() {
   cat >> "$rc_file" <<EOF
 
 $MARKER_START
-# claude-agent-team — AI agent workflow framework
-export CAW_HOME="$REPO_DIR"
-
-# caw (Claude Agent Workflow) — unified CLI
-alias caw="$SCRIPTS_DIR/caw.sh"
+export $CAW_ENV_VAR="$REPO_DIR"
+alias $CAW_ALIAS="$SCRIPTS_DIR/caw.sh"
 $MARKER_END
 EOF
 
-  echo "✅ Installed! Alias added to $rc_file"
+  echo "✅ Installed! Alias '$CAW_ALIAS' added to $rc_file"
   echo ""
 
   # Inject behavioral guidelines into ~/.claude/CLAUDE.md
@@ -184,9 +189,9 @@ EOF
 
   echo ""
   echo "Commands:"
-  echo "  caw init    <path>                     — scaffold claude agent workflow into existing project"
-  echo "  caw sync <path> [--dry-run]            — sync latest templates"
-  echo "  caw remove  <path> [--keep-tasks]     — remove claude agent workflow files"
+  echo "  $CAW_ALIAS init   <path>                  — scaffold claude agent workflow into existing project"
+  echo "  $CAW_ALIAS sync <path> [--dry-run]        — sync latest templates"
+  echo "  $CAW_ALIAS remove <path> [--keep-tasks]   — remove claude agent workflow files"
   echo ""
   echo "Reload your shell:"
   echo "  source $rc_file"
@@ -198,13 +203,13 @@ case "${1:-}" in
   --help|-h)
     echo "Usage: ./setup.sh [--uninstall]"
     echo ""
-    echo "  ./setup.sh             Install caw alias globally"
+    echo "  ./setup.sh             Install '$CAW_ALIAS' alias globally (CAW-V2)"
     echo "  ./setup.sh --uninstall Remove alias"
     echo ""
     echo "After install:"
-    echo "  caw init    <path>              Scaffold claude agent workflow into existing project"
-    echo "  caw sync <path> [--dry-run]  Sync latest templates"
-    echo "  caw remove  <path>              Remove claude agent workflow from project"
+    echo "  $CAW_ALIAS init   <path>             Scaffold claude agent workflow into existing project"
+    echo "  $CAW_ALIAS sync <path> [--dry-run]   Sync latest templates"
+    echo "  $CAW_ALIAS remove <path>             Remove claude agent workflow from project"
     ;;
   "") install ;;
   *) echo "Unknown option: $1"; echo "Usage: ./setup.sh [--uninstall]"; exit 1 ;;

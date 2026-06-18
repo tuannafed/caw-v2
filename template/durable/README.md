@@ -33,8 +33,12 @@ committed.
 | `tool register/remove` | register external project tools |
 | `trace` | record an agent execution (auto-scores its tier) |
 | `score-trace` | re-score a trace against its lane's required tier |
+| `score-context` | score a trace's context reads against lane+phase rules |
 | `backlog add/close` | improvement items with predicted→actual outcome loop |
 | `query <table> [--json\|--summary] [--open\|--closed]` | read state |
+| `query stats` | row counts per durable table (one-glance summary) |
+| `query friction` | traces that recorded harness_friction (the `propose` signal) |
+| `query sql "<SELECT …>"` | ad-hoc READ-ONLY SELECT for inspection |
 | `matrix [--json\|--summary]` | test-matrix generated from task+phase (no markdown) |
 | `audit [--conductor DIR]` | entropy/drift score (lower is better) |
 | `propose [--commit]` | turn recurring friction + drift into backlog proposals |

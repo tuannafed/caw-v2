@@ -16,14 +16,13 @@ templates/skills/   →  caw-owned     (5 skills)   workflow / archetype / integ
 
 ---
 
-## Caw-owned (5)
+## Caw-owned (4)
 
 | Skill | Purpose |
 |---|---|
 | `api-contract` | REST conventions + API Contract template (Plan → backend/frontend phase handoff) |
 | `error-handling-patterns` | Error envelope spec + full-stack handling (filters, ApiError, RQ, toast/inline rules) |
 | `nextjs-feature` | Archetype: feature-driven Next.js App Router (folder contract, ownership) |
-| `better-context` | Integration with better-context CLI (codebase intelligence) |
 | `react-component-testing` | Leak-free Jest + RTL + TanStack Query component-test patterns |
 
 ---

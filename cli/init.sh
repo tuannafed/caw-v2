@@ -783,12 +783,12 @@ done
 echo ""
 printf "${C_RED}🔒${C_RESET} ${C_BOLD}Copying${C_RESET} ${C_DIM}security advisories...${C_RESET}\n"
 ADVISORIES_SRC="$TEMPLATE_DIR/advisories"
-ADVISORIES_DEST="$PROJECT_PATH/docs/advisories"
+ADVISORIES_DEST="$PROJECT_PATH/docs/caw/advisories"
 if [[ -d "$ADVISORIES_SRC" ]]; then
   mkdir -p "$ADVISORIES_DEST"
   # Always overwrite advisories — they are authoritative from template hub
   cp -r "$ADVISORIES_SRC/." "$ADVISORIES_DEST/"
-  echo "   ✅ docs/advisories/ ($(ls "$ADVISORIES_SRC"/*.md 2>/dev/null | wc -l | tr -d ' ') files)"
+  echo "   ✅ docs/caw/advisories/ ($(ls "$ADVISORIES_SRC"/*.md 2>/dev/null | wc -l | tr -d ' ') files)"
 fi
 
 # 7. README
@@ -846,51 +846,7 @@ if [[ -f "$PROJECT_PATH/package.json" ]]; then
     fi
   fi
 
-  # 9c. .cursorrules (Cursor AI commit + code generation)
-  CURSORRULES_SRC="$TEMPLATE_DIR/cursorrules"
-  CURSORRULES_DEST="$PROJECT_PATH/.cursorrules"
-  if [[ -f "$CURSORRULES_SRC" ]]; then
-    if [[ ! -f "$CURSORRULES_DEST" ]]; then
-      cp "$CURSORRULES_SRC" "$CURSORRULES_DEST"
-      perl -i -pe "s/\{\{PROJECT_NAME\}\}/$ESCAPED_PROJECT_NAME/g;" "$CURSORRULES_DEST"
-      echo "   ✅ .cursorrules ${C_DIM}(Cursor AI)${C_RESET}"
-    else
-      echo "   ⏭️  .cursorrules (already exists, kept)"
-    fi
-  fi
-
-  # 9d. .github/copilot-instructions.md (GitHub Copilot — used by VS Code too)
-  COPILOT_SRC="$TEMPLATE_DIR/copilot-instructions.md"
-  COPILOT_DEST="$PROJECT_PATH/.github/copilot-instructions.md"
-  if [[ -f "$COPILOT_SRC" ]]; then
-    if [[ ! -f "$COPILOT_DEST" ]]; then
-      mkdir -p "$PROJECT_PATH/.github"
-      cp "$COPILOT_SRC" "$COPILOT_DEST"
-      perl -i -pe "s/\{\{PROJECT_NAME\}\}/$ESCAPED_PROJECT_NAME/g;" "$COPILOT_DEST"
-      echo "   ✅ .github/copilot-instructions.md ${C_DIM}(VS Code + GitHub Copilot)${C_RESET}"
-    else
-      echo "   ⏭️  .github/copilot-instructions.md (already exists, kept)"
-    fi
-  fi
-
-  # 9e. Inform user about .vscode/settings.json snippet (do not auto-merge — risky)
-  VSCODE_SNIPPET="$TEMPLATE_DIR/vscode-settings-ai.json"
-  if [[ -f "$VSCODE_SNIPPET" ]]; then
-    if [[ -f "$PROJECT_PATH/.vscode/settings.json" ]]; then
-      if grep -q "github.copilot.chat.commitMessageGeneration" "$PROJECT_PATH/.vscode/settings.json" 2>/dev/null; then
-        echo "   ⏭️  .vscode/settings.json (Copilot commit instructions already configured)"
-      else
-        printf "   ${C_YELLOW}ℹ️${C_RESET}  ${C_DIM}.vscode/settings.json exists — merge this snippet manually:${C_RESET}\n"
-        printf "      ${C_DIM}%s${C_RESET}\n" "$VSCODE_SNIPPET"
-      fi
-    else
-      mkdir -p "$PROJECT_PATH/.vscode"
-      cp "$VSCODE_SNIPPET" "$PROJECT_PATH/.vscode/settings.json"
-      echo "   ✅ .vscode/settings.json (Copilot commit instructions)"
-    fi
-  fi
-
-  # 9f. Hint about installing commitlint dependencies
+  # 9c. Hint about installing commitlint dependencies
   if ! grep -q '"@commitlint/cli"' "$PROJECT_PATH/package.json" 2>/dev/null; then
     printf "   ${C_YELLOW}⚠️${C_RESET}  ${C_DIM}commitlint not installed. To enable enforcement, run:${C_RESET}\n"
     printf "      ${C_BRIGHT_YELLOW}pnpm add -D @commitlint/cli @commitlint/config-conventional${C_RESET}\n"

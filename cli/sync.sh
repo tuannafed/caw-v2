@@ -21,8 +21,6 @@ set -euo pipefail
 #   .claude/README.md              — caw README copy for in-project reference
 #   commitlint.config.cjs          — commit rules (if already present)
 #   AGENTS.md                      — Codex CLI + Antigravity rules (if already present)
-#   .cursorrules                   — Cursor AI rules (if already present)
-#   .github/copilot-instructions.md — VS Code Copilot rules (if already present)
 #
 # What is created only if MISSING (never overwritten):
 #   docs/caw/conventions.md
@@ -195,12 +193,19 @@ fi
 echo ""
 echo "Updating security advisories..."
 ADVISORIES_SRC="$TEMPLATE_DIR/advisories"
-ADVISORIES_DEST="$PROJECT_PATH/docs/advisories"
+ADVISORIES_DEST="$PROJECT_PATH/docs/caw/advisories"
+# Migrate legacy location (docs/advisories/ → docs/caw/advisories/) once.
+ADVISORIES_LEGACY="$PROJECT_PATH/docs/advisories"
+if [[ -d "$ADVISORIES_LEGACY" && ! -d "$ADVISORIES_DEST" ]]; then
+  mkdir -p "$(dirname "$ADVISORIES_DEST")"
+  mv "$ADVISORIES_LEGACY" "$ADVISORIES_DEST"
+  echo "   ↪️  migrated docs/advisories/ → docs/caw/advisories/"
+fi
 if [[ -d "$ADVISORIES_SRC" ]]; then
   mkdir -p "$ADVISORIES_DEST"
   while IFS= read -r -d '' adv_file; do
     adv_name="$(basename "$adv_file")"
-    update_file "$adv_file" "$ADVISORIES_DEST/$adv_name" "docs/advisories/$adv_name"
+    update_file "$adv_file" "$ADVISORIES_DEST/$adv_name" "docs/caw/advisories/$adv_name"
   done < <(find "$ADVISORIES_SRC" -maxdepth 1 -name "*.md" -print0)
 fi
 
@@ -429,34 +434,6 @@ if [[ -f "$PROJECT_PATH/package.json" ]]; then
     "$TEMPLATE_DIR/AGENTS.md" \
     "$PROJECT_PATH/AGENTS.md" \
     "AGENTS.md"
-
-  # .cursorrules — Cursor AI
-  ensure_file \
-    "$TEMPLATE_DIR/cursorrules" \
-    "$PROJECT_PATH/.cursorrules" \
-    ".cursorrules"
-
-  # .github/copilot-instructions.md — VS Code Copilot + GitHub Copilot
-  ensure_file \
-    "$TEMPLATE_DIR/copilot-instructions.md" \
-    "$PROJECT_PATH/.github/copilot-instructions.md" \
-    ".github/copilot-instructions.md"
-
-  # .vscode/settings.json — special handling: never overwrite (personal settings)
-  if [[ -f "$PROJECT_PATH/.vscode/settings.json" ]]; then
-    if grep -q "github.copilot.chat.commitMessageGeneration" "$PROJECT_PATH/.vscode/settings.json" 2>/dev/null; then
-      echo "   ⏭️  .vscode/settings.json (Copilot commit instructions already present)"
-    else
-      printf "   ${C_YELLOW:-}ℹ️${C_RESET:-}  .vscode/settings.json exists — merge snippet manually:\n"
-      printf "      ${C_DIM:-}%s${C_RESET:-}\n" "$TEMPLATE_DIR/vscode-settings-ai.json"
-    fi
-  else
-    ensure_file \
-      "$TEMPLATE_DIR/vscode-settings-ai.json" \
-      "$PROJECT_PATH/.vscode/settings.json" \
-      ".vscode/settings.json" \
-      "false"
-  fi
 else
   echo "   ⏭️  (no package.json — commit + AI rules skipped)"
 fi
