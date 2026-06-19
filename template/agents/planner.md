@@ -44,7 +44,7 @@ State the type explicitly at the top of the plan.
 
 `lane` is the **single** story-sizing field. The tester's TDD behavior, pull
 depth, and ADR requirement are all derived from it — there is no separate
-`tdd_mode` field. Use the intake risk flags from `docs/caw/intake.md`
+`tdd_mode` field. Use the intake risk flags from `docs/caw/templates/intake.md`
 (if present) plus heuristics:
 
 | Lane | Triggers | Test behavior (tester derives) | Pull depth | Pipeline stages |
@@ -219,7 +219,7 @@ the task). If a trigger fires, **create the ADR file now** — do not just name 
 
 1. Read `docs/caw/decisions/` to find the highest existing `NNNN`.
 2. Write `docs/caw/decisions/<NNNN+1>-<kebab-slug>.md` from
-   `docs/caw/adr.md`, with `Status: Proposed`.
+   `docs/caw/templates/adr.md`, with `Status: Proposed`.
 3. Reference the ADR id in the Plan's `## Challenge` → `ADRs needed` list.
 
 A `risky`-lane task must produce at least one ADR. If you genuinely made no

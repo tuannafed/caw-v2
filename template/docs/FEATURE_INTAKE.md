@@ -91,7 +91,7 @@ Requirements:
 - Ask for human confirmation before implementation if direction is ambiguous.
 - Record a durable decision when behavior, architecture, authorization, data
   ownership, API shape, or validation requirements change meaningfully. Use a
-  `docs/caw/decisions/NNNN-*.md` file from `docs/caw/adr.md`, then add
+  `docs/caw/decisions/NNNN-*.md` file from `docs/caw/templates/adr.md`, then add
   or refresh the durable row with `scripts/caw/bin/harness-cli decision add`.
   Decision text in a trace is not a durable decision record.
 

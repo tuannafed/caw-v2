@@ -64,7 +64,6 @@ case "$SUBCOMMAND" in
     echo "  /caw-test <task-id>              Tests (mode derived from Plan's lane)"
     echo "  /caw-review <task-id>            Multi-dim review (security/perf/a11y)"
     echo "  /caw-verify <task-id>            Test + review parallel"
-    echo "  /caw-status [<task-id>]          Show task state"
     echo ""
     ;;
 

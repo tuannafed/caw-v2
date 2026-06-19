@@ -42,7 +42,6 @@ Each agent is a markdown file with YAML frontmatter (model, tools, maxTurns, per
 | `/caw-test <id>`                   | Tests (mode derived from Plan's lane)           |
 | `/caw-review <id>`                 | Multi-dim review                                |
 | `/caw-verify <id>`                 | Test + review in parallel                       |
-| `/caw-status [<id>]`               | Show task state                                 |
 
 The `caw-` prefix avoids namespace collisions with other Claude Code skills/commands.
 

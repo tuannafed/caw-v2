@@ -123,9 +123,11 @@ When staged changes span unrelated areas, propose splitting into multiple atomic
 
 ## Enforcement
 
-This project enforces these rules at commit time via:
+These rules are followed by every AI tool via the mirrored files below. Hard
+machine enforcement at commit time is **optional and not scaffolded by `caw init`** —
+set it up yourself if the team wants a hard gate:
 
-- **commitlint** with `@commitlint/config-conventional`, configured at `commitlint.config.cjs` (project root).
+- **commitlint** with `@commitlint/config-conventional` (add `commitlint.config.cjs` at project root).
 - **Husky** `commit-msg` hook that runs commitlint and rejects malformed messages.
 
 ### IDE AI commit-message generators
@@ -140,7 +142,7 @@ To make AI tools generate compliant messages on first try, the same rules are mi
 
 `AGENTS.md` is the **canonical cross-tool file**. The per-tool overlays exist because each tool's loader looks in a different path; their content is intentionally redundant with `AGENTS.md` so any single tool works standalone.
 
-If the commit-msg hook fails, fix the message and re-stage — do **not** bypass with `--no-verify`.
+If a commit-msg hook is configured and fails, fix the message and re-stage — do **not** bypass with `--no-verify`.
 
 ---
 

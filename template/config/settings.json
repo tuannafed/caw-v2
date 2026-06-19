@@ -240,7 +240,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '\\n📋 Claude Agent Workflow — run /caw-status to see all tasks'"
+            "command": "echo '\\n📋 Claude Agent Workflow — run scripts/caw/bin/harness-cli query matrix to see all tasks'"
           }
         ]
       }

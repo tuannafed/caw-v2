@@ -38,15 +38,16 @@ The `caw` alias dispatches to `scripts/caw.sh`, which routes subcommands to `scr
 
 ```
 agents/             # 5 agents: setup, planner, coder, tester, reviewer
-commands/           # 7 commands: caw-setup, caw-plan, caw-code, caw-test, caw-review, caw-verify, caw-status
-scripts/            # CLI scripts (caw.sh, init.sh, upgrade.sh, remove.sh, generate-catalog.{sh,py}, hooks/)
+commands/           # 6 commands: caw-setup, caw-plan, caw-code, caw-test, caw-review, caw-verify
+cli/                # CLI scripts (caw.sh, init.sh, sync.sh, remove.sh, defs.sh, generate-catalog.{sh,py})
 rules/              # Non-overridable coding rules loaded by every agent
   ├── common/       #   coding-standards, coding-style, commit-conventions, code-review,
   │                 #   harness-contract, package-manager, skill-loading (7 files)
   └── typescript/   #   coding-style (1 file)
-conductor/          # Seed files + format templates scaffolded (flattened) into <project>/docs/caw/
-                    #   seeds: conventions.md, knowledge.md, backlog.md, test-matrix.md, harness-backlog.md
-                    #   templates: adr.md, intake.md, task-test-matrix.md
+conductor/          # Seed files + format templates scaffolded into <project>/docs/caw/
+                    #   seeds (root): conventions.md, knowledge.md, harness-backlog.md
+                    #   templates (→ docs/caw/templates/): adr.md, intake.md
+                    #   schema ref (not copied): project.yaml
 templates/          # Files copied verbatim into target projects
   ├── skills/       # 65 caw-owned skills (test-driven-development, api-contract, error-handling-patterns, react-component-testing, …)
   ├── advisories/   # Supply-chain advisory templates scaffolded into target projects
@@ -81,7 +82,7 @@ Each agent file (`agents/*.md`) has YAML frontmatter (model, tools, maxTurns, pe
 
 All 5 agents have `Skill` in their `tools:` list — domain knowledge is auto-discovered.
 
-### Commands (7)
+### Commands (6)
 
 | Command | Action |
 |---|---|
@@ -91,7 +92,6 @@ All 5 agents have `Skill` in their `tools:` list — domain knowledge is auto-di
 | `/caw-test <id>` | Test (mode derived from Plan's lane) |
 | `/caw-review <id>` | Multi-dim review |
 | `/caw-verify <id>` | Test + review parallel |
-| `/caw-status [<id>]` | Show task state |
 
 Commands use `caw-` prefix (not `/caw <subcommand>`) to avoid namespace collisions with other Claude Code skills/commands.
 
@@ -99,9 +99,10 @@ Commands use `caw-` prefix (not `/caw <subcommand>`) to avoid namespace collisio
 
 ```
 caw init <project>     # Maintainer scaffold (core only — agents, commands, rules, hooks)
-                       # Also appends .agents/, .claude/, CLAUDE.md to target's .gitignore (machine-local)
+                       # Ships AGENTS.md + CLAUDE.md harness context (@-imports, harness-cli)
+                       # Also appends .agents/, .claude/ to target's .gitignore (machine-local)
                        # Also writes CAW_HOME to user's shell rc (for /caw-setup to find caw repo)
-/init                  # Claude Code built-in — generates CLAUDE.md
+/init                  # Claude Code built-in — OPTIONAL, enriches the scaffolded CLAUDE.md
 /caw-setup             # Reads CLAUDE.md + <CAW_HOME>/SKILLS-CATALOG.md → installs skills + conventions
 /caw-plan "<desc>"     # Per-task planning
 /caw-code <id> --all   # Implementation (all phases)
@@ -174,9 +175,9 @@ The dispatcher `scripts/hooks/run-with-flags.js` reads the profile and `CAW_DISA
 The architecture has 5 fixed agents (`setup`, `planner`, `coder`, `tester`, `reviewer`) — domain knowledge moves to skills, not new agents. Avoid creating new agents unless absolutely necessary.
 
 If you must add one:
-1. Create `agents/<name>.md` with YAML frontmatter + role prompt
-2. Create a matching `commands/caw-<name>.md` slash command
-3. Add the agent to the `AGENTS=` list in `scripts/init.sh` **and** the `AGENTS=` + `COMMANDS=` lists in `scripts/upgrade.sh`. (`init.sh` copies commands with a `commands/*.md` glob, so it needs no `COMMANDS=` list.)
+1. Create `template/agents/<name>.md` with YAML frontmatter + role prompt
+2. Create a matching `template/commands/caw-<name>.md` slash command
+3. Add the names to `CAW_AGENTS` / `CAW_COMMANDS` in `cli/defs.sh` — the single source of truth that both `init.sh` and `sync.sh` source (no per-script lists to keep in sync)
 4. Update README.md agent table
 
 ## Adding a New Skill
@@ -199,4 +200,5 @@ If you must add one:
 - **Markdown-first** — agent prompts, skills, and commands are all `.md` files
 - **Shell scripts use bash ≥ 4** — arrays, associative arrays, `[[ ]]` tests are all fine
 - **`conventions.md`** (in scaffolded projects, not this repo) is the source of truth for project-specific archetype + patterns; every code-writing agent reads it before proposing architecture
+- **docs/caw file naming** — `UPPER_CASE.md` = read-only guide/policy (agent only reads it; identical across projects — `template/docs/*`). `lower-case.md` = fill-in: format templates (`template/conductor/{adr,intake}.md` → `docs/caw/templates/`) or seed prose the project writes into (`conventions.md`, `knowledge.md`, `harness-backlog.md`). `README.md` is the universal UPPER exception. When adding a doc: agent only reads it → UPPER; project writes into it → lower.
 - Skills use folder format (`templates/skills/<name>/SKILL.md`) in a flat layout. The folder name (not `skills/`) avoids name collision with the `skills.sh` CLI, which auto-detects a top-level `skills/` folder.

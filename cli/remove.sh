@@ -5,11 +5,11 @@ set -euo pipefail
 # Removes claude agent workflow files from a project.
 #
 # What gets removed:
-#   docs/caw/                 — conventions.md, knowledge.md, backlog.md, adr.md, intake.md,
-#                                task-test-matrix.md, test-matrix.md, harness-backlog.md,
-#                                decisions/ (and tasks/ unless --keep-tasks)
+#   docs/caw/                 — conventions.md, knowledge.md, harness-backlog.md,
+#                                templates/ (adr.md, intake.md), decisions/
+#                                (and tasks/ unless --keep-tasks)
 #   .claude/commands/         — caw-*.md (caw-setup, caw-plan, caw-code,
-#                                caw-test, caw-review, caw-verify, caw-status)
+#                                caw-test, caw-review, caw-verify)
 #                                + legacy: caw.md, checkpoint.md, learn.md, create.md
 #   .claude/agents/           — all agent .md files
 #   .claude/skills/           — skill symlinks (created by /caw-setup)
@@ -129,7 +129,7 @@ if [[ -d "$CONDUCTOR_DIR" ]]; then
         TO_REMOVE_LABELS+=("docs/caw/$f")
       fi
     done
-    # `templates` is legacy — older installs nested templates under conductor/
+    # decisions/ = ADR records; templates/ = adr.md + intake.md format templates.
     for d in decisions templates; do
       dp="$CONDUCTOR_DIR/$d"
       if [[ -d "$dp" ]]; then
@@ -144,7 +144,8 @@ if [[ -d "$CONDUCTOR_DIR" ]]; then
 fi
 
 # .claude/commands/ — only remove claude agent workflow commands, not user's own commands
-# Match caw-*.md (caw-setup, caw-plan, caw-code, caw-test, caw-review, caw-verify, caw-status)
+# Match caw-*.md (caw-setup, caw-plan, caw-code, caw-test, caw-review, caw-verify)
+# The glob also catches legacy caw-status.md from older caw versions.
 # plus legacy single-word names (caw, checkpoint, learn, create) for back-compat.
 if [[ -d "$DOTCLAUDE/commands" ]]; then
   while IFS= read -r -d '' f; do

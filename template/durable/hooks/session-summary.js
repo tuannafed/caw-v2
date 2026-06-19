@@ -133,7 +133,7 @@ process.stdin.on('end', () => {
       lines.push(tokenSummary);
     }
 
-    lines.push('\nTo resume: /caw-status');
+    lines.push('\nTo resume: scripts/caw/bin/harness-cli query matrix');
     lines.push('──────────────────────────────────────────\n');
 
     console.error(lines.join('\n'));

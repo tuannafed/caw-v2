@@ -16,8 +16,8 @@ set -euo pipefail
 #   .claude/gitleaks.toml          — gitleaks config (if already present)
 #   .claude/settings.json          — hooks config (if already present)
 #   .claude/hooks/*.js             — hook scripts
-#   docs/caw/adr.md             — ADR format template
-#   docs/caw/intake.md          — feature-intake format template
+#   docs/caw/templates/adr.md      — ADR format template
+#   docs/caw/templates/intake.md   — feature-intake format template
 #   .claude/README.md              — caw README copy for in-project reference
 #   AGENTS.md                      — Codex CLI + Antigravity rules
 #
@@ -26,9 +26,9 @@ set -euo pipefail
 #   docs/caw/decisions/
 #   docs/caw/harness-backlog.md
 #   .claudeignore
+#   CLAUDE.md                              — harness context; may hold user rules
 #
 # What is NEVER touched:
-#   CLAUDE.md                              — user's project context
 #   docs/caw/knowledge.md         — accumulated lessons
 #   docs/caw/stories/               — story prose history
 #   Any source code
@@ -37,6 +37,11 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEMPLATE_DIR="$REPO_ROOT/template/config"
+
+# Shared agent/command sets (single source of truth — see cli/defs.sh).
+# shellcheck source=defs.sh
+source "$(dirname "${BASH_SOURCE[0]}")/defs.sh"
+
 PROJECT_PATH=""
 DRY_RUN=false
 TEAM_TYPE=""
@@ -107,9 +112,7 @@ echo "  Type    : $TEAM_TYPE"
 [[ "$DRY_RUN" == true ]] && echo "  Mode    : dry-run (no files changed)"
 echo ""
 
-# ── Agent + command set ────────────────────────────────────────────────────────
-AGENTS="setup planner coder tester reviewer"
-COMMANDS="caw-setup caw-plan caw-code caw-test caw-review caw-verify caw-status"
+# Agent + command sets: CAW_AGENTS / CAW_COMMANDS from cli/defs.sh (sourced above).
 
 # ── Helper ────────────────────────────────────────────────────────────────────
 UPDATED=0
@@ -140,7 +143,7 @@ update_file() {
 # ── 1. Agents ──────────────────────────────────────────────────────────────────
 echo "Updating agents..."
 mkdir -p "$DOTCLAUDE/agents"
-for agent in $AGENTS; do
+for agent in $CAW_AGENTS; do
   update_file \
     "$REPO_ROOT/template/agents/$agent.md" \
     "$DOTCLAUDE/agents/$agent.md" \
@@ -151,7 +154,7 @@ done
 echo ""
 echo "Updating commands..."
 mkdir -p "$DOTCLAUDE/commands"
-for cmd in $COMMANDS; do
+for cmd in $CAW_COMMANDS; do
   update_file \
     "$REPO_ROOT/template/commands/$cmd.md" \
     "$DOTCLAUDE/commands/$cmd.md" \
@@ -278,7 +281,7 @@ if [[ ! -d "$CONDUCTOR_DIR/decisions" ]]; then
 # Architectural Decision Records
 
 ADRs for this project. Filename: `NNNN-<kebab-slug>.md`. Use the template
-at `docs/caw/adr.md`. ADRs are usually created by planner during
+at `docs/caw/templates/adr.md`. ADRs are usually created by planner during
 `/caw-plan`, or by code-writing agents when they choose between
 architecture options. See `.claude/rules/common/harness-contract.md`.
 EOF
@@ -306,12 +309,23 @@ for doc in harness-backlog.md; do
   fi
 done
 
-# Format-only templates — always sync (reference material, not user data)
+# Format-only templates — always sync (reference material, not user data).
+# Grouped under docs/caw/templates/ (like repository-harness docs/templates/).
+# Migration: older installs put these flat at docs/caw/; remove the stale copies.
+mkdir -p "$CONDUCTOR_DIR/templates"
 for tmpl in adr.md intake.md; do
   src="$REPO_ROOT/template/conductor/$tmpl"
-  dest="$CONDUCTOR_DIR/$tmpl"
+  dest="$CONDUCTOR_DIR/templates/$tmpl"
   if [[ -f "$src" ]]; then
-    update_file "$src" "$dest" "docs/caw/$tmpl"
+    update_file "$src" "$dest" "docs/caw/templates/$tmpl"
+  fi
+  # Drop the pre-refactor flat copy if present.
+  if [[ -f "$CONDUCTOR_DIR/$tmpl" ]]; then
+    if [[ "$DRY_RUN" == true ]]; then
+      echo "   would remove stale: docs/caw/$tmpl (moved to templates/)"
+    else
+      rm -f "$CONDUCTOR_DIR/$tmpl" && echo "   🧹 docs/caw/$tmpl (moved to templates/)"
+    fi
   fi
 done
 
@@ -397,6 +411,24 @@ ensure_file \
   "$TEMPLATE_DIR/AGENTS.md" \
   "$PROJECT_PATH/AGENTS.md" \
   "AGENTS.md"
+
+# CLAUDE.md — created only if MISSING (never overwritten: may hold project rules
+# the user added above the harness block). Older projects without one get it.
+CLAUDE_SRC="$TEMPLATE_DIR/CLAUDE.md"
+CLAUDE_DEST="$PROJECT_PATH/CLAUDE.md"
+if [[ -f "$CLAUDE_SRC" ]] && [[ ! -f "$CLAUDE_DEST" ]]; then
+  if [[ "$DRY_RUN" == true ]]; then
+    echo "   would create: CLAUDE.md"
+    (( UPDATED++ )) || true
+  else
+    cp "$CLAUDE_SRC" "$CLAUDE_DEST"
+    perl -i -pe "s/\{\{PROJECT_NAME\}\}/$PROJECT_NAME/g;" "$CLAUDE_DEST"
+    echo "   ✅ CLAUDE.md (created)"
+    (( UPDATED++ )) || true
+  fi
+elif [[ -f "$CLAUDE_DEST" ]]; then
+  echo "   ⏭️  CLAUDE.md (already exists — not overwritten)"
+fi
 
 # ── 15. Backlog viewer (sync source if already installed) ─────────────────────
 # The viewer is opt-in at `caw init`. If a project has it, refresh the Astro/React

@@ -233,7 +233,7 @@ Per `rules/common/harness-contract.md`:
   cross-cutting decision the Plan did not already cover (caching strategy, state
   library, error-envelope shape, a new external dependency), create an ADR:
   read `docs/caw/decisions/` for the highest `NNNN`, write
-  `<NNNN+1>-<slug>.md` from `docs/caw/adr.md` with `Status: Proposed`.
+  `<NNNN+1>-<slug>.md` from `docs/caw/templates/adr.md` with `Status: Proposed`.
   The reviewer will block an architecture change that ships without one.
 - **Harness backlog.** If you hit friction (a missing convention, an ambiguous
   Plan field, the same workaround repeated across tasks), append an item to

@@ -7,6 +7,10 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEMPLATE_DIR="$REPO_ROOT/template/config"
 
+# Shared agent/command sets (single source of truth — see cli/defs.sh).
+# shellcheck source=defs.sh
+source "$(dirname "${BASH_SOURCE[0]}")/defs.sh"
+
 # ── ANSI colors (auto-disabled if NO_COLOR set or output not a TTY) ──────────
 if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}" ]]; then
   C_RESET=$'\033[0m'
@@ -472,7 +476,7 @@ if [[ ! -f "$PROJECT_PATH/docs/caw/decisions/README.md" ]]; then
 This folder holds ADRs for this project. Each ADR captures a non-obvious
 architecture or product choice that will outlive the task that produced it.
 
-Use the ADR template at `docs/caw/adr.md` when adding a new ADR.
+Use the ADR template at `docs/caw/templates/adr.md` when adding a new ADR.
 
 ## Filename Format
 
@@ -490,10 +494,13 @@ else
 fi
 
 # Format-only templates — agents read these to learn the ADR / intake structure.
-# Always synced (reference material, not state).
+# Grouped under docs/caw/templates/ (like repository-harness docs/templates/) so
+# they don't clutter the guide docs at docs/caw/ root. Always synced (reference
+# material, not state).
+mkdir -p "$PROJECT_PATH/docs/caw/templates"
 for tmpl in adr.md intake.md; do
-  cp "$REPO_ROOT/template/conductor/$tmpl" "$PROJECT_PATH/docs/caw/$tmpl"
-  echo "   ✅ docs/caw/$tmpl"
+  cp "$REPO_ROOT/template/conductor/$tmpl" "$PROJECT_PATH/docs/caw/templates/$tmpl"
+  echo "   ✅ docs/caw/templates/$tmpl"
 done
 
 # Harness friction log — self-improvement feedback loop (prose, not state).
@@ -528,7 +535,6 @@ if [[ ! -f "$GITIGNORE" ]] || ! grep -qF "$CAW_IGNORE_BLOCK_START" "$GITIGNORE";
     echo "### Skills"
     echo ".agents/"
     echo ".claude/"
-    echo "CLAUDE.md"
     echo "skills-lock.json"
     echo "### Script"
     echo "harness.db"
@@ -547,12 +553,12 @@ printf "${C_CYAN}🔧${C_RESET} ${C_BOLD}Setting up${C_RESET} .claude/ ${C_DIM}(
 mkdir -p "$PROJECT_PATH/.claude/commands"
 mkdir -p "$PROJECT_PATH/.claude/agents"
 
-# Commands: setup, plan, code, test, review, verify, status
-for cmd_file in "$REPO_ROOT"/template/commands/*.md; do
+# Commands — CAW_COMMANDS is defined in cli/defs.sh (sourced at top).
+for cmd in $CAW_COMMANDS; do
+  cmd_file="$REPO_ROOT/template/commands/$cmd.md"
   [[ -f "$cmd_file" ]] || continue
-  cmd="$(basename "$cmd_file" .md)"
   if [[ ! -f "$PROJECT_PATH/.claude/commands/$cmd.md" ]]; then
-    cp "$REPO_ROOT/template/commands/$cmd.md" "$PROJECT_PATH/.claude/commands/$cmd.md"
+    cp "$cmd_file" "$PROJECT_PATH/.claude/commands/$cmd.md"
     echo "   ✅ .claude/commands/$cmd.md"
   else
     echo "   ⏭️  .claude/commands/$cmd.md (already exists)"
@@ -729,8 +735,8 @@ printf "   ${C_BRIGHT_GREEN}🛡️${C_RESET}  ${C_BOLD}Secret scanning enabled$
 
 # 4. Skills — skip on init, /caw-setup will populate based on detected stack
 #
-# Skills are NOT copied at init time. They are pulled by /caw-setup after the
-# user has run /init to generate CLAUDE.md.
+# Skills are NOT copied at init time. They are pulled by /caw-setup after init
+# (init already ships a harness CLAUDE.md; the user may still run /init to enrich it).
 #
 # init time: skip skills entirely
 # /caw-setup: detect stack, copy caw-curated skills from <CAW_HOME>/template/skills/,
@@ -759,9 +765,8 @@ fi
 # 5. Agents — 5 generic agents (setup, planner, coder, tester, reviewer)
 # Domain knowledge lives in skills (loaded via Skill tool) — agents are workflow primitives.
 # TEAM_TYPE doesn't change agent set; all projects get the same 5 agents.
-AGENTS="setup planner coder tester reviewer"
-
-for agent in $AGENTS; do
+# CAW_AGENTS is defined in cli/defs.sh (sourced at top).
+for agent in $CAW_AGENTS; do
   SRC="$REPO_ROOT/template/agents/$agent.md"
   DEST="$PROJECT_PATH/.claude/agents/$agent.md"
   if [[ -f "$SRC" ]]; then
@@ -811,6 +816,20 @@ if [[ -f "$AGENTS_SRC" ]]; then
     echo "   ✅ AGENTS.md ${C_DIM}(Codex CLI + Antigravity + cross-tool)${C_RESET}"
   else
     echo "   ⏭️  AGENTS.md (already exists, kept)"
+  fi
+fi
+
+# CLAUDE.md (Claude Code: @-imports AGENTS.md + harness context at load time).
+# Skip if the project already has one — users may have run /init or hand-written it.
+CLAUDE_SRC="$TEMPLATE_DIR/CLAUDE.md"
+CLAUDE_DEST="$PROJECT_PATH/CLAUDE.md"
+if [[ -f "$CLAUDE_SRC" ]]; then
+  if [[ ! -f "$CLAUDE_DEST" ]]; then
+    cp "$CLAUDE_SRC" "$CLAUDE_DEST"
+    perl -i -pe "s/\{\{PROJECT_NAME\}\}/$ESCAPED_PROJECT_NAME/g;" "$CLAUDE_DEST"
+    echo "   ✅ CLAUDE.md ${C_DIM}(Claude Code harness context)${C_RESET}"
+  else
+    echo "   ⏭️  CLAUDE.md (already exists, kept)"
   fi
 fi
 
@@ -958,9 +977,9 @@ printf "${C_BRIGHT_GREEN}${C_BOLD}✨ Done!${C_RESET} ${C_BOLD}Project initializ
 echo ""
 printf "${C_BOLD}Next steps:${C_RESET}\n"
 printf "  ${C_GREEN}1.${C_RESET} Open Claude Code in: ${C_CYAN}%s${C_RESET}\n" "$PROJECT_PATH"
-printf "  ${C_GREEN}2.${C_RESET} Run: ${C_BRIGHT_YELLOW}/init${C_RESET}         ${C_GRAY}← Claude Code built-in: generates CLAUDE.md${C_RESET}\n"
-printf "  ${C_GREEN}3.${C_RESET} Run: ${C_BRIGHT_YELLOW}/caw-setup${C_RESET}    ${C_GRAY}← detects stack, copies skills, writes conventions.md${C_RESET}\n"
-printf "  ${C_GREEN}4.${C_RESET} Run: ${C_BRIGHT_YELLOW}/caw-plan \"<feature description>\"${C_RESET}\n"
+printf "  ${C_GREEN}2.${C_RESET} Run: ${C_BRIGHT_YELLOW}/caw-setup${C_RESET}    ${C_GRAY}← detects stack, copies skills, writes conventions.md${C_RESET}\n"
+printf "  ${C_GREEN}3.${C_RESET} Run: ${C_BRIGHT_YELLOW}/caw-plan \"<feature description>\"${C_RESET}\n"
+printf "${C_DIM}  (CLAUDE.md + AGENTS.md harness context already scaffolded. Optionally run ${C_RESET}${C_BRIGHT_YELLOW}/init${C_RESET}${C_DIM} to enrich CLAUDE.md with codebase notes.)${C_RESET}\n"
 echo ""
 printf "${C_DIM}Workflow: /caw-plan → /caw-code → /caw-test → /caw-review (or /caw-verify for parallel)${C_RESET}\n"
 echo ""

@@ -334,7 +334,7 @@ For auth, authorization, data ownership, API shape, audit/security, or
 validation changes, record the decision in both places:
 
 1. Add a markdown file under `docs/caw/decisions/` from
-   `docs/caw/adr.md` template.
+   `docs/caw/templates/adr.md` template.
 2. Add or refresh the durable record:
 
 ```bash

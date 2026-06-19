@@ -14,6 +14,24 @@ in the DB and is queried with `scripts/caw/bin/harness-cli`.
 | `HARNESS_AUDIT.md` | What `harness-cli audit` checks and how the entropy score is computed. |
 | `TOOL_REGISTRY.md` | Registering external project tools so agents can discover them. |
 
+## File naming convention
+
+Casing signals whether a file is read-only reference or something the project fills in:
+
+- **`UPPER_CASE.md`** — **read-only guide / policy**. Canonical reference an agent
+  *reads* to understand the harness; identical across every CAW project, never
+  edited per-project (`HARNESS.md`, `ARCHITECTURE.md`, `TRACE_SPEC.md`, …).
+  `README.md` is the one universal exception (always UPPER by convention).
+- **`lower-case.md`** — **fill-in**: a file the project *writes into*. Two flavors:
+  - *Format templates* (`templates/adr.md`, `templates/intake.md`) — copied/filled
+    each time you create an instance.
+  - *Project seed prose* (`conventions.md`, `knowledge.md`, `harness-backlog.md`) —
+    scaffolded near-empty, then filled and appended to over the project's life.
+- **`NNNN-*.md` / `US-*.md`** — content instances with an ID (`decisions/`, stories).
+
+Rule of thumb: if an agent only ever *reads* it → UPPER; if the project *writes*
+into it → lower.
+
 ## Layout of a CAW project
 
 ```text
@@ -22,9 +40,9 @@ project/
     agents/  commands/  rules/  hooks/  settings.json
   docs/
     caw/              # caw policy + prose the agents read/write
-      HARNESS.md  FEATURE_INTAKE.md  ARCHITECTURE.md  ...   # policy (this folder)
-      conventions.md  knowledge.md  intake.md  adr.md
-      harness-backlog.md
+      HARNESS.md  FEATURE_INTAKE.md  ARCHITECTURE.md  ...   # policy (UPPER_CASE)
+      conventions.md  knowledge.md  harness-backlog.md      # project seed prose
+      templates/      # format templates (adr.md, intake.md)
       decisions/      # ADR markdown (NNNN-*.md)
       stories/<story-id>/  plan.md  code.md  tests.md  review.md
       advisories/     # security advisories

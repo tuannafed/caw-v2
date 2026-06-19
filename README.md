@@ -23,7 +23,7 @@ caw init <project>                        ← scaffold core (agents, commands, r
 Open project in Claude Code
         │
         ▼
-/init                                     ← Claude built-in: generates CLAUDE.md
+/init                                     ← optional: enriches the scaffolded CLAUDE.md
 /caw-setup                                ← detect stack → install skills → write conventions.md
         │
         ▼
@@ -65,13 +65,13 @@ caw init ~/Projects/my-app
 
 Copies core (agents, commands, rules, hooks) into `.claude/`. **No skills yet** — those come in step 4.
 
-### 3 — Generate project documentation _(inside Claude Code)_
+### 3 — Generate project documentation _(inside Claude Code, optional)_
 
 ```
 /init
 ```
 
-Claude Code's built-in command. Scans the codebase and writes `CLAUDE.md`. Required input for the next step.
+Claude Code's built-in command. `caw init` already scaffolds a harness `CLAUDE.md` (with `@`-imports + `harness-cli`), so this step is **optional**. If you do run it to add codebase notes, keep the `<!-- HARNESS:BEGIN -->…<!-- HARNESS:END -->` block (and the `@AGENTS.md` / `@docs/caw/FEATURE_INTAKE.md` imports) so harness context still loads.
 
 ### 4 — Setup caw for this project _(inside Claude Code)_
 
@@ -103,7 +103,7 @@ Or step-by-step:
 /caw-code <task-id>                       ← one phase at a time
 /caw-test <task-id>                       ← write tests (mode driven by Plan)
 /caw-review <task-id>                     ← multi-dim review with severity findings
-/caw-status [<task-id>]                   ← check task state
+/caw-verify <task-id>                     ← test + review in parallel
 ```
 
 ### 6 — Maintain
@@ -161,7 +161,6 @@ Plus a one-time **Bootstrap** stage handled by `/caw-setup` (agent: `setup`).
 | `/caw-test`        | Tests (mode derived from Plan's lane)                   |
 | `/caw-review`      | Multi-dim review                                        |
 | `/caw-verify`      | Test + review in parallel                               |
-| `/caw-status`      | Show task state                                         |
 
 ### Lane-driven TDD
 
@@ -229,10 +228,10 @@ Two top-level concerns: `template/` is everything copied into a project on
 caw repo/
 ├── template/                   ← copied into a project on `caw init`
 │   ├── agents/                 5 agent definitions (setup, planner, coder, tester, reviewer)
-│   ├── commands/               7 command files (caw-setup, caw-plan, caw-code, ...)
+│   ├── commands/               6 command files (caw-setup, caw-plan, caw-code, ...)
 │   ├── rules/                  Non-overridable coding rules (common/ + typescript/ + react/)
 │   ├── conductor/              ADR / intake templates, knowledge, harness-backlog
-│   ├── config/                 gitleaks, AGENTS.md, settings.json, advisories
+│   ├── config/                 gitleaks, AGENTS.md, CLAUDE.md, settings.json, advisories
 │   ├── skills/                 65 caw-owned skills (vendor-curated + workflow + testing)
 │   └── durable/                the harness durable layer
 │       ├── bin/harness-cli     stdlib Python CLI
