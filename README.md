@@ -194,6 +194,29 @@ CAW_PROJECT_ROOT="<your-project>" pnpm dev
 
 ---
 
+## Releasing
+
+The scaffolded project settings pin the `caw` marketplace to a commit SHA
+(`extraKnownMarketplaces.caw.source.ref` in `plugins/caw/templates/project/settings.json`
+and `plugins/caw/project.settings.json`). **Bump that pin before tagging a release**,
+or members who install the new version get a stale plugin.
+
+```bash
+# Stage the release commit, then point the pin at it:
+cli/bump-marketplace-ref.py --write
+git commit -am "release: bump marketplace pin"
+git tag vX.Y.Z && git push --tags
+```
+
+`cli/bump-marketplace-ref.py --check` verifies the pin matches `git HEAD` (use it
+locally **before committing** the bump). The **release-pin-check** GitHub Action runs
+on every `v*` tag push and **fails the release** if the pin is stale — so a forgotten
+bump can't ship. (The Action uses `--allow-parent`: the bump commit pins to its own
+parent, since a commit can't contain its own SHA — both the tagged commit and its
+parent are accepted.)
+
+---
+
 ## Documentation
 
 - [docs/CONCEPT.md](docs/CONCEPT.md) — architecture design doc
