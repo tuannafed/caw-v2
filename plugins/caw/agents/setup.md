@@ -147,7 +147,27 @@ echo "    export CLAUDE_PLUGIN_ROOT=~/.claude/plugins/<...>/caw" >&2
 exit 1
 WRAP
 chmod +x scripts/caw/bin/harness-cli
+
+# Gitignore the machine-local artifacts caw scaffolds, so a member never commits
+# them. harness.db (+ WAL/SHM) is per-machine state; .claude/ holds local config.
+# Idempotent — only appends the block if it isn't already there.
+if ! grep -q "# >>> caw (machine-local) >>>" .gitignore 2>/dev/null; then
+  cat >> .gitignore <<'GITIGNORE'
+
+# >>> caw (machine-local) >>>
+harness.db
+harness.db-wal
+harness.db-shm
+.claude/
+# <<< caw (machine-local) <<<
+GITIGNORE
+  echo "✓ .gitignore updated (harness.db, .claude/ are machine-local)"
+fi
 ```
+
+> The wrapper at `scripts/caw/bin/harness-cli` and the `docs/caw/` seeds ARE meant to
+> be committed (they're shared project config); only `harness.db` and `.claude/` are
+> machine-local and gitignored above.
 
 > **Note on `CLAUDE_PLUGIN_ROOT` in the wrapper:** that env var is set when Claude
 > Code invokes a hook/command, so the wrapper resolves correctly in-session. Outside
