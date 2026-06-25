@@ -159,8 +159,8 @@ def build_parser():
     tr.set_defaults(_fn=commands.trace_add)
 
     # query <table> | query stats | query friction | query sql "<SELECT …>"
-    q = sub.add_parser("query", help="query a table, the stats/friction views, or raw SQL")
-    q.add_argument("table", help="intake|story|task|decision|backlog|trace|intervention|tool|stats|friction|sql")
+    q = sub.add_parser("query", help="query a table, the matrix/stats/friction views, or raw SQL")
+    q.add_argument("table", help="intake|story|task|decision|backlog|trace|intervention|tool|matrix|stats|friction|sql")
     q.add_argument("sql", nargs="?", help="when table=sql: a read-only SELECT to run")
     q.add_argument("--json", action="store_true")
     q.add_argument("--summary", action="store_true")

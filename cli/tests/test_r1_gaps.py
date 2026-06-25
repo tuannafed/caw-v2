@@ -92,6 +92,18 @@ def test_matrix_counts_phases_and_passes(conn):
     assert '"passed": 1' in out
 
 
+def test_query_matrix_is_an_alias_for_matrix(conn):
+    # Agents and docs reference both `matrix` and `query matrix`; the latter must
+    # route to the matrix view, not error as an unknown table.
+    _task(conn)
+    conn.execute("INSERT INTO task (story_id,task_key,verify_command,last_verified_result) "
+                 "VALUES ('t1','a','true','pass')")
+    conn.commit()
+    out = commands.query(conn, Args(table="matrix", json=True, summary=False))
+    assert '"tasks": 1' in out
+    assert '"passed": 1' in out
+
+
 # ----------------------------------------------------------------- verify-all
 def test_verify_all_runs_every_phase(conn):
     _task(conn)

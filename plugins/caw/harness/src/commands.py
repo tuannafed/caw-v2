@@ -307,10 +307,14 @@ def query(conn, a):
         return _query_friction(conn, a)
     if table == "sql":
         return _query_sql(conn, a)
+    if table == "matrix":
+        # `query matrix` is an alias for the top-level `matrix` view — agents and
+        # docs reference it both ways, so accept either.
+        return matrix(conn, a)
     if table not in QUERYABLE:
         raise domain.ValidationError(
             f"query: unknown table '{table}'. Choose: "
-            f"{', '.join(sorted(QUERYABLE))}, stats, friction, sql"
+            f"{', '.join(sorted(QUERYABLE))}, matrix, stats, friction, sql"
         )
     sql = f"SELECT * FROM {table}"  # table name validated against allowlist above
     params = ()
