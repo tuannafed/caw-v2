@@ -15,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Need the tag commit's parent for --allow-parent (the bump commit
+          # pins to its parent). Default depth=1 has no parent → false-fail.
+          fetch-depth: 2
 
       - name: Verify marketplace ref matches the release tag commit
         run: |
