@@ -17,7 +17,7 @@ for every skill its workflow requires.
 
 ## Skill sources (plugin era — no install step)
 
-caw v2 ships as the **`caw` plugin**. There is no `/caw-setup --add`, no
+caw v2 ships as the **`caw` plugin**. There is no `/caw:setup --add`, no
 `skill-map.yaml`, and no symlinked vendored skills. Skills come from three places,
 all available the moment the relevant plugins are enabled:
 

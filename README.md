@@ -45,20 +45,20 @@ Commit a `.claude/settings.json` into your project so members are **prompted to 
 ## Usage
 
 ```
-/caw-setup                 # detect stack, scaffold docs/caw seeds, verify harness, write conventions.md + project.yaml
-/caw-plan "<description>"   # generate a Plan (spec + API contract + phases + self-challenge + lane)
-/caw-code <id> --all       # implement all phases (parallel where the plan allows)
-/caw-verify <id>           # test + review in parallel
+/caw:setup                 # detect stack, scaffold docs/caw seeds, verify harness, write conventions.md + project.yaml
+/caw:plan "<description>"   # generate a Plan (spec + API contract + phases + self-challenge + lane)
+/caw:code <id> --all       # implement all phases (parallel where the plan allows)
+/caw:verify <id>           # test + review in parallel
 ```
 
 Or step-by-step:
 
 ```
-/caw-plan "<description>"
-/caw-code <id>             # one phase at a time
-/caw-test <id>             # write tests (mode driven by the Plan's lane)
-/caw-review <id>           # multi-dim review with severity findings
-/caw-verify <id>           # test + review in parallel
+/caw:plan "<description>"
+/caw:code <id>             # one phase at a time
+/caw:test <id>             # write tests (mode driven by the Plan's lane)
+/caw:review <id>           # multi-dim review with severity findings
+/caw:verify <id>           # test + review in parallel
 ```
 
 ---
@@ -68,7 +68,7 @@ Or step-by-step:
 | Component | What |
 | --- | --- |
 | **5 agents** | `setup`, `planner`, `coder`, `tester`, `reviewer` |
-| **6 commands** | `/caw-setup`, `/caw-plan`, `/caw-code`, `/caw-test`, `/caw-review`, `/caw-verify` |
+| **6 commands** | `/caw:setup`, `/caw:plan`, `/caw:code`, `/caw:test`, `/caw:review`, `/caw:verify` |
 | **4 authored skills** | `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing` (namespaced `caw:<name>`) |
 | **Durable harness** | `harness-cli` (Python stdlib) + SQLite; state lives in `harness.db` at the **project root** (never in the plugin cache) |
 | **Hooks** | Safety + workflow hooks, profile-gated by `CAW_HOOK_PROFILE` (`minimal` / `standard` / `strict`) |
@@ -159,7 +159,7 @@ caw-v2/
 │   └── caw/               The plugin
 │       ├── .claude-plugin/     plugin.json manifest
 │       ├── agents/             5 agents (setup, planner, coder, tester, reviewer)
-│       ├── commands/           6 commands (caw-setup, caw-plan, caw-code, ...)
+│       ├── commands/           6 commands (setup, plan, code, ... → /caw:setup, /caw:plan, …)
 │       ├── skills/             4 authored skills
 │       ├── hooks/              Safety + workflow hooks (hooks.json) + dispatcher
 │       ├── rules/              Non-overridable coding rules (common/ + typescript/ + react/)

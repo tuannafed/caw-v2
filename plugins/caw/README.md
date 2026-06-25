@@ -20,7 +20,7 @@ install on trust — that file also enables the three companion plugins below.
 | Component | What |
 |---|---|
 | **agents/** | 5 agents: `setup`, `planner`, `coder`, `tester`, `reviewer` |
-| **commands/** | 6 commands: `/caw-setup`, `/caw-plan`, `/caw-code`, `/caw-test`, `/caw-review`, `/caw-verify` |
+| **commands/** | 6 commands: `/caw:setup`, `/caw:plan`, `/caw:code`, `/caw:test`, `/caw:review`, `/caw:verify` |
 | **skills/** | 4 authored skills: `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing` (namespaced `caw:<name>`) |
 | **hooks/** | Safety + workflow hooks (`hooks.json`), profile-gated by `CAW_HOOK_PROFILE` |
 | **harness/** | Durable layer — `harness-cli` (Python stdlib) + SQLite schema. State lives in `harness.db` at the **project root**, not the plugin cache. |
@@ -40,10 +40,10 @@ caw no longer vendors framework/library skills. Use these alongside `caw`:
 ## Usage
 
 ```
-/caw-setup                 # detect stack, verify harness, write conventions.md + project.yaml
-/caw-plan "<description>"   # generate a Plan
-/caw-code <id> --all       # implement all phases
-/caw-verify <id>           # test + review in parallel
+/caw:setup                 # detect stack, verify harness, write conventions.md + project.yaml
+/caw:plan "<description>"   # generate a Plan
+/caw:code <id> --all       # implement all phases
+/caw:verify <id>           # test + review in parallel
 ```
 
 ## Hook profiles

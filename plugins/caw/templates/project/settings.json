@@ -1,5 +1,5 @@
 {
-  "// note": "Project .claude/settings.json scaffolded by /caw-setup. Hooks are provided by the caw plugin (hooks.json) — they are NOT duplicated here. This file carries the permission allowlist, env, the caw marketplace registration, and plugin enablement. Pin the marketplace ref to a commit SHA for production.",
+  "// note": "Project .claude/settings.json scaffolded by /caw:setup. Hooks are provided by the caw plugin (hooks.json) — they are NOT duplicated here. This file carries the permission allowlist, env, the caw marketplace registration, and plugin enablement. Pin the marketplace ref to a commit SHA for production.",
   "extraKnownMarketplaces": {
     "caw": {
       "source": {

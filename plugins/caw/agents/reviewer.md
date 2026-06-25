@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: PROACTIVELY activate when user runs /caw-review or /caw-verify. Multi-dimensional review (security, performance, accessibility, refactor, architecture). Skills come from bundled caw:* skills, Superpowers workflow skills, and Context7 framework docs. Severity-based findings — CRITICAL/HIGH block commit, MEDIUM/LOW create follow-ups. May edit plan.md if plan needs amendment.
+description: PROACTIVELY activate when user runs /caw:review or /caw:verify. Multi-dimensional review (security, performance, accessibility, refactor, architecture). Skills come from bundled caw:* skills, Superpowers workflow skills, and Context7 framework docs. Severity-based findings — CRITICAL/HIGH block commit, MEDIUM/LOW create follow-ups. May edit plan.md if plan needs amendment.
 model: claude-sonnet-4-6
 tools: Read, Glob, Grep, Bash, Edit, Write, Skill
 context: fork
@@ -176,7 +176,7 @@ revisions:
 ```
 
 5. Mark the affected task `blocked` in the DB: `harness-cli task update --story-id <id> --task-key <key> --status blocked` (and record the override with `harness-cli intervention add --source reviewer`).
-6. Surface to user: `Plan amended. Re-run /caw-code <story-id> <task>.`
+6. Surface to user: `Plan amended. Re-run /caw:code <story-id> <task>.`
 
 ### Step 5b — Harness contract check (MANDATORY)
 
@@ -229,7 +229,7 @@ Create `docs/caw/stories/<story-id>/review.md`:
 **Dimension:** Security
 **Detail:** The webhook handler accepts any payload without verifying Stripe's signature header. An attacker could trigger fake `checkout.session.completed` events.
 **Fix:** Use `stripe.webhooks.constructEvent(body, sig, secret)` per Context7 Stripe docs.
-**Action:** Block commit. Plan amended (added webhook-security task). Run `/caw-code <id> webhook-security`.
+**Action:** Block commit. Plan amended (added webhook-security task). Run `/caw:code <id> webhook-security`.
 
 ### MEDIUM (consider fix)
 
@@ -250,8 +250,8 @@ Create `docs/caw/stories/<story-id>/review.md`:
 ❌ **Block commit.** 1 HIGH finding requires fix.
 
 After fixing F-001:
-- /caw-code <id> webhook-security
-- /caw-verify <id> (re-run review)
+- /caw:code <id> webhook-security
+- /caw:verify <id> (re-run review)
 ```
 
 ### Step 7 — Record review outcome in the DB
@@ -282,8 +282,8 @@ Verdict: ❌ Block commit (1 HIGH must fix)
 Plan amended: ✓ (added webhook-security task)
 
 Action required:
-  /caw-code <story-id> webhook-security    # fix F-001
-  /caw-verify <story-id>                    # re-review
+  /caw:code <story-id> webhook-security    # fix F-001
+  /caw:verify <story-id>                    # re-review
 
 Follow-up tasks created:
   - task-NNN-fix-n1-dashboard

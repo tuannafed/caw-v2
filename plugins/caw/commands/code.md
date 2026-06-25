@@ -14,7 +14,7 @@ Run the coding workflow: $ARGUMENTS
 ### Prerequisites
 
 1. Verify `docs/caw/stories/<story-id>/plan.md` exists.
-   If not: `❌ Task not found. Run /caw-plan first.`
+   If not: `❌ Task not found. Run /caw:plan first.`
 2. Verify each target task's `depends_on` tasks all have status `done`.
 
 > A task's `skills_hint` is a hint, not a gate — there is no installed-skill
@@ -32,19 +32,19 @@ Coder agent will:
 3. Implement code per task description + test_scenarios + API contract
 4. **Self-verify gate (mandatory):** run the project type checker and linter on
    the changed files. This gate **blocks** the task from being marked `done` —
-   `/caw-verify` does not re-run type-check.
+   `/caw:verify` does not re-run type-check.
 5. Append to `code.md` and set the task status: `done` if the gate passed,
    `blocked` if it did not.
 
 After the task completes (next step depends on `lane` — read it from the DB,
 `harness-cli query story --json`, find the row for `<story-id>`):
-- Gate passed, more pending tasks → `/caw-code <story-id>` (next task)
+- Gate passed, more pending tasks → `/caw:code <story-id>` (next task)
 - Gate passed, all tasks done, `lane: tiny` → **done.** Skip test + review (the
   self-verify gate is the proof for tiny). Proceed to commit.
-- Gate passed, all tasks done, `lane: standard` or `risky` → `/caw-verify
+- Gate passed, all tasks done, `lane: standard` or `risky` → `/caw:verify
   <story-id>` (test + review parallel).
 - Gate failed (task `blocked`) → fix the reported type-check/lint errors, then
-  re-run `/caw-code <story-id> <task>`. Do NOT proceed to `/caw-verify`.
+  re-run `/caw:code <story-id> <task>`. Do NOT proceed to `/caw:verify`.
 
 ### All-tasks mode (`<story-id> --all`)
 
@@ -84,6 +84,6 @@ Phases run: db, backend, frontend, integrate
 Parallel groups: [db] → [backend|frontend-skel] → [frontend-impl] → [integrate]
 Self-verify gate: all tasks type-check ✓ + lint ✓
 
-Next: /caw-verify <story-id>   (lane: standard|risky)
+Next: /caw:verify <story-id>   (lane: standard|risky)
       — or commit directly if lane: tiny (test + review skipped)
 ```

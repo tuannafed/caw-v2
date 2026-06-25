@@ -13,7 +13,7 @@ Run the review workflow: $ARGUMENTS
 Verify all coder tasks are complete (`harness-cli query task --json` shows each `done`). If not:
 
 ```
-❌ Coding incomplete. Run /caw-code <story-id> --all first.
+❌ Coding incomplete. Run /caw:code <story-id> --all first.
 ```
 
 ### Delegate to reviewer agent
@@ -44,8 +44,8 @@ Reviewer agent will:
 
 If verdict is block:
 - Reviewer amended Plan (if needed) and added new task
-- Re-run `/caw-code <story-id> <task>` to fix
-- Then `/caw-verify <story-id>` to re-validate
+- Re-run `/caw:code <story-id> <task>` to fix
+- Then `/caw:verify <story-id>` to re-validate
 
 If verdict is ready:
 - Proceed to commit/PR (handled outside caw workflow)

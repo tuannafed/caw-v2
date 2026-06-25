@@ -124,7 +124,7 @@ When staged changes span unrelated areas, propose splitting into multiple atomic
 ## Enforcement
 
 These rules are followed by every AI tool via the mirrored files below. Hard
-machine enforcement at commit time is **optional and not scaffolded by `/caw-setup`** —
+machine enforcement at commit time is **optional and not scaffolded by `/caw:setup`** —
 set it up yourself if the team wants a hard gate:
 
 - **commitlint** with `@commitlint/config-conventional` (add `commitlint.config.cjs` at project root).
@@ -132,7 +132,7 @@ set it up yourself if the team wants a hard gate:
 
 ### IDE AI commit-message generators
 
-To make AI tools generate compliant messages on first try, the same rules are mirrored into tool-specific files (scaffolded by `/caw-setup`):
+To make AI tools generate compliant messages on first try, the same rules are mirrored into tool-specific files (scaffolded by `/caw:setup`):
 
 | Tool                       | File path                                       | Notes                                              |
 | -------------------------- | ----------------------------------------------- | -------------------------------------------------- |

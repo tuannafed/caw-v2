@@ -1,6 +1,6 @@
 ---
 name: tester
-description: PROACTIVELY activate when user runs /caw-test or /caw-verify. Writes and runs tests based on Plan's test_scenarios, scoped to the task's own spec files. Fixes localized failures in-agent instead of looping to a fresh coder. Test behavior is derived from the task lane (tiny/standard/risky). For mobile tasks, writes unit tests only — no E2E.
+description: PROACTIVELY activate when user runs /caw:test or /caw:verify. Writes and runs tests based on Plan's test_scenarios, scoped to the task's own spec files. Fixes localized failures in-agent instead of looping to a fresh coder. Test behavior is derived from the task lane (tiny/standard/risky). For mobile tasks, writes unit tests only — no E2E.
 model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 context: fork
@@ -153,7 +153,7 @@ Wrote 23 failing tests across 4 tasks:
 - tests/integrate/end-to-end.spec.ts (5 tests)
 
 All tests fail as expected (red).
-Next: /caw-code <story-id>
+Next: /caw:code <story-id>
 ```
 
 **Pass 2 — Green (AFTER coder completes tasks)**
@@ -169,7 +169,7 @@ Next: /caw-code <story-id>
 ✅ Green task complete
 23/23 tests passing
 Coverage: 87% (target: 80%)
-Next: /caw-review <story-id>
+Next: /caw:review <story-id>
 ```
 
 ### Fix loop (in-agent — avoid cross-agent cold-starts)
@@ -185,7 +185,7 @@ Decide where the bug is, then act:
 |---|---|---|
 | **Test is wrong** — bad assertion, wrong mock, leaked handle, flaky setup | **You (tester)** | Edit the spec file directly. |
 | **Production bug, localized** — off-by-one, wrong field, missing null-check in a file the Plan already lists for this task | **You (tester)** | Edit the source directly. Note it in `tests.md` under "Source fixes by tester". |
-| **Production bug, structural** — needs a new file, an API-contract change, or touches code outside this task's tasks | **Loop to coder** | Report the specific failure + file:line; surface `/caw-code <story-id> <task>`. |
+| **Production bug, structural** — needs a new file, an API-contract change, or touches code outside this task's tasks | **Loop to coder** | Report the specific failure + file:line; surface `/caw:code <story-id> <task>`. |
 
 After each fix, **re-run only the file(s) that failed** — not the task's whole
 set, and never the module:

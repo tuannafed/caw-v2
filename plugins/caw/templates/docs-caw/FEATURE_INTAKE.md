@@ -72,7 +72,7 @@ Use for story-sized behavior with bounded blast radius.
 
 Requirements:
 
-- Create or update the task plan at `docs/caw/stories/<story-id>/plan.md` (`/caw-plan`).
+- Create or update the task plan at `docs/caw/stories/<story-id>/plan.md` (`/caw:plan`).
 - Link relevant product docs.
 - Add or update validation expectations.
 - Implement the smallest vertical slice when implementation exists.

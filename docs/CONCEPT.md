@@ -22,8 +22,8 @@ Everything the pipeline needs — agents, commands, rules, hooks, authored skill
        Bootstrap                       Per-task
        ─────────                       ────────
         setup    →    planner   →   coder   →   tester   →   reviewer
-       /caw-setup    /caw-plan    /caw-code    /caw-test    /caw-review
-                                  (--all)                   /caw-verify
+       /caw:setup    /caw:plan    /caw:code    /caw:test    /caw:review
+                                  (--all)                   /caw:verify
 ```
 
 Each feature/bug/chore/refactor becomes a **task** at `docs/caw/tasks/<task-id>/`. Stages hand off via durable state (`harness.db`) plus structured markdown prose.
@@ -50,12 +50,12 @@ Each agent is a markdown file at `plugins/caw/agents/<name>.md` with YAML frontm
 
 | Command                            | Action                                              |
 | ---------------------------------- | --------------------------------------------------- |
-| `/caw-setup`                       | Detect stack, scaffold seeds, verify harness, write conventions |
-| `/caw-plan "<desc>"`               | Generate Plan from description                      |
-| `/caw-code <id> [<phase>] [--all]` | Implement one phase, or all phases with `--all`     |
-| `/caw-test <id>`                   | Tests (mode derived from Plan's lane)               |
-| `/caw-review <id>`                 | Multi-dim review                                    |
-| `/caw-verify <id>`                 | Test + review in parallel                           |
+| `/caw:setup`                       | Detect stack, scaffold seeds, verify harness, write conventions |
+| `/caw:plan "<desc>"`               | Generate Plan from description                      |
+| `/caw:code <id> [<phase>] [--all]` | Implement one phase, or all phases with `--all`     |
+| `/caw:test <id>`                   | Tests (mode derived from Plan's lane)               |
+| `/caw:review <id>`                 | Multi-dim review                                    |
+| `/caw:verify <id>`                 | Test + review in parallel                           |
 
 The `caw-` prefix avoids namespace collisions with other Claude Code skills/commands.
 
@@ -110,7 +110,7 @@ Risky lane requires user confirmation before proceeding — never auto-downgrade
 State and prose are kept separate. **State** lives in a SQLite database; **prose** lives in markdown. This split keeps task status machine-queryable while letting agents write rich, human-readable handoffs.
 
 - **State → `harness.db`.** The harness CLI binary ships in the plugin at `${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli`, but writes its DB to the **project root** (`./harness.db`, resolved from CWD — never the plugin cache). Every agent reads/writes task status, lane, and phase progress through it.
-- **Stable wrapper.** `/caw-setup` writes a thin wrapper at the project's `scripts/caw/bin/harness-cli` that `exec`s the plugin binary. This keeps one documented path stable for all tools regardless of where the plugin cache lives.
+- **Stable wrapper.** `/caw:setup` writes a thin wrapper at the project's `scripts/caw/bin/harness-cli` that `exec`s the plugin binary. This keeps one documented path stable for all tools regardless of where the plugin cache lives.
 - **Prose → markdown.** Per-task handoffs (`plan.md`, `code.md`, `tests.md`, `review.md`) and the project-level living docs below.
 
 Beyond per-task files, caw keeps project-level living docs under `docs/caw/`. Agents follow a **pull-then-push** contract (`rules/common/harness-contract.md`) — read them before working, update them after.
@@ -160,13 +160,13 @@ This is "thin authored core + delegate framework knowledge to Context7 + workflo
 ```
 /plugin install caw@caw   # Install from the caw marketplace
 /init                          # Claude Code built-in — generates CLAUDE.md
-/caw-setup                     # Detect stack, scaffold docs/caw seeds, verify harness, write conventions
-/caw-plan "<desc>"             # Per-task planning
-/caw-code <id> --all           # Implementation (all phases)
-/caw-verify <id>               # Test + review parallel
+/caw:setup                     # Detect stack, scaffold docs/caw seeds, verify harness, write conventions
+/caw:plan "<desc>"             # Per-task planning
+/caw:code <id> --all           # Implementation (all phases)
+/caw:verify <id>               # Test + review parallel
 ```
 
-`/caw-setup` is the only bootstrap step, and it is purely local: it scaffolds the
+`/caw:setup` is the only bootstrap step, and it is purely local: it scaffolds the
 `docs/caw/` seeds the plugin ships, writes the stable `scripts/caw/bin/harness-cli`
 wrapper, verifies `harness.db` initializes at the project root, and generates
 `conventions.md` + `.claude/project.yaml`. No network, no catalog, no symlinks.
@@ -198,4 +198,4 @@ before invoking any hook.
 5. **Skills are authoritative.** When a loaded skill says "use X pattern", agents defer to it over their own assumptions.
 6. **MANDATORY skill load.** Every agent must invoke `Skill({skill: "..."})` for every required name before touching project files. Listing skills in output without invoking is a reporting failure.
 7. **Severity decides action.** CRITICAL/HIGH always block; MEDIUM/LOW always create follow-ups. No ad-hoc judgment calls.
-8. **Idempotent bootstrap.** `/caw-setup` is safe to re-run — seed scaffolding, the wrapper write, and `harness init` are all idempotent.
+8. **Idempotent bootstrap.** `/caw:setup` is safe to re-run — seed scaffolding, the wrapper write, and `harness init` are all idempotent.

@@ -1,6 +1,6 @@
 ---
 name: planner
-description: PROACTIVELY activate when user runs /caw-plan. Translates feature/bug/chore/refactor requests into a structured Plan with tasks, test_scenarios, skills_hint per task (naming caw authored skills, Superpowers workflow skills, or Context7 framework libraries), and a self-challenge section (risks, gaps, ADRs). Determines the task lane.
+description: PROACTIVELY activate when user runs /caw:plan. Translates feature/bug/chore/refactor requests into a structured Plan with tasks, test_scenarios, skills_hint per task (naming caw authored skills, Superpowers workflow skills, or Context7 framework libraries), and a self-challenge section (risks, gaps, ADRs). Determines the task lane.
 model: claude-sonnet-4-6
 tools: Read, Write, Glob, Grep, Skill
 context: fork
@@ -81,7 +81,7 @@ the full multi-dimension review.
 ## Inputs
 
 1. `CLAUDE.md` — project intent, custom instructions
-2. `docs/caw/conventions.md` — archetype, folder contract, forbidden patterns (from /caw-setup)
+2. `docs/caw/conventions.md` — archetype, folder contract, forbidden patterns (from /caw:setup)
 3. Available skills (no install manifest) — the 4 authored `caw:*` skills are always present in the plugin; framework docs come from Context7; workflow skills from the Superpowers plugin
 4. `docs/caw/decisions/` — list ADRs, read those tagged with relevant concerns
 5. Project files (`package.json`, `apps/`, `packages/`, `src/`)

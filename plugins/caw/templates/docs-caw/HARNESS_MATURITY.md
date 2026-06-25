@@ -36,7 +36,7 @@ A durable layer agents write to and query. The harness can *score* a trace and
 The harness *verifies* work, not just observes it. A phase carries a proof
 command; a pre-close gate blocks approval without it.
 - Criteria: `phase verify` + `task gate` exist and are wired into
-  `caw-verify`/`reviewer`. (caw v2 M3.)
+  `/caw:verify`/`reviewer`. (caw v2 M3.)
 
 ### H5 — Evolution infrastructure
 The harness proposes safe improvements to itself from its own friction + drift,

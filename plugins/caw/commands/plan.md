@@ -10,10 +10,10 @@ Run the planning workflow: $ARGUMENTS
 
 ### Prerequisite check
 
-Verify `docs/caw/conventions.md` exists (written by `/caw-setup`). If not:
+Verify `docs/caw/conventions.md` exists (written by `/caw:setup`). If not:
 
 ```
-❌ Project not set up. Run /caw-setup first.
+❌ Project not set up. Run /caw:setup first.
 ```
 
 ### Delegate to planner agent
@@ -29,7 +29,7 @@ Planner agent will:
 
 After planning, the next step follows the lane's **Pipeline stages** (see the
 planner's lane table — lane gates which agents run, this is the speed contract):
-- `lane: risky` → `/caw-test <story-id>` (red mode, write failing tests first)
-- `lane: standard` → `/caw-code <story-id>` (code → then `/caw-verify`)
-- `lane: tiny` → `/caw-code <story-id>` (code only — the coder's self-verify gate
-  is the proof; **skip `/caw-test` and `/caw-review`**, go straight to commit)
+- `lane: risky` → `/caw:test <story-id>` (red mode, write failing tests first)
+- `lane: standard` → `/caw:code <story-id>` (code → then `/caw:verify`)
+- `lane: tiny` → `/caw:code <story-id>` (code only — the coder's self-verify gate
+  is the proof; **skip `/caw:test` and `/caw:review`**, go straight to commit)

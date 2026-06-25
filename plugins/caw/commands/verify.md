@@ -14,9 +14,9 @@ Verify every task has status `done` in the DB (`harness-cli query task --json`).
 `pending`, `in_progress`, or `blocked`, abort:
 
 - A `blocked` task means the coder's self-verify gate (type-check / lint) failed.
-  Tell the user to fix the reported errors and re-run `/caw-code <story-id> <task>`
+  Tell the user to fix the reported errors and re-run `/caw:code <story-id> <task>`
   before verifying.
-- `/caw-verify` assumes the code already type-checks — it does not re-run the
+- `/caw:verify` assumes the code already type-checks — it does not re-run the
   type checker. It only runs tests + multi-dim review.
 
 ### Spawn tester + reviewer in parallel
@@ -31,7 +31,7 @@ Wait for both to complete.
 ### Durable verification gate (mechanical — runs BEFORE the verdict)
 
 A green test suite + an approved review is **not sufficient** to declare
-ready-to-commit. dava2 shipped DB leaks past `/caw-verify` because the gate was a
+ready-to-commit. dava2 shipped DB leaks past `/caw:verify` because the gate was a
 human reading code. The durable layer makes the gate mechanical: every task that
 carries a `verify_command` must have recorded a `pass`.
 
@@ -98,6 +98,6 @@ Tests: 18/18 passing
 Review: 1 HIGH (webhook signature not verified)
 
 Plan amended: yes (added webhook-security task)
-Action: /caw-code <story-id> webhook-security
-Then: /caw-verify <story-id> (re-run)
+Action: /caw:code <story-id> webhook-security
+Then: /caw:verify <story-id> (re-run)
 ```

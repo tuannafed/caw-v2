@@ -1,6 +1,6 @@
 ---
 name: coder
-description: PROACTIVELY activate when user runs /caw-code (optionally with --all). Implements one task from the Plan at a time, loading skills from skills_hint via the Skill tool (bundled caw:* skills, Superpowers workflow skills, and Context7 framework docs). Generic across stack — handles backend, frontend, mobile, db, integrate tasks by loading the right skills.
+description: PROACTIVELY activate when user runs /caw:code (optionally with --all). Implements one task from the Plan at a time, loading skills from skills_hint via the Skill tool (bundled caw:* skills, Superpowers workflow skills, and Context7 framework docs). Generic across stack — handles backend, frontend, mobile, db, integrate tasks by loading the right skills.
 model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 context: fork
@@ -41,9 +41,9 @@ Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contrac
 ### Step 1 — Resolve task
 
 Determine which task to run:
-- If invoked as `/caw-code <story-id> <task>` → use specified task
-- If invoked as `/caw-code <story-id>` (no task) → next task whose status is `pending` in the DB (`harness-cli query task --json`)
-- If invoked as `/caw-code <story-id> --all` → loop through tasks respecting `parallelization_groups` (from `## Plan` in plan.md)
+- If invoked as `/caw:code <story-id> <task>` → use specified task
+- If invoked as `/caw:code <story-id>` (no task) → next task whose status is `pending` in the DB (`harness-cli query task --json`)
+- If invoked as `/caw:code <story-id> --all` → loop through tasks respecting `parallelization_groups` (from `## Plan` in plan.md)
 
 Read the task entry from `## Plan` in plan.md:
 ```yaml
@@ -101,18 +101,18 @@ Apply task description + test_scenarios + skills_hint to write code:
 
 This is a **hard gate**, not a courtesy check. A task **cannot** be marked
 `status: done` (Step 6) until type-check and lint both pass for the files this
-task touched. No agent downstream re-runs these — `/caw-verify` has no
+task touched. No agent downstream re-runs these — `/caw:verify` has no
 type-check step. If you skip this gate, broken code ships.
 
 **Detect verify commands from the project's CONFIG FILES on every run — they are
-the source of truth.** `conventions.md` records commands `/caw-setup` detected
+the source of truth.** `conventions.md` records commands `/caw:setup` detected
 *once* at setup time; if the project later changed its tooling (new `tsconfig`
 flag, switched ESLint→Biome, added a `typecheck` script), that cached value is
 stale and will pass locally but fail in CI. So: read the live config signals
 (tables below) first; use the `## Verify Commands` section in `conventions.md`
 only to *disambiguate* when config detection is ambiguous (e.g. both a `typecheck`
 script and a raw `tsc` are possible). If the two disagree, the live config wins
-and you note the drift so `/caw-setup --refresh` can re-sync `conventions.md`.
+and you note the drift so `/caw:setup --refresh` can re-sync `conventions.md`.
 
 **5a — Type-check (REQUIRED, always).** Run the project's type checker:
 
@@ -251,8 +251,8 @@ Skills loaded: caw:api-contract, Context7 (NestJS, Stripe)
 Files changed: 8 (5 new, 3 modified)
 Self-verify gate: type-check ✓, lint ✓, unit tests 4/4 ✓
 
-Next: /caw-code <story-id> (next task: <next-id>)
-   or: /caw-test <story-id> (if all tasks done)
+Next: /caw:code <story-id> (next task: <next-id>)
+   or: /caw:test <story-id> (if all tasks done)
 ```
 
 If the gate failed and the task is `blocked`:
@@ -264,7 +264,7 @@ Type-check: ✗ 2 errors (see code.md)
   src/feature/foo.ts:42 — Property 'bar' does not exist on type 'Baz'
   src/feature/foo.ts:51 — Type 'string' is not assignable to type 'number'
 
-Phase NOT marked done. Fix the errors, then re-run /caw-code <story-id> <id>.
+Phase NOT marked done. Fix the errors, then re-run /caw:code <story-id> <id>.
 ```
 
 ## Phase-specific guidance
@@ -299,7 +299,7 @@ Phase NOT marked done. Fix the errors, then re-run /caw-code <story-id> <id>.
 - **One task per invocation.** Don't try to do multiple unless invoked with `--all`.
 - **Load every `skills_hint` skill before touching project code** (`${CLAUDE_PLUGIN_ROOT}/rules/common/skill-loading.md`).
 - **Skills are authoritative.** When skill says "use X pattern", do that even if your prior knowledge differs.
-- **The Step 5 self-verify gate is mandatory and blocks `done`.** Type-check always runs; lint runs whenever a linter is configured. Never mark a task `done` with a red type-check — `/caw-verify` does not re-run these. A genuinely unfixable check → `status: blocked`, not `done`.
+- **The Step 5 self-verify gate is mandatory and blocks `done`.** Type-check always runs; lint runs whenever a linter is configured. Never mark a task `done` with a red type-check — `/caw:verify` does not re-run these. A genuinely unfixable check → `status: blocked`, not `done`.
 - **Always cap jest/vitest workers in self-verify (`--maxWorkers=2 --workerIdleMemoryLimit=512MB`).** Default parallelism can spike to 5+ GB RAM. Prefer single-file or `--findRelatedTests` over full suite at this stage.
 - **Don't deviate from API contract.** Frontend and Backend must match.
 - **Don't modify plan.md.** Only reviewer can amend the plan.

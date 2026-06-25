@@ -34,4 +34,4 @@ Setup agent will:
 3. Verify the durable harness (`${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli`) — DB resolves to the project root
 4. Generate `docs/caw/conventions.md`, `.claude/project.yaml`, `.claude/rules/project.md`
 
-After setup completes, the project is ready for `/caw-plan`.
+After setup completes, the project is ready for `/caw:plan`.

@@ -21,7 +21,7 @@ This repo uses the caw (Claude Agent Workflow) harness. Before work, read:
 
 Use the harness CLI at `scripts/caw/bin/harness-cli` (Python 3, stdlib-only —
 no toolchain, cross-platform) as the main operational tool. This is a thin
-wrapper that `/caw-setup` writes; it execs the real binary shipped by the
+wrapper that `/caw:setup` writes; it execs the real binary shipped by the
 `caw` plugin and writes `harness.db` to the project root. Read state with
 `harness-cli query …`, write it with `harness-cli story/task/decision/backlog …`.
 

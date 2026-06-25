@@ -39,7 +39,7 @@ Design) rather than vendored skills.
 
 Or commit a `.claude/settings.json` into the member project so everyone is prompted
 to install on trust. A sample lives at `plugins/caw/project.settings.json`
-(also scaffolded by `/caw-setup` as `plugins/caw/templates/project/settings.json`).
+(also scaffolded by `/caw:setup` as `plugins/caw/templates/project/settings.json`).
 That settings file pins the `caw` marketplace and enables `caw` plus 3
 companion plugins: `superpowers`, `frontend-design`, `context7`.
 
@@ -54,14 +54,14 @@ companion plugins: `superpowers`, `frontend-design`, `context7`.
 plugins/caw/                    # THE plugin
   .claude-plugin/plugin.json         # plugin manifest
   agents/        # 5 agents: setup, planner, coder, tester, reviewer
-  commands/      # 6 commands: caw-setup, caw-plan, caw-code, caw-test, caw-review, caw-verify
+  commands/      # 6 commands: setup, plan, code, test, review, verify (invoked as /caw:setup, /caw:plan, …)
   skills/        # 4 AUTHORED skills: api-contract, error-handling-patterns,
                  #   nextjs-feature, react-component-testing (namespaced caw:<name>)
   hooks/         # hooks.json (uses ${CLAUDE_PLUGIN_ROOT}) + hook .js files
   rules/         # non-overridable coding rules every agent loads (common/, react/, typescript/)
   harness/       # durable layer: bin/harness-cli (Python stdlib) + harness/*.py + schema/*.sql
                  #   DB resolves to the PROJECT root, not the plugin cache
-  templates/     # files /caw-setup scaffolds into a member project:
+  templates/     # files /caw:setup scaffolds into a member project:
                  #   docs-caw/ → project docs/caw/ (policy docs, ADR/intake templates,
                  #               conventions.md/knowledge.md seeds, advisories)
                  #   project/  → AGENTS.md, CLAUDE.md (@-import), gitleaks.toml,
@@ -97,12 +97,12 @@ maxTurns, permissionMode). All 5 have `Skill` in their `tools:` list.
 
 | Command | Action |
 |---|---|
-| `/caw-setup` | Detect stack, verify harness, generate conventions + project rules (one-time; `--refresh` to re-run) |
-| `/caw-plan "<desc>"` | Generate Plan |
-| `/caw-code <id> [<phase>] [--all]` | Implement one phase (or all phases with `--all`) |
-| `/caw-test <id>` | Test (mode derived from Plan's lane) |
-| `/caw-review <id>` | Multi-dim review |
-| `/caw-verify <id>` | Test + review parallel |
+| `/caw:setup` | Detect stack, verify harness, generate conventions + project rules (one-time; `--refresh` to re-run) |
+| `/caw:plan "<desc>"` | Generate Plan |
+| `/caw:code <id> [<phase>] [--all]` | Implement one phase (or all phases with `--all`) |
+| `/caw:test <id>` | Test (mode derived from Plan's lane) |
+| `/caw:review <id>` | Multi-dim review |
+| `/caw:verify <id>` | Test + review parallel |
 
 Commands use the `caw-` prefix (not `/caw <subcommand>`) to avoid namespace
 collisions with other Claude Code skills/commands.
@@ -112,10 +112,10 @@ collisions with other Claude Code skills/commands.
 ```
 /plugin install caw@caw   # install the plugin (or trust a committed settings.json)
 /init                          # Claude Code built-in — generates/enriches CLAUDE.md
-/caw-setup                     # detect stack, verify harness, scaffold docs/caw + conventions + project rules
-/caw-plan "<desc>"             # per-task planning
-/caw-code <id> --all           # implementation (all phases)
-/caw-verify <id>               # test + review parallel
+/caw:setup                     # detect stack, verify harness, scaffold docs/caw + conventions + project rules
+/caw:plan "<desc>"             # per-task planning
+/caw:code <id> --all           # implementation (all phases)
+/caw:verify <id>               # test + review parallel
 ```
 
 There is no shell install step and no caw-repo discovery dance. The plugin is
@@ -126,7 +126,7 @@ plugin's cache directory for any path the agents/hooks/commands need.
 
 The real binary ships in the plugin at
 `${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli` — a stdlib-only Python CLI (no
-toolchain needed). `/caw-setup` writes a **thin wrapper** at the project's
+toolchain needed). `/caw:setup` writes a **thin wrapper** at the project's
 `scripts/caw/bin/harness-cli` so the documented invocation path is stable across
 tools (Claude Code, Codex, Antigravity, CI), regardless of where the plugin cache
 lives. **`harness.db` lives at the PROJECT root** (gitignored; each project

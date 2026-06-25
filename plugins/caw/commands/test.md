@@ -39,6 +39,6 @@ The tester runs only this task's spec files and fixes localized failures itself
 change, out-of-scope code).
 
 Next step depends on flow:
-- After `--red` (lane=risky) → `/caw-code <story-id>` to make tests pass
-- After post-impl test, all green → `/caw-review <story-id>` (or `/caw-verify` for parallel)
-- Tester reports a structural bug it could not fix → `/caw-code <story-id> <task>`
+- After `--red` (lane=risky) → `/caw:code <story-id>` to make tests pass
+- After post-impl test, all green → `/caw:review <story-id>` (or `/caw:verify` for parallel)
+- Tester reports a structural bug it could not fix → `/caw:code <story-id> <task>`
