@@ -91,29 +91,78 @@ PROJ="${CLAUDE_PLUGIN_ROOT}/templates/project"
 cp -n "$PROJ/AGENTS.md"     AGENTS.md       2>/dev/null || true
 cp -n "$PROJ/.claudeignore" .claudeignore   2>/dev/null || true
 cp -n "$PROJ/gitleaks.toml" gitleaks.toml   2>/dev/null || true
-# CLAUDE.md: only scaffold if absent — /init usually wrote a richer one already
-cp -n "$PROJ/CLAUDE.md"     CLAUDE.md        2>/dev/null || true
 # settings.json: drop a SAMPLE next to the live file (never overwrite an
 # existing .claude/settings.json — it carries the member's own permissions/env).
 # The member reviews and merges it (it enables plugins + sets the allowlist).
 mkdir -p .claude
 cp -n "$PROJ/settings.json" .claude/settings.json.sample 2>/dev/null || true
 
+# CLAUDE.md: a member usually already has one from /init (richer than the caw
+# stub). DON'T overwrite it — but Claude Code does NOT auto-load AGENTS.md, so the
+# harness only loads if CLAUDE.md @-imports it. Ensure the marker-delimited harness
+# block is present: copy the template if absent, else APPEND just the block.
+if [[ ! -e CLAUDE.md ]]; then
+  cp "$PROJ/CLAUDE.md" CLAUDE.md
+  echo "✓ CLAUDE.md scaffolded (caw template)"
+elif ! grep -qF "<!-- HARNESS:BEGIN -->" CLAUDE.md; then
+  # Extract just the HARNESS block from the template and append it.
+  awk '/<!-- HARNESS:BEGIN -->/{p=1} p{print} /<!-- HARNESS:END -->/{p=0}' \
+    "$PROJ/CLAUDE.md" >> CLAUDE.md
+  echo "✓ harness @-import block appended to existing CLAUDE.md"
+else
+  echo "⏭️  CLAUDE.md already has the harness block — left as-is"
+fi
+
 # Secret scanning: caw standardizes on gitleaks (industry standard) rather than a
-# hand-rolled regex hook. Install a git pre-commit runner that calls gitleaks on
-# the staged diff. Only if this is a git repo, gitleaks is installed, and there is
-# no existing pre-commit hook (never clobber the member's own hook).
-if [[ -d .git ]] && command -v gitleaks >/dev/null 2>&1 && [[ ! -e .git/hooks/pre-commit ]]; then
-  cat > .git/hooks/pre-commit <<'GLHOOK'
-#!/usr/bin/env bash
+# hand-rolled regex hook. Install/refresh a marker-delimited caw block in the git
+# pre-commit hook that runs gitleaks on the staged diff against ./gitleaks.toml.
+#
+# This is idempotent and SAFE next to an existing hook:
+#   - no hook        → create one with the caw block
+#   - hook, no block → APPEND the caw block (never clobber the member's hook)
+#   - stale block    → REPLACE only the block (e.g. caw v1 hooks that pointed at
+#                      the old .claude/gitleaks.toml path — this corrects them)
+if [[ -d .git ]]; then
+  HOOK=.git/hooks/pre-commit
+  BEGIN='# >>> caw:gitleaks >>>'
+  END='# <<< caw:gitleaks <<<'
+  read -r -d '' BLOCK <<'GLBLOCK' || true
+# >>> caw:gitleaks >>>
 # caw secret scan — blocks a commit if gitleaks finds a secret in the staged diff.
-# Config: ./gitleaks.toml (scaffolded by /caw:setup). Remove this file to disable.
-exec gitleaks protect --staged --redact --config gitleaks.toml
-GLHOOK
-  chmod +x .git/hooks/pre-commit
-  echo "✓ gitleaks pre-commit hook installed"
-elif [[ -d .git ]] && ! command -v gitleaks >/dev/null 2>&1; then
-  echo "⚠️  gitleaks not installed — secret scanning is OFF. Install it (brew install gitleaks) and re-run /caw:setup to wire the pre-commit hook. gitleaks.toml is already in place."
+# Config: ./gitleaks.toml at the repo root (scaffolded by /caw:setup).
+if command -v gitleaks >/dev/null 2>&1; then
+  CAW_GL_CONFIG="$(git rev-parse --show-toplevel)/gitleaks.toml"
+  if [ -f "$CAW_GL_CONFIG" ]; then
+    gitleaks protect --staged --redact --config "$CAW_GL_CONFIG" || {
+      echo "[gitleaks] Commit blocked: secrets detected. False positive? edit gitleaks.toml allowlist." >&2
+      exit 1
+    }
+  fi
+fi
+# <<< caw:gitleaks <<<
+GLBLOCK
+
+  if [[ ! -e "$HOOK" ]]; then
+    { printf '#!/usr/bin/env bash\nset -e\n\n'; printf '%s\n' "$BLOCK"; } > "$HOOK"
+    chmod +x "$HOOK"
+    echo "✓ gitleaks pre-commit hook installed"
+  else
+    # First, strip ANY pre-existing caw block (this v2 marker OR the legacy caw v1
+    # `claude-agent-team:gitleaks-*` block that pointed at .claude/gitleaks.toml).
+    # Then append the fresh block. This both de-dupes and corrects stale paths
+    # without touching the member's own hook lines.
+    awk -v b="$BEGIN" -v e="$END" \
+        '$0==b{skip=1;next} $0==e{skip=0;next}
+         /# claude-agent-team:gitleaks-start/{skip=1;next}
+         /# claude-agent-team:gitleaks-end/{skip=0;next}
+         !skip{print}' "$HOOK" > "$HOOK.tmp"
+    # Drop a trailing blank run, then append exactly one fresh block.
+    { sed -e :a -e '/^\n*$/{$d;N;ba}' "$HOOK.tmp" 2>/dev/null || cat "$HOOK.tmp"; printf '\n%s\n' "$BLOCK"; } > "$HOOK"
+    rm -f "$HOOK.tmp"
+    chmod +x "$HOOK"
+    echo "✓ gitleaks pre-commit block refreshed (config → ./gitleaks.toml; legacy block removed if present)"
+  fi
+  command -v gitleaks >/dev/null 2>&1 || echo "⚠️  gitleaks not installed — secret scanning is OFF until you install it (brew install gitleaks). The hook is wired and will activate once gitleaks is present."
 fi
 
 # Stable harness-cli wrapper → execs the plugin binary, DB resolves to project CWD
