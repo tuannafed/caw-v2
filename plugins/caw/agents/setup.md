@@ -97,15 +97,39 @@ cat > scripts/caw/bin/harness-cli <<'WRAP'
 #!/usr/bin/env bash
 # caw harness-cli wrapper — execs the binary shipped by the caw plugin.
 # Stable path for all tools; harness.db resolves to the current project root.
-exec python3 "${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/caw/caw}/harness/bin/harness-cli" "$@"
+set -euo pipefail
+
+# 1. Prefer the plugin root Claude Code injects when it invokes a hook/command.
+if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -f "$CLAUDE_PLUGIN_ROOT/harness/bin/harness-cli" ]]; then
+  exec python3 "$CLAUDE_PLUGIN_ROOT/harness/bin/harness-cli" "$@"
+fi
+
+# 2. No (valid) plugin root: discover the binary under the plugins dir. Match any
+#    cache layout — we do NOT assume .../cache/caw/caw — and take the first hit.
+plugins_dir="${HOME}/.claude/plugins"
+if [[ -d "$plugins_dir" ]]; then
+  found="$(find "$plugins_dir" -type f -path '*/caw/harness/bin/harness-cli' 2>/dev/null | head -n1)"
+  if [[ -n "$found" ]]; then
+    exec python3 "$found" "$@"
+  fi
+fi
+
+# 3. Give up loudly — never exec a guessed path.
+echo "caw: harness-cli not found." >&2
+echo "  Run this from inside Claude Code (which sets CLAUDE_PLUGIN_ROOT)," >&2
+echo "  or export CLAUDE_PLUGIN_ROOT to the caw plugin directory, e.g.:" >&2
+echo "    export CLAUDE_PLUGIN_ROOT=~/.claude/plugins/<...>/caw" >&2
+exit 1
 WRAP
 chmod +x scripts/caw/bin/harness-cli
 ```
 
 > **Note on `CLAUDE_PLUGIN_ROOT` in the wrapper:** that env var is set when Claude
-> Code invokes a hook/command, so the wrapper resolves correctly in-session. The
-> `:-` fallback covers direct shell/CI use. If your install path differs, edit the
-> fallback once.
+> Code invokes a hook/command, so the wrapper resolves correctly in-session. Outside
+> a session (direct shell / CI) it discovers the plugin binary under
+> `~/.claude/plugins` by pattern — no hardcoded cache layout. If neither path works
+> it exits non-zero with guidance instead of exec'ing a guessed path; export
+> `CLAUDE_PLUGIN_ROOT` to fix.
 
 > On `--refresh`, re-copy ONLY the read-only UPPER_CASE policy docs (`HARNESS.md`,
 > `CONTEXT_RULES.md`, `ARCHITECTURE.md`, etc. — identical across projects) so policy

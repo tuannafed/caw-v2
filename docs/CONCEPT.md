@@ -110,7 +110,7 @@ Risky lane requires user confirmation before proceeding — never auto-downgrade
 State and prose are kept separate. **State** lives in a SQLite database; **prose** lives in markdown. This split keeps task status machine-queryable while letting agents write rich, human-readable handoffs.
 
 - **State → `harness.db`.** The harness CLI binary ships in the plugin at `${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli`, but writes its DB to the **project root** (`./harness.db`, resolved from CWD — never the plugin cache). Every agent reads/writes task status, lane, and phase progress through it.
-- **Stable wrapper.** `/caw:setup` writes a thin wrapper at the project's `scripts/caw/bin/harness-cli` that `exec`s the plugin binary. This keeps one documented path stable for all tools regardless of where the plugin cache lives.
+- **Stable wrapper.** `/caw:setup` writes a thin wrapper at the project's `scripts/caw/bin/harness-cli` that `exec`s the plugin binary. It resolves the binary via `$CLAUDE_PLUGIN_ROOT` in-session, and outside a session discovers it by pattern under `~/.claude/plugins` — no hardcoded cache layout. If neither resolves, it exits non-zero with guidance rather than exec'ing a guessed path. This keeps one documented path stable for all tools regardless of where the plugin cache lives.
 - **Prose → markdown.** Per-task handoffs (`plan.md`, `code.md`, `tests.md`, `review.md`) and the project-level living docs below.
 
 Beyond per-task files, caw keeps project-level living docs under `docs/caw/`. Agents follow a **pull-then-push** contract (`rules/common/harness-contract.md`) — read them before working, update them after.
