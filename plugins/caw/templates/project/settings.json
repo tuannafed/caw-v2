@@ -22,6 +22,24 @@
     "CONTEXT7_API_KEY": ""
   },
   "permissions": {
+    "// deny note": "Native deny rules replace the old dangerous-actions-blocker hook. These are prefix-matched (not regex) so they are intentionally broad — Claude Code will refuse any Bash call matching them. Adjust per project if a legitimate command is caught.",
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
+      "Bash(rm -rf /)",
+      "Bash(sudo rm*)",
+      "Bash(mkfs*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(git clean -df*)",
+      "Bash(git clean -xdf*)",
+      "Bash(git branch -D*)",
+      "Bash(*DROP TABLE*)",
+      "Bash(*DROP DATABASE*)",
+      "Bash(*TRUNCATE TABLE*)"
+    ],
     "allow": [
       "Read(**)",
       "Write(.claude/**)",

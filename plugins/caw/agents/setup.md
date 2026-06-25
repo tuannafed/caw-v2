@@ -99,6 +99,23 @@ cp -n "$PROJ/CLAUDE.md"     CLAUDE.md        2>/dev/null || true
 mkdir -p .claude
 cp -n "$PROJ/settings.json" .claude/settings.json.sample 2>/dev/null || true
 
+# Secret scanning: caw standardizes on gitleaks (industry standard) rather than a
+# hand-rolled regex hook. Install a git pre-commit runner that calls gitleaks on
+# the staged diff. Only if this is a git repo, gitleaks is installed, and there is
+# no existing pre-commit hook (never clobber the member's own hook).
+if [[ -d .git ]] && command -v gitleaks >/dev/null 2>&1 && [[ ! -e .git/hooks/pre-commit ]]; then
+  cat > .git/hooks/pre-commit <<'GLHOOK'
+#!/usr/bin/env bash
+# caw secret scan — blocks a commit if gitleaks finds a secret in the staged diff.
+# Config: ./gitleaks.toml (scaffolded by /caw:setup). Remove this file to disable.
+exec gitleaks protect --staged --redact --config gitleaks.toml
+GLHOOK
+  chmod +x .git/hooks/pre-commit
+  echo "✓ gitleaks pre-commit hook installed"
+elif [[ -d .git ]] && ! command -v gitleaks >/dev/null 2>&1; then
+  echo "⚠️  gitleaks not installed — secret scanning is OFF. Install it (brew install gitleaks) and re-run /caw:setup to wire the pre-commit hook. gitleaks.toml is already in place."
+fi
+
 # Stable harness-cli wrapper → execs the plugin binary, DB resolves to project CWD
 mkdir -p scripts/caw/bin
 cat > scripts/caw/bin/harness-cli <<'WRAP'

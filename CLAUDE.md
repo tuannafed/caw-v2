@@ -205,15 +205,22 @@ Hooks ship via the plugin's `plugins/caw/hooks/hooks.json` (entries invoke
 `CAW_HOOK_PROFILE` env var:
 
 - `minimal` — no hooks run
-- `standard` — all hooks except dangerous-actions-blocker
-- `strict` — all hooks including dangerous-actions-blocker
+- `standard` — the standard set (record-trace, session-summary, format-on-stop, post-edit-accumulator)
+- `strict` — the standard set **plus** the strict-only hooks (task-read-gate, prompt-injection-detector)
 
 The dispatcher `hooks/run-with-flags.js` reads the profile and `CAW_DISABLED_HOOKS`
 (comma-separated list) before invoking any hook.
 
-**Hook inventory:** task-read-gate, dangerous-actions-blocker, pre-commit-secrets,
-prompt-injection-detector, suggest-compact, warn-debug-leftovers,
-post-edit-accumulator, record-trace, session-summary, stop-format-typecheck.
+The hook set is deliberately small — each remaining hook either serves the harness
+memory loop or is safety that nothing else (a rule, the linter, native Claude Code,
+or a companion plugin) already covers. Destructive-command blocking moved to native
+`permissions.deny` in the settings template; secret scanning moved to a gitleaks
+git `pre-commit` hook (`/caw:setup` installs it). Hooks that only duplicated a coding
+rule, the linter, or native autocompact were removed (`warn-debug-leftovers`,
+`suggest-compact`, `dangerous-actions-blocker`, `pre-commit-secrets`).
+
+**Hook inventory:** task-read-gate, prompt-injection-detector, post-edit-accumulator,
+record-trace, session-summary, stop-format-typecheck.
 Dispatch/helper scripts: run-with-flags.js, hook-flags.js, resolve-formatter.js.
 
 > `record-trace` (Stop) mechanically writes a `harness-cli trace` row when a story
