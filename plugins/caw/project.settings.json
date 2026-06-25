@@ -1,11 +1,11 @@
 {
-  "// note": "Sample .claude/settings.json for a TEAM-MEMBER PROJECT. Commit this into your repo so members get prompted to install the stack on trust. Pin the caw marketplace ref to a commit SHA (not a branch) for production — push to a branch can silently change what the team installs.",
+  "// note": "Sample .claude/settings.json for a TEAM-MEMBER PROJECT. Commit this into your repo so members get prompted to install the stack on trust. The caw marketplace ref tracks 'main' so members get the latest by running /plugin marketplace update — no settings edit needed. For a frozen install, pin ref to a tag or commit SHA instead.",
   "extraKnownMarketplaces": {
     "caw": {
       "source": {
         "source": "github",
         "repo": "tuannafed/caw-v2",
-        "ref": "4698acde3f02d2730696d97f90a1a65c9c10054d"
+        "ref": "main"
       }
     }
   },

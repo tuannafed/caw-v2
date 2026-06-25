@@ -61,6 +61,6 @@ Disable individual hooks with `CAW_DISABLED_HOOKS` (comma-separated).
 - **harness.db is per-project.** The CLI binary runs from
   `${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli` but resolves its DB to the
   project CWD (git root). It never writes into the plugin cache.
-- **Pin a SHA in production.** In `marketplace.json` / `extraKnownMarketplaces`,
-  reference a commit SHA rather than a branch — a branch push can silently change
-  what your team installs.
+- **Marketplace ref tracks `main`.** The scaffolded settings set
+  `extraKnownMarketplaces.caw.source.ref` to `"main"`, so `/plugin marketplace update`
+  pulls the latest with no settings edit. Pin `ref` to a tag/SHA for a frozen install.

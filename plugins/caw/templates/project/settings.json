@@ -1,11 +1,11 @@
 {
-  "// note": "Project .claude/settings.json scaffolded by /caw:setup. Hooks are provided by the caw plugin (hooks.json) — they are NOT duplicated here. This file carries the permission allowlist, env, the caw marketplace registration, and plugin enablement. Pin the marketplace ref to a commit SHA for production.",
+  "// note": "Project .claude/settings.json scaffolded by /caw:setup. Hooks are provided by the caw plugin (hooks.json) — they are NOT duplicated here. This file carries the permission allowlist, env, the caw marketplace registration, and plugin enablement. The marketplace ref tracks 'main' so /plugin marketplace update pulls the latest with no settings edit. Pin ref to a tag/SHA for a frozen install.",
   "extraKnownMarketplaces": {
     "caw": {
       "source": {
         "source": "github",
         "repo": "tuannafed/caw-v2",
-        "ref": "4698acde3f02d2730696d97f90a1a65c9c10054d"
+        "ref": "main"
       }
     }
   },

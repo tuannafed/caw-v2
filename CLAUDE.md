@@ -40,12 +40,13 @@ Design) rather than vendored skills.
 Or commit a `.claude/settings.json` into the member project so everyone is prompted
 to install on trust. A sample lives at `plugins/caw/project.settings.json`
 (also scaffolded by `/caw:setup` as `plugins/caw/templates/project/settings.json`).
-That settings file pins the `caw` marketplace and enables `caw` plus 3
+That settings file registers the `caw` marketplace and enables `caw` plus 3
 companion plugins: `superpowers`, `frontend-design`, `context7`.
 
-> **Pin a commit SHA for production.** In `marketplace.json` /
-> `extraKnownMarketplaces`, reference a commit SHA, not a branch. A push to a
-> branch silently changes what the team installs.
+> **The marketplace ref tracks `main`.** `extraKnownMarketplaces.caw.source.ref`
+> is `"main"`, so a push to `main` ships the release and members get it via
+> `/plugin marketplace update caw` with no settings edit. For a frozen install,
+> pin `ref` to a tag or commit SHA instead.
 
 ## Repository Structure
 
@@ -233,8 +234,8 @@ Don't author a skill — use **Context7** (live docs, no static catalog to maint
 - **Shell scripts use bash ≥ 4** — arrays, associative arrays, `[[ ]]` tests are fine.
 - **`${CLAUDE_PLUGIN_ROOT}`** — hooks/commands/agents reference plugin-internal paths
   through this variable, never hardcoded absolute paths.
-- **Pin a commit SHA** in `marketplace.json` / `extraKnownMarketplaces` for
-  production — a branch push silently changes what the team installs.
+- **Marketplace ref tracks `main`** — pushing to `main` ships the release; members
+  pull it via `/plugin marketplace update`. Pin a tag/SHA only for a frozen install.
 - **`conventions.md`** (scaffolded into projects, not this repo) is the source of
   truth for project-specific archetype + patterns; every code-writing agent reads it
   before proposing architecture.

@@ -189,31 +189,28 @@ CAW_PROJECT_ROOT="<your-project>" pnpm dev
 ## Security & production notes
 
 - **Plugin hooks run shell with the member's user permissions.** `caw` is first-party, and the 3 companion plugins are official / vetted. **Vet any other plugin before enabling it** — enabling a plugin grants it the ability to run hooks as you.
-- **Pin a commit SHA in the marketplace ref for production.** In `marketplace.json` / `extraKnownMarketplaces`, reference a commit SHA rather than a branch — a branch push can silently change what your team installs.
+- **The marketplace ref tracks `main` by default.** The scaffolded settings set `extraKnownMarketplaces.caw.source.ref` to `"main"`, so members get the latest by running `/plugin marketplace update caw` — no settings edit. For a frozen install (locked to a known-good build), pin `ref` to a tag or commit SHA instead.
 - **`harness.db` is per-project.** The CLI runs from `${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli` but resolves its DB to the project (git root). It never writes into the plugin cache.
 
 ---
 
-## Releasing
+## Releasing & updating
 
-The scaffolded project settings pin the `caw` marketplace to a commit SHA
-(`extraKnownMarketplaces.caw.source.ref` in `plugins/caw/templates/project/settings.json`
-and `plugins/caw/project.settings.json`). **Bump that pin before tagging a release**,
-or members who install the new version get a stale plugin.
+The marketplace ref tracks `main`, so **pushing to `main` ships the release** — there
+is no separate tag/bump step.
 
 ```bash
-# Stage the release commit, then point the pin at it:
-cli/bump-marketplace-ref.py --write
-git commit -am "release: bump marketplace pin"
-git tag vX.Y.Z && git push --tags
+# Maintainer — cut a release:
+git push origin main
+
+# Member — pull the latest (no settings edit):
+/plugin marketplace update caw
+/plugin update caw@caw
 ```
 
-`cli/bump-marketplace-ref.py --check` verifies the pin matches `git HEAD` (use it
-locally **before committing** the bump). The **release-pin-check** GitHub Action runs
-on every `v*` tag push and **fails the release** if the pin is stale — so a forgotten
-bump can't ship. (The Action uses `--allow-parent`: the bump commit pins to its own
-parent, since a commit can't contain its own SHA — both the tagged commit and its
-parent are accepted.)
+Because every push to `main` reaches members on their next update, treat `main` as the
+release branch: land changes through a PR / branch and keep it green. If you need a
+build that can't drift, pin a member's `ref` to a tag or commit SHA instead of `"main"`.
 
 ---
 
