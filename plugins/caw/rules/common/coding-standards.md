@@ -1,15 +1,11 @@
----
-paths:
-  - "**/*.ts"
-  - "**/*.tsx"
-  - "**/*.js"
-  - "**/*.jsx"
-  - "**/*.py"
----
-# Rule: Coding Standards
+# Rule: Coding Standards (language-agnostic)
 
-**Layer:** rules — non-negotiable project-wide conventions
-**Used by:** coder (all tasks), reviewer.
+**Layer:** rules — non-negotiable project-wide conventions.
+**Loaded by:** coder (Step 3.5, every code task) and reviewer (Step 1.5) via
+explicit `Read` — Claude Code does not auto-attach rules.
+**Scope:** universal rules that apply in any language. TS/JS-specific style
+(types, `any`, React props) lives in [`typescript/coding-style.md`](../typescript/coding-style.md)
+and must be read in addition for `.ts`/`.tsx`/`.js`/`.jsx` work.
 **Note:** These are *rules*, not patterns. They cannot be overridden by `conventions.md`.
 
 ---
@@ -90,7 +86,7 @@ try {
 1. Handle the error (recover or transform into a typed error), or
 2. Re-throw with added context
 
-Never `console.error` in library/service code — log at the boundary (controller/handler).
+Never `console.error`/`console.log` in library/service code — log at the boundary (controller/handler).
 
 ---
 
@@ -126,10 +122,10 @@ All config comes from environment or the config service. No magic strings or num
 ## Code Quality Checklist
 
 Before completing any task:
-- [ ] No `any` types (use `unknown` + narrowing)
 - [ ] No mutations of existing objects
 - [ ] No hardcoded secrets, URLs, or config values
 - [ ] No silent catch blocks
 - [ ] Files under 800 lines
 - [ ] Functions under 50 lines
 - [ ] Nesting depth ≤ 4 levels
+- [ ] (TS/JS) the `typescript/coding-style.md` checklist — no `any`, typed public APIs

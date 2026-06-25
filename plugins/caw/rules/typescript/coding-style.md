@@ -1,14 +1,11 @@
----
-paths:
-  - "**/*.ts"
-  - "**/*.tsx"
-  - "**/*.js"
-  - "**/*.jsx"
----
 # Rule: TypeScript/JavaScript Coding Style
 
-**Layer:** rules — auto-loaded for TS/JS files based on paths frontmatter
-**Used by:** coder (all tasks), reviewer.
+**Layer:** rules — non-negotiable, TS/JS-specific.
+**Loaded by:** coder (Step 3.5) and reviewer (Step 1.5) via explicit `Read` when the
+task touches `.ts`/`.tsx`/`.js`/`.jsx` — Claude Code does not auto-attach rules.
+**Scope:** TS/JS-specific style only. Language-agnostic rules (immutability, error
+handling, input validation, file size, naming, no-hardcoded-values) live in
+[`../common/coding-standards.md`](../common/coding-standards.md) — read that too.
 
 ---
 
@@ -72,53 +69,21 @@ function UserCard({ user, onSelect }: UserCardProps) {
 }
 ```
 
-## Immutability
+## Idioms specific to TS/JS
 
-Use spread operator for immutable updates. Never mutate existing objects.
+The language-agnostic rules in `../common/coding-standards.md` (immutability, error
+handling, input validation) apply here too — these are the TS/JS-specific ways to
+satisfy them:
 
-```typescript
-// WRONG
-function updateUser(user: User, name: string): User {
-  user.name = name  // MUTATION
-  return user
-}
+- **Immutable updates:** use the spread operator and `Readonly<T>` params.
+- **Error narrowing:** `catch (error: unknown)` then narrow (`error instanceof Error`)
+  before reading `.message`; re-throw with context.
+- **Boundary validation:** prefer **Zod** schemas and infer the type with `z.infer`.
 
-// CORRECT
-function updateUser(user: Readonly<User>, name: string): User {
-  return { ...user, name }
-}
-```
+## TypeScript checklist
 
-## Error Handling
-
-Use async/await with try-catch. Narrow `unknown` errors safely.
-
-```typescript
-async function loadUser(userId: string): Promise<User> {
-  try {
-    return await riskyOperation(userId)
-  } catch (error: unknown) {
-    logger.error('Operation failed', error)
-    throw new Error(getErrorMessage(error))
-  }
-}
-```
-
-## Input Validation
-
-Use Zod for schema-based validation. Infer types from the schema.
-
-```typescript
-import { z } from 'zod'
-
-const userSchema = z.object({
-  email: z.string().email(),
-  age: z.number().int().min(0).max(150)
-})
-type UserInput = z.infer<typeof userSchema>
-const validated: UserInput = userSchema.parse(input)
-```
-
-## Console.log
-
-No `console.log` in production code. Use proper logging libraries.
+- [ ] No `any` (use `unknown` + narrowing, or generics)
+- [ ] Exported functions / public methods have explicit param + return types
+- [ ] `interface` for object shapes, `type` for unions/intersections; string-literal unions over `enum`
+- [ ] React props typed via named interface/type; no `React.FC`
+- [ ] No `console.log` in production code

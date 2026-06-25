@@ -98,6 +98,20 @@ After loading, restate the lane and the skills actually loaded: `Reviewer lane:
 
 Read `code.md` to get the full list of files changed across all tasks. Also use `git diff` to confirm.
 
+### Step 1.5 — Load the coding rules you review against
+
+The same non-negotiable rules the coder must follow are your checklist for the
+refactor / quality dimension. Claude Code does NOT auto-attach them (the `paths:`
+frontmatter is a Cursor convention) — `Read` the ones matching the changed files:
+
+- **Any code changed:** `Read ${CLAUDE_PLUGIN_ROOT}/rules/common/coding-standards.md`.
+- **`.ts`/`.tsx`/`.js`/`.jsx` changed:** `Read ${CLAUDE_PLUGIN_ROOT}/rules/typescript/coding-style.md`.
+- **`package.json`/`.npmrc`/deps changed:** `Read ${CLAUDE_PLUGIN_ROOT}/rules/common/package-manager.md`.
+- **React components changed:** `Read ${CLAUDE_PLUGIN_ROOT}/rules/react/react-state-deps.md`.
+
+A clear violation of one of these is at least a MEDIUM finding (HIGH if it's a
+correctness/security rule like input validation or the `any` ban).
+
 ### Step 2 — Multi-dimensional review
 
 For each changed file, evaluate across the dimensions **in scope for the lane**
@@ -108,7 +122,7 @@ rows are never skipped for any lane that reaches review.
 
 | Dimension | What to check | Skill |
 |---|---|---|
-| **Security** | Injection, auth bypass, secrets exposure, OWASP Top 10 | Superpowers code-review |
+| **Security** | Injection, auth bypass, secrets exposure, OWASP Top 10. **Always flag when the change touches:** authn/authz, user-input handling, DB queries, filesystem ops, external API calls, crypto, or payment/financial code. | Superpowers code-review |
 | **Performance** | N+1 queries, bundle size, Core Web Vitals, perf regressions | Context7 / Frontend Design |
 | **Accessibility** | WCAG violations, missing ARIA, keyboard nav, contrast | Context7 / Frontend Design |
 | **Architecture** | Folder contract violations, circular deps, abstraction leaks | conventions.md + Context7 framework docs |

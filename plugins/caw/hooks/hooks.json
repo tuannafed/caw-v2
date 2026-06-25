@@ -6,6 +6,36 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js task-read-gate ${CLAUDE_PLUGIN_ROOT}/hooks/task-read-gate.js strict"
+          }
+        ],
+        "description": "Mark the session as 'task state read' when a harness-cli query runs"
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js task-read-gate ${CLAUDE_PLUGIN_ROOT}/hooks/task-read-gate.js strict"
+          }
+        ],
+        "description": "Warn (not block) when editing while a story is in progress but task state wasn't read"
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js task-read-gate ${CLAUDE_PLUGIN_ROOT}/hooks/task-read-gate.js strict"
+          }
+        ],
+        "description": "Warn (not block) when writing while a story is in progress but task state wasn't read"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
             "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js dangerous-actions-blocker ${CLAUDE_PLUGIN_ROOT}/hooks/dangerous-actions-blocker.js strict"
           }
         ],
@@ -85,6 +115,16 @@
       }
     ],
     "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js record-trace ${CLAUDE_PLUGIN_ROOT}/hooks/record-trace.js standard,strict"
+          }
+        ],
+        "description": "Record a harness trace row when a story is in progress and files changed (mechanical observability)"
+      },
       {
         "matcher": "",
         "hooks": [

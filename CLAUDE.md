@@ -38,9 +38,9 @@ Design) rather than vendored skills.
 ```
 
 Or commit a `.claude/settings.json` into the member project so everyone is prompted
-to install on trust. A sample lives at `plugins/caw/project.settings.json`
-(also scaffolded by `/caw:setup` as `plugins/caw/templates/project/settings.json`).
-That settings file registers the `caw` marketplace and enables `caw` plus 3
+to install on trust. The canonical sample is `plugins/caw/templates/project/settings.json`
+(also scaffolded into the project by `/caw:setup`). That settings file carries the
+permission allowlist, registers the `caw` marketplace, and enables `caw` plus 3
 companion plugins: `superpowers`, `frontend-design`, `context7`.
 
 > **The marketplace ref tracks `main`.** `extraKnownMarketplaces.caw.source.ref`
@@ -59,7 +59,7 @@ plugins/caw/                    # THE plugin
   skills/        # 4 AUTHORED skills: api-contract, error-handling-patterns,
                  #   nextjs-feature, react-component-testing (namespaced caw:<name>)
   hooks/         # hooks.json (uses ${CLAUDE_PLUGIN_ROOT}) + hook .js files
-  rules/         # non-overridable coding rules every agent loads (common/, react/, typescript/)
+  rules/         # non-overridable rules agents Read explicitly (common/, react/, typescript/)
   harness/       # durable layer: bin/harness-cli (Python stdlib) + harness/*.py + schema/*.sql
                  #   DB resolves to the PROJECT root, not the plugin cache
   templates/     # files /caw:setup scaffolds into a member project:
@@ -68,7 +68,6 @@ plugins/caw/                    # THE plugin
                  #   project/  → AGENTS.md, CLAUDE.md (@-import), gitleaks.toml,
                  #               .claudeignore, settings.json
   README.md
-  project.settings.json              # sample project settings (commit into member repo)
 cli/tests/                           # harness-cli test suite (pytest); imports harness from the plugin
 docs/CONCEPT.md                      # architecture design doc
 tools/backlog/                       # Astro + React + shadcn Kanban UI (vendored, unchanged)
@@ -173,8 +172,13 @@ manifest (none exists). Agents load the named skill directly via the `Skill` too
 or query Context7 for the named framework. The full contract is in
 `plugins/caw/rules/common/skill-loading.md`.
 
-Rules (`plugins/caw/rules/`) are separate from skills — they are
-non-overridable and always loaded by agents, never installed as skills.
+Rules (`plugins/caw/rules/`) are separate from skills — non-overridable, never
+installed as skills. Claude Code does **not** auto-attach them (the `paths:`
+frontmatter is a Cursor convention with no effect here); agents reach a rule only
+by **`Read`-ing it explicitly**. State/spec/test rules are pulled per lane via the
+CONTEXT_RULES matrix; the coding rules (`coding-standards`, `typescript/coding-style`,
+`package-manager`, `commit-conventions`, `react/react-state-deps`) are Read by the
+coder (Step 3.5) and reviewer (Step 1.5), gated by what the task touches.
 
 ## Hook Profile System
 
@@ -189,10 +193,20 @@ Hooks ship via the plugin's `plugins/caw/hooks/hooks.json` (entries invoke
 The dispatcher `hooks/run-with-flags.js` reads the profile and `CAW_DISABLED_HOOKS`
 (comma-separated list) before invoking any hook.
 
-**Hook inventory:** dangerous-actions-blocker, pre-commit-secrets,
+**Hook inventory:** task-read-gate, dangerous-actions-blocker, pre-commit-secrets,
 prompt-injection-detector, suggest-compact, warn-debug-leftovers,
-post-edit-accumulator, session-summary, stop-format-typecheck. Dispatch/helper
-scripts: run-with-flags.js, hook-flags.js, resolve-formatter.js.
+post-edit-accumulator, record-trace, session-summary, stop-format-typecheck.
+Dispatch/helper scripts: run-with-flags.js, hook-flags.js, resolve-formatter.js.
+
+> `record-trace` (Stop) mechanically writes a `harness-cli trace` row when a story
+> is `in_progress` and files changed — so the observability/evolution layer (audit /
+> propose / maturity) gets data without relying on an agent calling `trace`. It is a
+> silent no-op on chat sessions (no active story or no file changes).
+>
+> `task-read-gate` (PreToolUse, `strict` only) warns — never blocks — when an agent
+> edits while a story is `in_progress` but no `harness-cli query` ran this session.
+> It closes the "READ task state before acting" loop mechanically; a hard block was
+> avoided because legitimate non-task edits (docs/config) would false-fire.
 
 ## Tests
 

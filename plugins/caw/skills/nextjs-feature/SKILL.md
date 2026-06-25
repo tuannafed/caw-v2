@@ -1,6 +1,6 @@
 ---
 name: nextjs-feature
-description: Archetype for a feature-driven Next.js App Router product. Defines folder contract (app/ routes, src/features/<feature>/, src/components/ui/, src/lib/), feature ownership rules, and reuse boundaries. Use when scaffolding a Next.js SaaS or reviewing folder structure violations. For workspace/multi-area apps with capability-based modules, see nextjs-monorepo instead.
+description: Archetype for a feature-driven Next.js App Router product. Defines folder contract (app/ routes, src/features/<feature>/, src/components/ui/, src/lib/), feature ownership rules, and reuse boundaries. Use when scaffolding a Next.js SaaS or reviewing folder structure violations. Scoped to single-app products organized by user-facing features; for workspace/multi-area apps with capability-based modules, adapt the same ownership rules per workspace area rather than per feature.
 ---
 
 # Archetype: Next.js Feature SaaS
@@ -9,7 +9,7 @@ Neutral archetype for a feature-driven web product built with Next.js App Router
 
 ## Use When
 
-- The app is organized around user-facing product features (NOT workspace areas — use `nextjs-monorepo` for that)
+- The app is organized around user-facing product features (for workspace/multi-area apps, apply the same ownership rules per workspace area instead of per feature)
 - Routes should stay thin and compose feature modules
 - Shared UI and infrastructure need clear separation from feature code
 
@@ -65,6 +65,22 @@ src/
 - Stateful logic > 20 lines → extract to `<feature>/hooks/use<Name>.ts`
 - Same UI/UX in 2+ places → extract to shared component
 
+### Server / client boundary (how it maps to the folder contract)
+
+> *How* Server vs Client Components work in Next.js is framework docs — query
+> Context7. This is only where caw's folder contract puts the boundary.
+
+- A feature's top-level `FeaturePage` stays a **Server Component** that does the
+  initial data fetch — caw colocates fetching with the page to keep the client
+  bundle small and avoid prop-drilling.
+- `'use client'` lives on the **smallest child that needs it** (a form, an
+  interactive widget), never on `FeaturePage` — so most of the feature renders
+  on the server.
+- `<feature>/store/` (Zustand) and `<feature>/hooks/` are client-side by nature;
+  the components that consume them are the client islands.
+- `<feature>/api/` (TanStack Query) is for **post-hydration** client reads/mutations
+  — not the initial render, which the Server Component already fetched.
+
 ## Forbidden patterns
 
 - ❌ Business logic inside route files (`app/**/page.tsx`)
@@ -72,9 +88,14 @@ src/
 - ❌ Cross-feature imports outside `index.ts` (breaks encapsulation)
 - ❌ Generic `utils/` or `helpers/` at root without ownership
 - ❌ Same component duplicated in `src/features/A/` and `src/features/B/`
+- ❌ `'use client'` at the top of a whole feature/page when only a small child needs it (kills server rendering for the subtree)
 
 ## Review signals
 
 - ✅ Good: a single feature folder explains the full implementation surface; routes are 5-line files
 - ⚠️ Warning: feature logic spread across `app/`, `components/`, and `hooks/` with no clear owner
 - ❌ Bad: route file with > 50 lines of business logic, or feature B importing internals of feature A
+
+---
+
+**Pairs with:** `api-contract` (shape of the `<feature>/api/` client + request/response contract), `error-handling-patterns` (error boundaries, typed fetch wrapper, form errors), `react-component-testing` (what to put in `<feature>/tests/`).

@@ -140,15 +140,12 @@ await waitFor(() => expect(toast.success).toHaveBeenCalled(), { timeout: 100 });
 
 ### 4b. Fake timers when the test uses `setTimeout` / `setInterval` / debounce
 
-```tsx
-beforeEach(() => jest.useFakeTimers());
-afterEach(() => {
-  jest.runOnlyPendingTimers();
-  jest.useRealTimers();
-});
-```
+**The pitfall (the reason this is here):** real timers from `debounce`/`setTimeout`
+keep the jest worker alive *after* assertions pass — another source of "tests pass
+but jest hangs." Swap in fake timers and flush pending ones in `afterEach`.
 
-Without this, real timers from `debounce`/`setTimeout` keep the worker alive after assertions pass.
+The exact `jest.useFakeTimers()` / `runOnlyPendingTimers()` / `useRealTimers()`
+recipe is standard Jest — query Context7 if you need the syntax.
 
 ### 4c. Reset zustand `persist` / localStorage between tests
 
@@ -191,7 +188,7 @@ Cap at **5-7 `it()` blocks per component test file**. More than that = the compo
 - [ ] `jest.fn()` mock for mutation/query returning data — broken integration
 - [ ] No `gcTime: 0` on test QueryClient — 5-minute timer leak
 - [ ] `--forceExit` to hide handle leaks — masks bugs
-- [ ] More than 10 `it()` in one component test file — refactor signal
+- [ ] More than 7 `it()` in one component test file — refactor signal (see cap above)
 
 ## Quick template
 

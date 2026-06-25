@@ -72,7 +72,7 @@ Or step-by-step:
 | **4 authored skills** | `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing` (namespaced `caw:<name>`) |
 | **Durable harness** | `harness-cli` (Python stdlib) + SQLite; state lives in `harness.db` at the **project root** (never in the plugin cache) |
 | **Hooks** | Safety + workflow hooks, profile-gated by `CAW_HOOK_PROFILE` (`minimal` / `standard` / `strict`) |
-| **Rules** | Non-overridable coding rules every agent loads |
+| **Rules** | Non-overridable coding rules agents `Read` explicitly (per lane / per task type — Claude Code does not auto-attach them) |
 
 ---
 

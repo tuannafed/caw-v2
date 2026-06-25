@@ -90,6 +90,11 @@ cp -n "$PROJ/.claudeignore" .claudeignore   2>/dev/null || true
 cp -n "$PROJ/gitleaks.toml" gitleaks.toml   2>/dev/null || true
 # CLAUDE.md: only scaffold if absent — /init usually wrote a richer one already
 cp -n "$PROJ/CLAUDE.md"     CLAUDE.md        2>/dev/null || true
+# settings.json: drop a SAMPLE next to the live file (never overwrite an
+# existing .claude/settings.json — it carries the member's own permissions/env).
+# The member reviews and merges it (it enables plugins + sets the allowlist).
+mkdir -p .claude
+cp -n "$PROJ/settings.json" .claude/settings.json.sample 2>/dev/null || true
 
 # Stable harness-cli wrapper → execs the plugin binary, DB resolves to project CWD
 mkdir -p scripts/caw/bin

@@ -12,8 +12,8 @@ Code plugin.
 ```
 
 Or commit a `.claude/settings.json` into your repo (see
-[`project.settings.json`](./project.settings.json)) so members get prompted to
-install on trust — that file also enables the three companion plugins below.
+[`templates/project/settings.json`](./templates/project/settings.json)) so members get
+prompted to install on trust — that file also enables the three companion plugins below.
 
 ## What's inside
 
@@ -24,7 +24,7 @@ install on trust — that file also enables the three companion plugins below.
 | **skills/** | 4 authored skills: `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing` (namespaced `caw:<name>`) |
 | **hooks/** | Safety + workflow hooks (`hooks.json`), profile-gated by `CAW_HOOK_PROFILE` |
 | **harness/** | Durable layer — `harness-cli` (Python stdlib) + SQLite schema. State lives in `harness.db` at the **project root**, not the plugin cache. |
-| **rules/** | Non-overridable coding rules every agent loads |
+| **rules/** | Non-overridable rules agents `Read` explicitly (Claude Code does not auto-attach them) |
 
 ## What moved out (and where)
 
