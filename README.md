@@ -23,22 +23,47 @@ Domain knowledge that caw used to vendor (framework docs, workflow skills, UI qu
 /plugin install caw@caw
 ```
 
-That's it. The pipeline, harness, hooks, rules, and skills are all in the plugin.
+That installs the `caw` plugin (pipeline, harness, hooks, rules, skills). **caw on
+its own is not the full stack** — the agents depend on 3 official companion plugins
+for framework docs, workflow skills, and UI quality. Install those too:
+
+```
+/plugin install superpowers@claude-plugins-official
+/plugin install frontend-design@claude-plugins-official
+/plugin install context7@claude-plugins-official
+```
+
+`claude-plugins-official` is built into Claude Code — you do **not** need to
+`marketplace add` it. If you skip these three, agents that try to load a workflow
+skill (Superpowers) or query framework docs (Context7) will fail mid-task with a
+"plugin not enabled" error. `/caw:setup` preflights for them and warns if missing.
 
 ### Share the whole stack with a committed settings file
 
 Commit a `.claude/settings.json` into your project so members are **prompted to install on trust** when they open it. A ready sample lives at
-[`plugins/caw/templates/project/settings.json`](plugins/caw/templates/project/settings.json). It registers the `caw` marketplace, enables `caw`, and enables the **3 companion plugins** (`superpowers`, `frontend-design`, `context7`) — so members get the whole stack at once.
+[`plugins/caw/templates/project/settings.json`](plugins/caw/templates/project/settings.json). Its `enabledPlugins` block lists `caw` **and** all 3 companions — so a member who trusts the committed file gets the whole stack at once, **without running the 3 commands above**. The manual commands are only for the from-scratch path where no committed `settings.json` exists.
 
-> **Honest note:** `enabledPlugins` makes the plugin discoverable and prompts the member to approve it — it is **clone → trust → approve**, not fully silent auto-install yet.
+> **Honest note:** the companion plugins reach a member in exactly two ways:
+> (1) they trust a committed `.claude/settings.json` whose `enabledPlugins` lists them
+> (Claude Code then prompts to install — **clone → trust → approve**, not yet fully
+> silent), **or** (2) they run the 3 `/plugin install` commands above by hand.
+> Installing `caw` alone does **not** pull the companions — don't assume the stack is
+> complete just because `caw` is installed.
 
 ### Companion plugins (official)
 
-| Plugin | Provides |
-| --- | --- |
-| **superpowers** | Workflow skills — TDD, debugging, verification, review |
-| **context7** | Live framework / library docs (Next.js, Prisma, Stripe, TanStack, Supabase, …) |
-| **frontend-design** | Frontend / UI quality |
+| Plugin | Slug | Provides |
+| --- | --- | --- |
+| **superpowers** | `superpowers@claude-plugins-official` | Workflow skills — TDD, debugging, verification, review |
+| **context7** | `context7@claude-plugins-official` | Live framework / library docs (Next.js, Prisma, Stripe, TanStack, Supabase, …) |
+| **frontend-design** | `frontend-design@claude-plugins-official` | Frontend / UI quality |
+
+> **Context7 rate limits (teams / large projects).** Context7 runs as an MCP server.
+> Without a key it uses a shared anonymous tier with a low rate limit — a whole team
+> hammering it can get throttled. Set `CONTEXT7_API_KEY` (free key at
+> [context7.com/dashboard](https://context7.com/dashboard)) to get your own quota.
+> The settings template has an empty `CONTEXT7_API_KEY` slot in its `env` block —
+> fill it in locally; never commit a real key.
 
 ---
 

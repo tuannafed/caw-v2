@@ -33,7 +33,10 @@ You run **once** per project (and on-demand via `--refresh`).
 > (`caw:api-contract`, `caw:error-handling-patterns`,
 > `caw:nextjs-feature`, `caw:react-component-testing`) — they are always
 > available once the plugin is enabled, no install step. Setup therefore does NOT
-> run a skill matcher, build an install list, or create symlinks.
+> run a skill matcher, build an install list, or create symlinks. It DOES preflight
+> that the companion plugins (Superpowers, Context7, Frontend Design) are enabled —
+> see Phase 0.5 — and warns (without blocking) if they're missing, since the
+> downstream agents depend on them.
 
 ## Inputs
 
@@ -140,6 +143,40 @@ chmod +x scripts/caw/bin/harness-cli
 > `CONTEXT_RULES.md`, `ARCHITECTURE.md`, etc. — identical across projects) so policy
 > updates from a plugin upgrade land. Never re-copy the lower-case seed prose
 > (`conventions.md`, `knowledge.md`, `harness-backlog.md`) — those are project-owned.
+
+### Phase 0.5 — Preflight companion plugins (warn, never block)
+
+The downstream agents depend on 3 official companion plugins: **Superpowers**
+(workflow skills), **Context7** (framework docs), **Frontend Design** (UI quality).
+If a member installed `caw` by hand and skipped them, agents fail mid-task with a
+"plugin not enabled" error. Catch that here, once, instead of silently mid-task.
+
+There is no stable plugin-list API to query, so probe with a cheap skill load. Call:
+
+```
+Skill({skill: "test-driven-development"})
+```
+
+(a Superpowers skill). If it loads, the companions are very likely present — proceed.
+If it errors with "plugin not enabled" / "skill not found", **print this warning and
+continue** (do NOT abort setup):
+
+```
+⚠️ Companion plugins may be missing — agents will be degraded until they're installed.
+   caw depends on these (official; `claude-plugins-official` is built in, no marketplace add):
+
+     /plugin install superpowers@claude-plugins-official
+     /plugin install frontend-design@claude-plugins-official
+     /plugin install context7@claude-plugins-official
+
+   Without them: Superpowers workflow skills and Context7 framework docs won't load,
+   and the coder/tester/reviewer will fall back to generic knowledge or fail mid-task.
+   (If a committed .claude/settings.json already enables them via enabledPlugins, you
+   can ignore this — the probe can't always see them.)
+```
+
+Record the preflight result in the Phase 6 report (`companions: ok` or
+`companions: warned — see above`). This is advisory only — setup still completes.
 
 ### Phase 1 — Read context
 
@@ -330,6 +367,10 @@ Detected stack:
 
 ⚠️ Mismatches:
   - CLAUDE.md mentions Redis but no redis client in deps. Did you remove it?
+
+Companion plugins:
+  ✓ companions: ok    (Superpowers / Context7 / Frontend Design reachable)
+  — or —  ⚠️ companions: warned — install the 3 plugins above (agents degraded until then)
 
 Durable layer:
   ✓ harness-cli <version> operational (plugin binary → ./harness.db at project root)

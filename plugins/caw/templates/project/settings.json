@@ -17,7 +17,9 @@
   },
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80",
-    "CAW_HOOK_PROFILE": "standard"
+    "CAW_HOOK_PROFILE": "standard",
+    "// CONTEXT7_API_KEY note": "Leave empty to use Context7's shared anonymous tier (low rate limit). For teams/large projects, get a free key at context7.com/dashboard and set it here for your own quota. NEVER commit a real key — set it locally (e.g. in .claude/settings.local.json) instead of committing this value.",
+    "CONTEXT7_API_KEY": ""
   },
   "permissions": {
     "allow": [

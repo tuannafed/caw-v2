@@ -11,9 +11,30 @@ Code plugin.
 /plugin install caw@caw
 ```
 
+`caw` depends on 3 official companion plugins (workflow skills, framework docs,
+UI quality). Install them too — `claude-plugins-official` is built in, no
+`marketplace add` needed:
+
+```
+/plugin install superpowers@claude-plugins-official
+/plugin install frontend-design@claude-plugins-official
+/plugin install context7@claude-plugins-official
+```
+
+If you skip these, agents fail mid-task when they try to load a Superpowers skill
+or query Context7. `/caw:setup` preflights and warns if any are missing.
+
 Or commit a `.claude/settings.json` into your repo (see
-[`templates/project/settings.json`](./templates/project/settings.json)) so members get
-prompted to install on trust — that file also enables the three companion plugins below.
+[`templates/project/settings.json`](./templates/project/settings.json)) whose
+`enabledPlugins` lists `caw` **and** all 3 companions — then a member who trusts the
+file is prompted to install the whole stack and does **not** need the manual commands
+above. Installing `caw` alone does not pull the companions.
+
+> **Context7 API key (teams).** Context7 is an MCP server; without a key it uses a
+> shared anonymous rate-limit tier. Set `CONTEXT7_API_KEY` (free at
+> [context7.com/dashboard](https://context7.com/dashboard)) for your own quota. The
+> settings template has an empty `CONTEXT7_API_KEY` env slot — fill it locally, never
+> commit a real key.
 
 ## What's inside
 

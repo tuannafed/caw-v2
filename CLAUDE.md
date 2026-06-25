@@ -43,6 +43,24 @@ to install on trust. The canonical sample is `plugins/caw/templates/project/sett
 permission allowlist, registers the `caw` marketplace, and enables `caw` plus 3
 companion plugins: `superpowers`, `frontend-design`, `context7`.
 
+The companions are required — caw's agents load workflow skills from Superpowers and
+framework docs from Context7. A member who trusts the committed `settings.json` gets
+them via `enabledPlugins`. Without that file, install them by hand (the slugs are
+fixed — `claude-plugins-official` is built in, no `marketplace add`):
+
+```
+/plugin install superpowers@claude-plugins-official
+/plugin install frontend-design@claude-plugins-official
+/plugin install context7@claude-plugins-official
+```
+
+`/caw:setup` preflights for them and warns (does not block) if any are missing.
+
+> **Context7 API key (teams).** Context7 is an MCP server; the no-key path uses a
+> shared anonymous rate-limit tier. For a team or large project, set `CONTEXT7_API_KEY`
+> (free key at context7.com/dashboard) for your own quota. The settings template ships
+> an empty `CONTEXT7_API_KEY` slot — fill it locally; never commit a real key.
+
 > **The marketplace ref tracks `main`.** `extraKnownMarketplaces.caw.source.ref`
 > is `"main"`, so a push to `main` ships the release and members get it via
 > `/plugin marketplace update caw` with no settings edit. For a frozen install,
