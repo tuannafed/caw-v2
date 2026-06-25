@@ -9,8 +9,7 @@ every sentence that happens to contain the word "done".
 import sys
 from pathlib import Path
 
-SCRIPTS_DIR = Path(__file__).resolve().parent.parent          # cli/
-DURABLE_DIR = SCRIPTS_DIR.parent / "plugins" / "caw" / "harness"     # harness package + bin
+DURABLE_DIR = Path(__file__).resolve().parent.parent  # plugins/caw/harness/
 sys.path.insert(0, str(DURABLE_DIR))
 
 from src import state_drift  # noqa: E402

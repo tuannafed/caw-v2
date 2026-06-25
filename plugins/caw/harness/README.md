@@ -6,6 +6,12 @@ rules; this layer is "what agents did", not "what they should do" (ADR-0004,
 ported from repository-harness). Shape mirrors repository-harness so a future Rust
 rewrite migrates 1:1.
 
+> **Two docs, two audiences.** This README is the **developer doc** for the harness
+> *code* (layout, commands, tests). The concept/contract for *users* — mental model,
+> durable-layer philosophy, spec lifecycle — lives in the scaffolded `docs/caw/HARNESS.md`
+> (source: `templates/docs-caw/HARNESS.md`). Keep the two in sync when the CLI's
+> command surface changes.
+
 ## Layout
 
 ```

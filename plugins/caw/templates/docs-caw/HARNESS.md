@@ -5,6 +5,11 @@ agents turn a future product spec into safe, validated work.
 
 The app is what users touch. The harness is what agents touch.
 
+> This is the **concept / contract** doc (mental model, lifecycle, commands you run).
+> For the harness *code* itself — package layout, how the CLI is built, the test
+> suite — see the developer README that ships with the plugin (`harness/README.md`).
+> See also `GLOSSARY.md` for the shared vocabulary used throughout.
+
 ## Mental Model
 
 ```text
@@ -305,6 +310,11 @@ scripts/caw/bin/harness-cli maturity
 `audit` reports drift categories and an entropy score documented in
 `docs/caw/AUDIT.md`. `lint` checks for common harness inconsistencies.
 `maturity` assesses proof readiness and trace quality.
+
+> **Run these via `/caw:maintain`.** Rather than remembering to run audit /
+> maturity / propose by hand, use the `/caw:maintain` command — it runs all three
+> as one discoverable step (report-only, or `--commit` to file proposals). The raw
+> commands above remain available for scripting / CI.
 
 Interventions are separate from traces:
 

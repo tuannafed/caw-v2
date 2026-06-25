@@ -3,6 +3,16 @@
 Astro + React + shadcn UI app that renders caw stories
 (`docs/caw/stories/<story-id>/`) as a stage-based Kanban board.
 
+> **Status source — read this.** The board reads the `status:` field from each
+> story's `overview.yaml` (markdown), **not** `harness.db`. In caw v2 the durable
+> DB is the source of truth for execution state (`harness-cli query matrix` — "what
+> agents did"); the markdown `status:` is a human-readable mirror agents write. If
+> the two drift (e.g. the DB records `blocked`/`failed` but `overview.yaml` wasn't
+> updated), the board shows the markdown value and can lag the real state. Treat the
+> board as a convenience view; `harness-cli query matrix` is authoritative. This
+> viewer is an **optional** companion — it ships outside `plugins/caw/` and is not
+> installed with the plugin.
+
 ## Stack
 
 - **Astro 5** (SSR via `@astrojs/node`)

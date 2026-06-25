@@ -93,7 +93,7 @@ Or step-by-step:
 | Component | What |
 | --- | --- |
 | **5 agents** | `setup`, `planner`, `coder`, `tester`, `reviewer` |
-| **6 commands** | `/caw:setup`, `/caw:plan`, `/caw:code`, `/caw:test`, `/caw:review`, `/caw:verify` |
+| **7 commands** | `/caw:setup`, `/caw:plan`, `/caw:code`, `/caw:test`, `/caw:review`, `/caw:verify`, `/caw:maintain` |
 | **4 authored skills** | `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing` (namespaced `caw:<name>`) |
 | **Durable harness** | `harness-cli` (Python stdlib) + SQLite; state lives in `harness.db` at the **project root** (never in the plugin cache) |
 | **Hooks** | Safety + workflow hooks, profile-gated by `CAW_HOOK_PROFILE` (`minimal` / `standard` / `strict`) |
@@ -184,14 +184,12 @@ caw-v2/
 │   └── caw/               The plugin
 │       ├── .claude-plugin/     plugin.json manifest
 │       ├── agents/             5 agents (setup, planner, coder, tester, reviewer)
-│       ├── commands/           6 commands (setup, plan, code, ... → /caw:setup, /caw:plan, …)
+│       ├── commands/           7 commands (setup, plan, code, ..., maintain → /caw:setup, …)
 │       ├── skills/             4 authored skills
 │       ├── hooks/              Safety + workflow hooks (hooks.json) + dispatcher
 │       ├── rules/              Non-overridable coding rules (common/ + typescript/ + react/)
-│       ├── harness/            Durable layer — harness-cli (Python stdlib) + SQLite schema
+│       ├── harness/            Durable layer — harness-cli (Python stdlib) + SQLite schema + tests/
 │       └── templates/          Project + docs/caw seeds (incl. sample settings.json)
-├── cli/
-│   └── tests/                  pytest suite for the harness
 ├── docs/
 │   └── CONCEPT.md              Architecture design doc
 └── tools/

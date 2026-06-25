@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-SCRIPTS_DIR = Path(__file__).resolve().parent.parent          # cli/
-DURABLE_DIR = SCRIPTS_DIR.parent / "plugins" / "caw" / "harness"     # harness package + bin
+DURABLE_DIR = Path(__file__).resolve().parent.parent  # plugins/caw/harness/
+REPO_ROOT = DURABLE_DIR.parent.parent.parent          # repo root (has rules/ + docs/)
 sys.path.insert(0, str(DURABLE_DIR))
 
 from src import db as dbmod, lint, maturity  # noqa: E402
@@ -64,7 +64,7 @@ def conn(tmp_path):
 
 def test_maturity_assesses_against_real_repo(conn):
     # repo_root = the caw source root (has rules/ + docs/).
-    repo_root = SCRIPTS_DIR.parent
+    repo_root = REPO_ROOT
     level, evidence = maturity.assess(conn, repo_root=str(repo_root))
     # The v2 rules + docs exist, so at least H2 is reached even on an empty DB.
     assert level in {"H2", "H3", "H4", "H5"}
@@ -72,7 +72,7 @@ def test_maturity_assesses_against_real_repo(conn):
 
 
 def test_maturity_reaches_h5_when_fully_exercised(conn):
-    repo_root = SCRIPTS_DIR.parent
+    repo_root = REPO_ROOT
     conn.execute("INSERT INTO story (id,title,risk_lane,status) VALUES ('t','T','normal','in_progress')")
     conn.execute("INSERT INTO task (story_id,task_key,verify_command,last_verified_result) "
                  "VALUES ('t','be','true','pass')")

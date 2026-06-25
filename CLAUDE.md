@@ -73,20 +73,20 @@ fixed — `claude-plugins-official` is built in, no `marketplace add`):
 plugins/caw/                    # THE plugin
   .claude-plugin/plugin.json         # plugin manifest
   agents/        # 5 agents: setup, planner, coder, tester, reviewer
-  commands/      # 6 commands: setup, plan, code, test, review, verify (invoked as /caw:setup, /caw:plan, …)
+  commands/      # 7 commands: setup, plan, code, test, review, verify, maintain (invoked as /caw:setup, /caw:plan, …)
   skills/        # 4 AUTHORED skills: api-contract, error-handling-patterns,
                  #   nextjs-feature, react-component-testing (namespaced caw:<name>)
   hooks/         # hooks.json (uses ${CLAUDE_PLUGIN_ROOT}) + hook .js files
   rules/         # non-overridable rules agents Read explicitly (common/, react/, typescript/)
-  harness/       # durable layer: bin/harness-cli (Python stdlib) + harness/*.py + schema/*.sql
+  harness/       # durable layer: bin/harness-cli (Python stdlib) + src/*.py + schema/*.sql + tests/
                  #   DB resolves to the PROJECT root, not the plugin cache
+                 #   tests/ → pytest suite for the harness (CI runs this)
   templates/     # files /caw:setup scaffolds into a member project:
                  #   docs-caw/ → project docs/caw/ (policy docs, ADR/intake templates,
                  #               conventions.md/knowledge.md seeds, advisories)
                  #   project/  → AGENTS.md, CLAUDE.md (@-import), gitleaks.toml,
                  #               .claudeignore, settings.json
   README.md
-cli/tests/                           # harness-cli test suite (pytest); imports harness from the plugin
 docs/CONCEPT.md                      # architecture design doc
 tools/backlog/                       # Astro + React + shadcn Kanban UI (vendored, unchanged)
 ```
@@ -236,7 +236,7 @@ Dispatch/helper scripts: run-with-flags.js, hook-flags.js, resolve-formatter.js.
 ## Tests
 
 ```bash
-python -m pytest cli/tests       # harness-cli suite; CI runs this
+python -m pytest plugins/caw/harness/tests       # harness-cli suite; CI runs this
 ```
 
 The tests import the harness package from `plugins/caw/harness`.

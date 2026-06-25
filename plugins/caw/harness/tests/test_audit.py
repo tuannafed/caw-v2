@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pytest
 
-SCRIPTS_DIR = Path(__file__).resolve().parent.parent          # cli/
-DURABLE_DIR = SCRIPTS_DIR.parent / "plugins" / "caw" / "harness"     # harness package + bin
+DURABLE_DIR = Path(__file__).resolve().parent.parent  # plugins/caw/harness/
 sys.path.insert(0, str(DURABLE_DIR))
 
 from src import audit, db as dbmod  # noqa: E402

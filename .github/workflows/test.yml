@@ -7,13 +7,11 @@ on:
   push:
     branches: [main]
     paths:
-      - "cli/**"
       - "plugins/caw/harness/**"
       - "requirements-dev.txt"
       - ".github/workflows/test.yml"
   pull_request:
     paths:
-      - "cli/**"
       - "plugins/caw/harness/**"
       - "requirements-dev.txt"
       - ".github/workflows/test.yml"
@@ -33,4 +31,4 @@ jobs:
       - name: Install dev deps
         run: pip install -r requirements-dev.txt
       - name: Run tests
-        run: python -m pytest cli/tests -q
+        run: python -m pytest plugins/caw/harness/tests -q
