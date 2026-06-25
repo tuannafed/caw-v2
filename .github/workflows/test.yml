@@ -8,13 +8,13 @@ on:
     branches: [main]
     paths:
       - "cli/**"
-      - "template/durable/**"
+      - "plugins/caw/harness/**"
       - "requirements-dev.txt"
       - ".github/workflows/test.yml"
   pull_request:
     paths:
       - "cli/**"
-      - "template/durable/**"
+      - "plugins/caw/harness/**"
       - "requirements-dev.txt"
       - ".github/workflows/test.yml"
 

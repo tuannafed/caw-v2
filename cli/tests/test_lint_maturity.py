@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent          # cli/
-DURABLE_DIR = SCRIPTS_DIR.parent / "template" / "durable"     # harness package + bin
+DURABLE_DIR = SCRIPTS_DIR.parent / "plugins" / "caw" / "harness"     # harness package + bin
 sys.path.insert(0, str(DURABLE_DIR))
 
-from harness import db as dbmod, lint, maturity  # noqa: E402
+from src import db as dbmod, lint, maturity  # noqa: E402
 
 
 # ----------------------------------------------------------------- lint

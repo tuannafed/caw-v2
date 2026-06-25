@@ -1,0 +1,110 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js dangerous-actions-blocker ${CLAUDE_PLUGIN_ROOT}/hooks/dangerous-actions-blocker.js strict"
+          }
+        ],
+        "description": "Block destructive commands (rm -rf, git push --force, DROP TABLE, etc.)"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js pre-commit-secrets ${CLAUDE_PLUGIN_ROOT}/hooks/pre-commit-secrets.js standard,strict"
+          }
+        ],
+        "description": "Scan staged files for hardcoded secrets before git commit"
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js prompt-injection-detector ${CLAUDE_PLUGIN_ROOT}/hooks/prompt-injection-detector.js standard,strict"
+          }
+        ],
+        "description": "Warn when reading sensitive files that may contain injected instructions"
+      },
+      {
+        "matcher": "WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js prompt-injection-detector ${CLAUDE_PLUGIN_ROOT}/hooks/prompt-injection-detector.js standard,strict"
+          }
+        ],
+        "description": "Warn when fetching URLs with suspicious prompt injection patterns"
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/suggest-compact.js"
+          }
+        ],
+        "description": "Suggest /compact at strategic intervals (every 50 then 25 tool calls)"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js warn-debug-leftovers ${CLAUDE_PLUGIN_ROOT}/hooks/warn-debug-leftovers.js standard,strict"
+          }
+        ],
+        "description": "Warn about console.log/debug in JS/TS files after edits"
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-accumulator.js"
+          }
+        ],
+        "description": "Accumulate edited JS/TS/Python paths for batch format+typecheck at Stop"
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/post-edit-accumulator.js"
+          }
+        ],
+        "description": "Accumulate written JS/TS/Python paths for batch format+typecheck at Stop"
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/run-with-flags.js session-summary ${CLAUDE_PLUGIN_ROOT}/hooks/session-summary.js standard,strict"
+          }
+        ],
+        "description": "Print session summary (changed files, commits, active tasks) when session ends"
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/stop-format-typecheck.js"
+          }
+        ],
+        "description": "Batch format (Biome/Prettier/ruff) and typecheck all files edited this session"
+      }
+    ]
+  }
+}

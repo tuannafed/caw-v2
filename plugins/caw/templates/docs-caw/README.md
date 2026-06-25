@@ -1,0 +1,62 @@
+# Project Docs
+
+Harness policy and project documentation for a CAW project. Policy docs describe
+*how to work*; durable state (story/task status, proof, decisions, traces) lives
+in the DB and is queried with `scripts/caw/bin/harness-cli`.
+
+## Policy docs (this folder)
+
+| File | What it covers |
+| --- | --- |
+| `HARNESS.md` | The human–agent operating model: task loop, durable layer, growth-from-friction, done definition. |
+| `FEATURE_INTAKE.md` | The intake gate — input types, risk checklist, and lane selection (tiny / normal / high_risk). |
+| `ARCHITECTURE.md` | Architecture discovery questions and boundary rules (layering, parse-first, command/query). |
+| `HARNESS_AUDIT.md` | What `harness-cli audit` checks and how the entropy score is computed. |
+| `TOOL_REGISTRY.md` | Registering external project tools so agents can discover them. |
+
+## File naming convention
+
+Casing signals whether a file is read-only reference or something the project fills in:
+
+- **`UPPER_CASE.md`** — **read-only guide / policy**. Canonical reference an agent
+  *reads* to understand the harness; identical across every CAW project, never
+  edited per-project (`HARNESS.md`, `ARCHITECTURE.md`, `TRACE_SPEC.md`, …).
+  `README.md` is the one universal exception (always UPPER by convention).
+- **`lower-case.md`** — **fill-in**: a file the project *writes into*. Two flavors:
+  - *Format templates* (`templates/adr.md`, `templates/intake.md`) — copied/filled
+    each time you create an instance.
+  - *Project seed prose* (`conventions.md`, `knowledge.md`, `harness-backlog.md`) —
+    scaffolded near-empty, then filled and appended to over the project's life.
+- **`NNNN-*.md` / `US-*.md`** — content instances with an ID (`decisions/`, stories).
+
+Rule of thumb: if an agent only ever *reads* it → UPPER; if the project *writes*
+into it → lower.
+
+## Layout of a CAW project
+
+```text
+project/
+  .claude/            # what Claude Code natively loads
+    agents/  commands/  rules/  hooks/  settings.json
+  docs/
+    caw/              # caw policy + prose the agents read/write
+      HARNESS.md  FEATURE_INTAKE.md  ARCHITECTURE.md  ...   # policy (UPPER_CASE)
+      conventions.md  knowledge.md  harness-backlog.md      # project seed prose
+      templates/      # format templates (adr.md, intake.md)
+      decisions/      # ADR markdown (NNNN-*.md)
+      stories/<story-id>/  plan.md  code.md  tests.md  review.md
+      advisories/     # security advisories
+  scripts/
+    caw/bin/harness-cli   caw/schema/   caw/harness/   # durable layer (CLI + SQLite)
+  harness.db          # operational state (gitignored)
+```
+
+## Source of truth
+
+- **State** (story/task status, lane, proof, decision status, traces, backlog) →
+  the DB. Query it: `harness-cli query <table>`, `harness-cli matrix`.
+- **Prose** (plan rationale, ADR content, narrative, conventions) → markdown
+  under `docs/`.
+
+One fact lives in exactly one place. Never restate task status in prose — the
+`harness-cli lint` state-drift gate rejects it.

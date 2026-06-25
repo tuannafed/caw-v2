@@ -1,0 +1,12 @@
+{
+  "name": "caw",
+  "version": "2.0.0",
+  "description": "Claude Agent Workflow — 5-agent pipeline (plan/code/test/review), durable SQLite harness, safety hooks, and authored skills.",
+  "author": {
+    "name": "tuannafed"
+  },
+  "homepage": "https://github.com/tuannafed/caw-v2",
+  "repository": "https://github.com/tuannafed/caw-v2",
+  "license": "MIT",
+  "keywords": ["workflow", "agents", "pipeline", "harness", "tdd"]
+}

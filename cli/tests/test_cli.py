@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent          # cli/
-DURABLE_DIR = SCRIPTS_DIR.parent / "template" / "durable"     # harness package + bin
+DURABLE_DIR = SCRIPTS_DIR.parent / "plugins" / "caw" / "harness"     # harness package + bin
 sys.path.insert(0, str(DURABLE_DIR))
 
 # harness-cli has no .py extension — load it with an explicit source loader
@@ -24,7 +24,7 @@ _spec = importlib.util.spec_from_loader("harness_cli", _loader)
 cli = importlib.util.module_from_spec(_spec)
 _loader.exec_module(cli)
 
-from harness import db as dbmod  # noqa: E402
+from src import db as dbmod  # noqa: E402
 
 
 @pytest.fixture

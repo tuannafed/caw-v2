@@ -1,0 +1,22 @@
+{
+  "// note": "Sample .claude/settings.json for a TEAM-MEMBER PROJECT. Commit this into your repo so members get prompted to install the stack on trust. Pin the caw marketplace ref to a commit SHA (not a branch) for production — push to a branch can silently change what the team installs.",
+  "extraKnownMarketplaces": {
+    "caw": {
+      "source": {
+        "source": "github",
+        "repo": "tuannafed/caw-v2",
+        "ref": "9c5f3185a4a7614c97a7902df163e2224fee07d1"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "caw@caw": true,
+    "superpowers@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true
+  },
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80",
+    "CAW_HOOK_PROFILE": "standard"
+  }
+}

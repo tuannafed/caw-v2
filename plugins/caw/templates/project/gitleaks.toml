@@ -1,0 +1,148 @@
+title = "claude-agent-team gitleaks config"
+
+# Strategy: replace defaults entirely with explicit, raw-value detection rules.
+#
+# Why useDefault = false?
+# Gitleaks 8.x default rules apply entropy thresholds and stopword filters that
+# silently skip raw secret values without keyword context (e.g. a bare
+# `sk-proj-…` line gets ignored unless it appears as `OPENAI_API_KEY=…`).
+# Using only explicit custom rules makes detection deterministic.
+[extend]
+useDefault = false
+
+# ─── Custom rules: detect RAW secrets (no keyword context required) ──────────
+
+[[rules]]
+id = "custom-openai-api-key"
+description = "OpenAI API Key (legacy + project + service-account)"
+regex = '''sk-(?:proj-|svcacct-|admin-)?[A-Za-z0-9_-]{40,}'''
+tags = ["key", "openai"]
+
+[[rules]]
+id = "custom-anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-(?:api|admin)\d*-[A-Za-z0-9_-]{40,}'''
+tags = ["key", "anthropic"]
+
+[[rules]]
+id = "custom-aws-access-key"
+description = "AWS Access Key ID (long-term + temporary)"
+regex = '''(?:AKIA|ASIA)[0-9A-Z]{16}'''
+tags = ["key", "aws"]
+
+[[rules]]
+id = "custom-aws-secret-key"
+description = "AWS Secret Access Key (with keyword)"
+regex = '''(?i)aws_secret_access_key\s*[:=]\s*["']?[A-Za-z0-9/+=]{40}["']?'''
+tags = ["key", "aws"]
+
+[[rules]]
+id = "custom-stripe-live-key"
+description = "Stripe Live Secret Key"
+regex = '''sk_live_[A-Za-z0-9]{24,}'''
+tags = ["key", "stripe"]
+
+[[rules]]
+id = "custom-stripe-publishable-live"
+description = "Stripe Publishable Live Key"
+regex = '''pk_live_[A-Za-z0-9]{24,}'''
+tags = ["key", "stripe"]
+
+[[rules]]
+id = "custom-slack-token"
+description = "Slack Token (bot/user/app/legacy)"
+regex = '''xox[baprs]-[A-Za-z0-9-]{10,}'''
+tags = ["token", "slack"]
+
+[[rules]]
+id = "custom-google-api-key"
+description = "Google API Key"
+regex = '''AIza[0-9A-Za-z_-]{35}'''
+tags = ["key", "google"]
+
+[[rules]]
+id = "custom-google-oauth-client-secret"
+description = "Google OAuth Client Secret"
+regex = '''GOCSPX-[A-Za-z0-9_-]{28,}'''
+tags = ["key", "google"]
+
+[[rules]]
+id = "custom-github-pat-classic"
+description = "GitHub Personal Access Token (classic ghp_*)"
+regex = '''ghp_[A-Za-z0-9]{36}'''
+tags = ["key", "github"]
+
+[[rules]]
+id = "custom-github-pat-fine-grained"
+description = "GitHub Fine-Grained Personal Access Token"
+regex = '''github_pat_[A-Za-z0-9_]{82}'''
+tags = ["key", "github"]
+
+[[rules]]
+id = "custom-azure-storage-key"
+description = "Azure Storage Account Key (with keyword)"
+regex = '''(?i)(?:account[_-]?key|storage[_-]?key)\s*[:=]\s*["']?[A-Za-z0-9+/=]{86,88}["']?'''
+tags = ["key", "azure"]
+
+[[rules]]
+id = "custom-sendgrid-api-key"
+description = "SendGrid API Key"
+regex = '''SG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}'''
+tags = ["key", "sendgrid"]
+
+[[rules]]
+id = "custom-tavily-api-key"
+description = "Tavily API Key"
+regex = '''tvly-(?:dev|prod)-[A-Za-z0-9]{40,}'''
+tags = ["key", "tavily"]
+
+[[rules]]
+id = "custom-notion-api-token"
+description = "Notion Internal Integration Token"
+regex = '''(?:ntn_|secret_)[A-Za-z0-9]{40,}'''
+tags = ["key", "notion"]
+
+[[rules]]
+id = "custom-supabase-service-role"
+description = "Supabase Service Role Key (long JWT)"
+regex = '''eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{40,}'''
+tags = ["key", "supabase"]
+
+[[rules]]
+id = "custom-jwt-token-long"
+description = "JWT Token (long format)"
+regex = '''eyJ[A-Za-z0-9_-]{20,}\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{40,}'''
+tags = ["token", "jwt"]
+
+[[rules]]
+id = "custom-private-key-block"
+description = "Private key (PEM)"
+regex = '''-----BEGIN (?:RSA |EC |DSA |OPENSSH |PGP )?PRIVATE KEY( BLOCK)?-----'''
+tags = ["key", "private"]
+
+# ─── Allowlist for test/example/fixture files ────────────────────────────────
+[allowlist]
+description = "Global allowlist — exclude generated/binary/example/doc files"
+paths = [
+  '''(.*?)(jpg|jpeg|gif|doc|docx|pdf|bin|svg|socket|png|ico|lock|pb\.go|pb\.gw\.go)$''',
+  '''\.pre-commit-config\.yaml$''',
+  '''gitleaks\.toml$''',
+  '''\.claude/skills''',
+  '''\.claude/agents''',
+  '''\.env\.example$''',
+  '''\.env\.sample$''',
+  '''\.env\.template$''',
+  '''__fixtures__/''',
+  '''fixtures?/''',
+  '''__snapshots__/''',
+  '''\.md$''',
+  '''docs?/''',
+  '''CHANGELOG\b''',
+  '''README\b''',
+]
+regexes = [
+  '''EXAMPLE_|example_|test_|TEST_|dummy_|DUMMY_|xxxxx|your_token_here''',
+  '''REPLACE_WITH_''',
+  '''placeholder_''',
+  '''<your_.*_here>''',
+]
