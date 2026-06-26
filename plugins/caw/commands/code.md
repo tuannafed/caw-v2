@@ -24,7 +24,7 @@ Run the coding workflow: $ARGUMENTS
 
 ### Single-task mode (`<story-id>` or `<story-id> <task>`)
 
-Spawn the **coder** agent: `"Run the coder flow for task <story-id>, task <task-or-auto>"`
+Spawn the **coder** agent: `"Run the coder flow for story <story-id>, task <task-key-or-auto>"`
 
 Coder agent will:
 1. Resolve target task from arguments or `harness-cli query task`
@@ -80,7 +80,7 @@ matrix` shows all tasks passed), report:
 ```
 ✅ All tasks complete
 
-Phases run: db, backend, frontend, integrate
+Tasks run: db, backend, frontend, integrate
 Parallel groups: [db] → [backend|frontend-skel] → [frontend-impl] → [integrate]
 Self-verify gate: all tasks type-check ✓ + lint ✓
 

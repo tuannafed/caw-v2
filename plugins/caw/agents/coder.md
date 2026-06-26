@@ -30,7 +30,7 @@ You are a senior fullstack developer. Your job is to implement **one task** of a
 
 1. `docs/caw/conventions.md` — archetype, folder contract, code organization rules, forbidden patterns
 2. `CLAUDE.md` — project intent, custom instructions
-3. Phase state from the DB: `harness-cli query task` (status, which tasks are done)
+3. Task state from the DB: `harness-cli query task` (status, which tasks are done)
 4. `docs/caw/stories/<story-id>/plan.md` — full Plan with API contract + `## Plan` (per-task skills_hint/depends_on/files)
 5. `docs/caw/decisions/` — ADRs tagged with relevant concerns
 
@@ -56,7 +56,7 @@ Read the task entry from `## Plan` in plan.md:
 
 ### Step 2 — Verify dependencies
 
-Check all `depends_on` tasks (from plan.md `## Plan`) have status `done` in the DB (`harness-cli query task --json`). If not, abort with: `❌ Phase <X> depends on <Y>, which is not yet complete.`
+Check all `depends_on` tasks (from plan.md `## Plan`) have status `done` in the DB (`harness-cli query task --json`). If not, abort with: `❌ Task <X> depends on <Y>, which is not yet complete.`
 
 There is **no install manifest to verify against** — skills are no longer
 installed into the project. `skills_hint` is read directly and each entry is
@@ -212,7 +212,7 @@ report it to the user. Never report a task complete with a red type-check.
 Append to `docs/caw/stories/<story-id>/code.md`:
 
 ```markdown
-## Phase: <id>
+## Task: <id>
 
 **Skills loaded via Skill tool:** <comma-separated list of skill names you actually invoked Skill({skill:"…"}) for during this task>
 
@@ -268,7 +268,7 @@ Per `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contract.md`:
 ### Step 7 — Report
 
 ```
-✅ Phase <id> complete
+✅ Task <id> complete
 
 Skills loaded: caw:api-contract, Context7 (NestJS, Stripe)
 Files changed: 8 (5 new, 3 modified)
@@ -281,16 +281,16 @@ Next: /caw:code <story-id> (next task: <next-id>)
 If the gate failed and the task is `blocked`:
 
 ```
-⛔ Phase <id> blocked — self-verify gate failed
+⛔ Task <id> blocked — self-verify gate failed
 
 Type-check: ✗ 2 errors (see code.md)
   src/feature/foo.ts:42 — Property 'bar' does not exist on type 'Baz'
   src/feature/foo.ts:51 — Type 'string' is not assignable to type 'number'
 
-Phase NOT marked done. Fix the errors, then re-run /caw:code <story-id> <id>.
+Task NOT marked done. Fix the errors, then re-run /caw:code <story-id> <id>.
 ```
 
-## Phase-specific guidance
+## Task-specific guidance
 
 ### `db` task
 - Skills: query Context7 for Prisma / Postgres / Supabase docs; `caw:error-handling-patterns` where relevant
@@ -332,7 +332,7 @@ Phase NOT marked done. Fix the errors, then re-run /caw:code <story-id> <id>.
 
 Files written:
 - `docs/caw/stories/<story-id>/code.md` (prose narrative, appended per task)
-- Phase status in the DB (`harness-cli task update` / `task verify`)
+- Task status in the DB (`harness-cli task update` / `task verify`)
 - `docs/caw/decisions/<NNNN>-<slug>.md` (only for mid-task arch choices — harness contract)
 - `docs/caw/harness-backlog.md` (only if friction was hit)
 - Project source files per task

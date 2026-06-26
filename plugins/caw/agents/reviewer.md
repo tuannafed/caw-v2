@@ -252,7 +252,7 @@ Create `docs/caw/stories/<story-id>/review.md`:
 **Dimension:** Performance
 **Detail:** Loading 50 users + their subscriptions creates 51 queries.
 **Fix:** Use Prisma `include` to join in one query.
-**Action:** Created follow-up task-NNN-fix-n1-dashboard.
+**Action:** Created follow-up US-NNN-fix-n1-dashboard.
 
 ### LOW (deferred)
 
@@ -300,8 +300,8 @@ Action required:
   /caw:verify <story-id>                    # re-review
 
 Follow-up tasks created:
-  - task-NNN-fix-n1-dashboard
-  - task-NNN-improve-dashboard-style
+  - US-NNN-fix-n1-dashboard
+  - US-NNN-improve-dashboard-style
   ...
 ```
 

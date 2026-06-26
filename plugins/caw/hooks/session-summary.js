@@ -36,12 +36,13 @@ process.stdin.on('end', () => {
       recentCommits = execSync('git log --oneline -5', { encoding: 'utf8' }).trim();
     } catch {}
 
-      // ── Active tasks ──────────────────────────────────────────────────────────
-    // Each task is a folder: docs/caw/tasks/task-NNN-<slug>/
+      // ── Active stories ────────────────────────────────────────────────────────
+    // Each story is a folder: docs/caw/stories/<story-id>/ (epics group them under
+    // docs/caw/stories/epics/<epic>/<story-id>/).
     let taskSummary = '';
     try {
       const taskDirs = execSync(
-        'ls -d docs/caw/tasks/task-*/ 2>/dev/null',
+        'ls -d docs/caw/stories/*/ docs/caw/stories/epics/*/*/ 2>/dev/null | grep -v "/epics/$"',
         { encoding: 'utf8' }
       ).trim();
       if (taskDirs) {
@@ -49,9 +50,9 @@ process.stdin.on('end', () => {
         const summaries = dirs.map(d => {
           try {
             const yaml = fs.readFileSync(`${d.replace(/\/$/, '')}/overview.yaml`, 'utf8');
-            const taskId   = d.replace(/.*\/(task-[^/]+)\/?$/, '$1');
+            const taskId   = d.replace(/.*\/([^/]+)\/?$/, '$1');
             const status   = (yaml.match(/^status:\s*(.+)$/m)?.[1] || '?').trim();
-            const next     = (yaml.match(/^next_phase:\s*(.+)$/m)?.[1] || '?').trim();
+            const next     = (yaml.match(/^next_task:\s*(.+)$/m)?.[1] || '?').trim();
             return `  ${taskId}: ${status} / next: ${next}`;
           } catch { return null; }
         }).filter(Boolean);

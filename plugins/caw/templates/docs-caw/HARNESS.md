@@ -261,20 +261,21 @@ For every task:
 10. If harness friction was found, either fix it directly or record it with
     `scripts/caw/bin/harness-cli backlog add`.
 
-## Task and Phase Verification
+## Task Verification
 
-Tasks contain tasks, and tasks may carry a mechanical proof command:
+A **story** owns many **tasks** (db, backend, frontend, smoke…); a task may carry
+a mechanical proof command:
 
 ```bash
-scripts/caw/bin/harness-cli story add --id T-012 --title "Task with tasks" --lane normal
-scripts/caw/bin/harness-cli task add --task T-012 --name implementation --verify "pytest tests/"
-scripts/caw/bin/harness-cli task update --task T-012 --task implementation --status in_progress
-scripts/caw/bin/harness-cli task verify --task T-012 --task implementation
+scripts/caw/bin/harness-cli story add --id story-012 --title "Login flow" --risk-lane normal
+scripts/caw/bin/harness-cli task add    --story-id story-012 --task-key backend --verify "pytest tests/"
+scripts/caw/bin/harness-cli task update --story-id story-012 --task-key backend --status in_progress
+scripts/caw/bin/harness-cli task verify --story-id story-012 --task-key backend
 ```
 
 `task verify` runs the command from the repository root, records
 `last_verified_at` and `last_verified_result`, and exits 0 on pass or 1 on fail.
-When `trace --task <id>` links to a task whose task verification commands have
+When a trace links to a story whose task verification commands have
 never passed, the trace still records but prints an advisory warning before close.
 
 Use `story verify-all` before merges, maturity claims, and benchmark runs. It

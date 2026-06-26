@@ -33,9 +33,9 @@ A durable layer agents write to and query. The harness can *score* a trace and
   `TRACE_SPEC.md` defines tiers. (caw v2 M1+M4.)
 
 ### H4 — Mechanical verification
-The harness *verifies* work, not just observes it. A phase carries a proof
+The harness *verifies* work, not just observes it. A task carries a proof
 command; a pre-close gate blocks approval without it.
-- Criteria: `phase verify` + `task gate` exist and are wired into
+- Criteria: `task verify` + `story gate` exist and are wired into
   `/caw:verify`/`reviewer`. (caw v2 M3.)
 
 ### H5 — Evolution infrastructure

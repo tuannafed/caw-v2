@@ -9,7 +9,7 @@ maxTurns: 30
 permissionMode: acceptEdits
 ---
 
-# Planner Agent — Spec + Phases + Challenge
+# Planner Agent — Spec + Tasks + Challenge
 
 ## Role
 
@@ -120,12 +120,21 @@ won't fire for you — read them explicitly):**
 (Downstream, the reviewer gets these automatically: they are `paths:`-scoped to
 `plan.md`, which the reviewer Reads.)
 
-### Step 1 — Create task folder
+### Step 1 — Create story folder
 
-Generate story-id: `task-<NNN>-<slug>` where NNN is next sequential number.
+Generate story-id: `US-<NNN>-<slug>` where NNN is the next sequential number (US =
+user story). One story = one cohesive unit of work; its `task`s (db/backend/
+frontend/smoke…) are the breakdown.
 
-Create `docs/caw/stories/<story-id>/plan.md` (and the DB task state via
-`harness-cli` — see "Write task state" below). No `overview.yaml`.
+Create `docs/caw/stories/<story-id>/plan.md` (and the DB story+task state via
+`harness-cli` — see "Write state" below). No `overview.yaml`.
+
+**Epics (optional grouping).** When several stories belong to one larger theme,
+group them under `docs/caw/stories/epics/E<NN>-<theme>/<story-id>/plan.md` instead
+of the flat `docs/caw/stories/<story-id>/`. Epics are a **folder convention only** —
+the DB has no `epic` table; the `story` row is identical either way. Create an epic
+folder lazily, only when the work actually spans multiple stories (don't pre-create
+empty epics). A standalone story stays flat at `docs/caw/stories/<story-id>/`.
 
 ### Step 2 — Write spec
 
@@ -230,7 +239,7 @@ architecture decision, state that explicitly in the Challenge section.
 ```markdown
 # Plan: <task-title>
 
-**Task:** task-<NNN>-<slug>
+**Story:** US-<NNN>-<slug>
 **Type:** feature | bug | chore | refactor
 **Lane:** tiny | standard | risky
 **Created:** 2026-05-10T15:00
@@ -326,7 +335,7 @@ v2 values with `harness-cli`.
 > `overview.yaml`; it was the v1 state mirror and is retired.
 
 **State field rules (DB, via `harness-cli`):**
-- Phase `status`: one of `pending`, `in_progress`, `blocked`, `done` (DB CHECK).
+- Task `status`: one of `pending`, `in_progress`, `blocked`, `done` (DB CHECK).
   A task is `blocked` when the coder's self-verify gate (type-check / lint)
   failed — not `done` until the gate passes.
 - `lane`: required on `story add`. Tester derives its TDD behavior from this — no

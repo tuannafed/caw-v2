@@ -68,12 +68,14 @@ project already has** (use `cp -n` / a `test -e` guard), so a member's edits to
 ```bash
 SEED="${CLAUDE_PLUGIN_ROOT}/templates/docs-caw"
 DEST="docs/caw"
-mkdir -p "$DEST/templates" "$DEST/decisions" "$DEST/advisories"
+mkdir -p "$DEST/templates" "$DEST/decisions" "$DEST/advisories" "$DEST/stories/epics"
 
 # Policy docs + seed prose (do not clobber project edits)
 cp -n "$SEED"/*.md                  "$DEST/"            2>/dev/null || true
 cp -n "$SEED"/templates/*.md        "$DEST/templates/"  2>/dev/null || true
 cp -n "$SEED"/advisories/*.md       "$DEST/advisories/" 2>/dev/null || true
+# stories/ layout guide (story = US-NNN folder; epics/ = optional grouping)
+cp -n "$SEED"/stories/README.md     "$DEST/stories/"    2>/dev/null || true
 
 echo "=== docs/caw scaffolded ==="
 ls "$DEST"

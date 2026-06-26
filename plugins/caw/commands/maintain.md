@@ -28,7 +28,7 @@ scripts/caw/bin/harness-cli audit
 ```
 
 Reports a 0–100 entropy score (lower is better) over the durable state: orphaned
-tasks, unverified phases, missing backlog outcomes, stale state. Summarize the score
+tasks, unverified tasks, missing backlog outcomes, stale state. Summarize the score
 and the top drivers if the score is non-zero.
 
 ### Step 2 — Maturity (H0–H5)

@@ -1,7 +1,7 @@
 # NNNN Decision Title
 
 Date: YYYY-MM-DD
-Task: task-NNN-slug (or "n/a" for cross-task decisions)
+Story: US-NNN-slug (or "n/a" for cross-story decisions)
 
 ## Status
 

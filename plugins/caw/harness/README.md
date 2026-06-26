@@ -17,10 +17,11 @@ rewrite migrates 1:1.
 ```
 scripts/
   bin/harness-cli      stdlib Python CLI (chmod +x; no toolchain needed)
-  schema/001-init.sql  6 tables: intake, task, phase, decision, backlog, trace
-  harness/             package: db, domain, render, commands, audit, scoring,
-                       propose, lint, maturity
-  tests/               pytest (67 tests)
+  schema/*.sql         tables: intake, story, task, decision, backlog, trace,
+                       intervention, tool
+  src/                 package: db, domain, render, commands, audit, scoring,
+                       propose, lint, maturity, context_score, state_drift, importer
+  tests/               pytest (100 tests)
 ```
 
 `harness.db` is gitignored — each project generates its own. The schema + CLI are
@@ -32,8 +33,8 @@ committed.
 | --- | --- |
 | `init` | create/migrate `harness.db` |
 | `intake add` | classify incoming work (type, lane, flags) |
-| `task add/update/gate/verify-all` | a unit of work; `gate` is the pre-close proof check; `verify-all` runs every phase's proof |
-| `phase add/update/verify` | steps inside a task; `verify` runs the proof command |
+| `story add/update/gate/verify-all` | a story (work unit); `gate` is the pre-close proof check; `verify-all` runs every task's proof |
+| `task add/update/verify` | a task inside a story (db/backend/frontend/smoke…); `verify` runs the proof command |
 | `decision add/verify` | durable ADR **index** (status/proof); content stays in `decisions/*.md` |
 | `intervention add` | record a human/reviewer/CI override of agent work |
 | `tool register/remove` | register external project tools |
@@ -45,7 +46,7 @@ committed.
 | `query stats` | row counts per durable table (one-glance summary) |
 | `query friction` | traces that recorded harness_friction (the `propose` signal) |
 | `query sql "<SELECT …>"` | ad-hoc READ-ONLY SELECT for inspection |
-| `matrix [--json\|--summary]` | test-matrix generated from task+phase (no markdown) |
+| `matrix [--json\|--summary]` | test-matrix generated from story+task (no markdown) |
 | `audit [--conductor DIR]` | entropy/drift score (lower is better) |
 | `propose [--commit]` | turn recurring friction + drift into backlog proposals |
 | `import [--conductor DIR] [--dry-run]` | migrate caw v1 markdown state into the DB |
@@ -63,12 +64,12 @@ Run `harness-cli <command> --help` for flags.
 
 ```bash
 harness-cli init
-harness-cli task add --id T-1 --title "feature X" --risk-lane normal
-harness-cli phase add --task-id T-1 --phase-key backend --verify "pnpm test"
-# ...code the phase...
-harness-cli phase verify --task-id T-1 --phase-key backend   # runs the proof
-harness-cli task gate --task-id T-1                          # blocks approval until pass
-harness-cli trace --summary "..." --outcome completed --task-id T-1 --agent coder ...
+harness-cli story add  --id story-1 --title "feature X" --risk-lane normal
+harness-cli task add    --story-id story-1 --task-key backend --verify "pnpm test"
+# ...code the backend task...
+harness-cli task verify --story-id story-1 --task-key backend   # runs the proof
+harness-cli story gate  --story-id story-1                       # blocks approval until pass
+harness-cli trace --summary "..." --outcome completed --story-id story-1 --agent coder ...
 harness-cli audit       # is the project drifting?
 harness-cli propose     # what should we fix next?
 ```

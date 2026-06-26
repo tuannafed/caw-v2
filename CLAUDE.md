@@ -106,24 +106,25 @@ maxTurns, permissionMode). All 5 have `Skill` in their `tools:` list.
 | Agent | Stage | Purpose |
 |---|---|---|
 | `setup` | Bootstrap | Detect stack, verify the harness, generate conventions.md + project.yaml + project rules |
-| `planner` | Plan + Challenge | Spec, API contract, phases (with test_scenarios + skills_hint), self-challenge, lane |
-| `coder` | Code (per phase) | Implement one phase at a time. Loads skills via `Skill` from the phase's `skills_hint`. Generic across stack. |
+| `planner` | Plan + Challenge | Spec, API contract, tasks (with test_scenarios + skills_hint), self-challenge, lane |
+| `coder` | Code (per task) | Implement one task at a time. Loads skills via `Skill` from the task's `skills_hint`. Generic across stack. |
 | `tester` | Test | Test mode derived from Plan's `lane`: tiny=skip / standard=backend-only / risky=all (red+green). Mobile = unit tests only. |
 | `reviewer` | Review | Multi-dim review (security, perf, a11y, refactor, architecture). Severity-based findings. May amend Plan. |
 
-### Commands (6)
+### Commands (7)
 
 | Command | Action |
 |---|---|
 | `/caw:setup` | Detect stack, verify harness, generate conventions + project rules (one-time; `--refresh` to re-run) |
 | `/caw:plan "<desc>"` | Generate Plan |
-| `/caw:code <id> [<phase>] [--all]` | Implement one phase (or all phases with `--all`) |
+| `/caw:code <id> [<task>] [--all]` | Implement one task (or all tasks with `--all`) |
 | `/caw:test <id>` | Test (mode derived from Plan's lane) |
 | `/caw:review <id>` | Multi-dim review |
 | `/caw:verify <id>` | Test + review parallel |
+| `/caw:maintain` | Harness self-maintenance: audit + maturity + propose (`--commit` files proposals) |
 
-Commands use the `caw-` prefix (not `/caw <subcommand>`) to avoid namespace
-collisions with other Claude Code skills/commands.
+Commands are namespaced `/caw:<name>` by the plugin, so they never collide with
+other Claude Code skills/commands.
 
 ## Project lifecycle
 
@@ -131,8 +132,8 @@ collisions with other Claude Code skills/commands.
 /plugin install caw@caw   # install the plugin (or trust a committed settings.json)
 /init                          # Claude Code built-in — generates/enriches CLAUDE.md
 /caw:setup                     # detect stack, verify harness, scaffold docs/caw + conventions + project rules
-/caw:plan "<desc>"             # per-task planning
-/caw:code <id> --all           # implementation (all phases)
+/caw:plan "<desc>"             # per-story planning
+/caw:code <id> --all           # implementation (all tasks)
 /caw:verify <id>               # test + review parallel
 ```
 
@@ -150,20 +151,21 @@ tools (Claude Code, Codex, Antigravity, CI), regardless of where the plugin cach
 lives. **`harness.db` lives at the PROJECT root** (gitignored; each project
 generates its own). The schema + CLI are committed in the plugin.
 
-The harness records "what agents did" (state: task/phase/decision status, proof,
+The harness records "what agents did" (state: story/task/decision status, proof,
 backlog, traces) in a per-project SQLite DB; prose (plan, ADR content, narrative)
 stays in markdown (ADR-0001). See `plugins/caw/harness/README.md` for the
 full command list.
 
-## Task File Format
+## Story File Format
 
-Tasks live at `docs/caw/tasks/<task-id>/`:
+Each story lives at `docs/caw/stories/<story-id>/` (related stories can be grouped
+under `docs/caw/stories/epics/<epic>/`):
 
 | File | Owner | Purpose |
 |---|---|---|
-| `overview.yaml` | all agents | State file — task status, lane, phase status, next_phase |
-| `plan.md` | planner | Spec + API contract + phases + challenge + revisions |
-| `code.md` | coder | Files changed per phase (appended) |
+| `overview.yaml` | all agents | State file — story status, lane, per-task status, next_task |
+| `plan.md` | planner | Spec + API contract + tasks + challenge + revisions |
+| `code.md` | coder | Files changed per task (appended) |
 | `tests.md` | tester | Tests written, coverage |
 | `review.md` | reviewer | Findings by severity |
 | `test-matrix.md` | tester | This task's behavior-level coverage rows |

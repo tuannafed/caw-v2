@@ -13,7 +13,7 @@ Pick one:
 
 - [ ] Spec slice — implementing selected behavior from accepted product
 - [ ] Change request — bounded behavior change, bug fix, or refinement
-- [ ] New initiative — larger product area needing multiple Tasks
+- [ ] New initiative — larger product area needing multiple Stories
 - [ ] Maintenance request — dependency, performance, security, ops work
 - [ ] Harness improvement — process, template, or agent rule change
 
@@ -58,9 +58,9 @@ Selected lane: `tiny` | `standard` | `risky`
 
 Reason: [short explanation tying flags to lane]
 
-## 6. Task Plan
+## 6. Story Plan
 
-- Task ID to create: `task-NNN-<slug>`
+- Story ID to create: `US-NNN-<slug>`
 - Affected docs: [list]
 - Validation expected: unit | integration | e2e
 - ADR needed: yes | no — [reason]
