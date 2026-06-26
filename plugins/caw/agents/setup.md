@@ -52,34 +52,60 @@ You run **once** per project (and on-demand via `--refresh`).
 | Invocation | Behavior |
 |---|---|
 | `/caw:setup` (no flags) | First-run: detect stack, verify harness, generate conventions + project.yaml + project rules |
-| `/caw:setup --refresh` | Re-detect stack and regenerate `conventions.md`, `project.yaml`, `.claude/rules/project.md` from scratch |
+| `/caw:setup --refresh` | Re-sync the read-only UPPER_CASE policy docs (`HARNESS.md`, `GLOSSARY.md`, …) to the installed plugin version, re-detect stack, and regenerate `project.yaml` + `.claude/rules/project.md`. Leaves project-owned prose (`conventions.md`, `knowledge.md`, `harness-backlog.md`) untouched. Run after `/plugin update`. |
 
 ## Workflow
 
-### Phase 0 — Scaffold project seeds (first-run only)
+### Phase 0 — Scaffold project seeds
 
-A plugin ships files but cannot create project-local files on its own. On
-first-run (`/caw:setup` with no flags), copy the bundled `docs/caw/` seeds from
-the plugin into the project. These are the harness policy docs + ADR/intake
-templates the downstream agents read. **Idempotent — never overwrite a file the
-project already has** (use `cp -n` / a `test -e` guard), so a member's edits to
-`conventions.md` or `knowledge.md` survive re-runs.
+A plugin ships files but cannot create project-local files on its own. Copy the
+bundled `docs/caw/` seeds from the plugin into the project. Two classes of file
+are handled differently:
+
+- **UPPER_CASE policy docs** (`HARNESS.md`, `GLOSSARY.md`, `ARCHITECTURE.md`,
+  `CONTEXT_RULES.md`, `FEATURE_INTAKE.md`, `TRACE_SPEC.md`, `TOOL_REGISTRY.md`,
+  `IMPROVEMENT_PROTOCOL.md`, `HARNESS_AUDIT.md`, `HARNESS_MATURITY.md`, `README.md`)
+  — read-only, **identical across projects**. On first-run they're copied;
+  on **`--refresh`** they're **overwritten** so policy updates from a plugin
+  upgrade land. The member never edits these, so overwriting is safe.
+- **lower-case seed prose** (`conventions.md`, `knowledge.md`, `harness-backlog.md`)
+  — the project writes into these. **Never overwrite** them (even on `--refresh`),
+  so a member's edits survive.
+
+**Before running the block, set `REFRESH`** based on `$ARGUMENTS`: write the first
+line as `REFRESH=1` if the invocation included `--refresh`, otherwise `REFRESH=0`.
+(Edit the literal below to match — don't rely on an inherited env var.)
 
 ```bash
+REFRESH=0   # ← set to 1 when /caw:setup was invoked with --refresh
 SEED="${CLAUDE_PLUGIN_ROOT}/templates/docs-caw"
 DEST="docs/caw"
 mkdir -p "$DEST/templates" "$DEST/decisions" "$DEST/advisories" "$DEST/stories/epics"
 
-# Policy docs + seed prose (do not clobber project edits)
-cp -n "$SEED"/*.md                  "$DEST/"            2>/dev/null || true
-cp -n "$SEED"/templates/*.md        "$DEST/templates/"  2>/dev/null || true
-cp -n "$SEED"/advisories/*.md       "$DEST/advisories/" 2>/dev/null || true
-# stories/ layout guide (story = US-NNN folder; epics/ = optional grouping)
-cp -n "$SEED"/stories/README.md     "$DEST/stories/"    2>/dev/null || true
+# UPPER_CASE policy docs: overwrite on --refresh, else don't clobber.
+GUARD="-n"; [[ "$REFRESH" == "1" ]] && GUARD="-f"
+for f in "$SEED"/*.md; do
+  base="$(basename "$f")"
+  if [[ "$base" =~ ^[A-Z0-9_]+\.md$ || "$base" == "README.md" ]]; then
+    cp $GUARD "$f" "$DEST/$base" 2>/dev/null || true   # policy doc → refreshable
+  else
+    cp -n "$f" "$DEST/$base" 2>/dev/null || true       # lower seed → never clobber
+  fi
+done
 
-echo "=== docs/caw scaffolded ==="
+# Templates + advisories: read-only too → refreshable like policy docs.
+cp $GUARD "$SEED"/templates/*.md   "$DEST/templates/"  2>/dev/null || true
+cp $GUARD "$SEED"/advisories/*.md  "$DEST/advisories/" 2>/dev/null || true
+# stories/ layout guide (story = US-NNN folder; epics/ = optional grouping).
+cp $GUARD "$SEED"/stories/README.md "$DEST/stories/"   2>/dev/null || true
+
+echo "=== docs/caw scaffolded (refresh=$REFRESH) ==="
 ls "$DEST"
 ```
+
+> **`--refresh` re-syncs policy docs to the installed plugin version** — run it
+> after a `/plugin update` to pull GLOSSARY/HARNESS/etc. changes into the project.
+> Your `conventions.md` / `knowledge.md` / `harness-backlog.md` are left untouched.
 
 Also scaffold the project config files (AGENTS.md, the `@`-import CLAUDE.md,
 gitleaks.toml, .claudeignore) and a stable harness-cli wrapper. The wrapper keeps
@@ -238,11 +264,6 @@ fi
 > `~/.claude/plugins` by pattern — no hardcoded cache layout. If neither path works
 > it exits non-zero with guidance instead of exec'ing a guessed path; export
 > `CLAUDE_PLUGIN_ROOT` to fix.
-
-> On `--refresh`, re-copy ONLY the read-only UPPER_CASE policy docs (`HARNESS.md`,
-> `CONTEXT_RULES.md`, `ARCHITECTURE.md`, etc. — identical across projects) so policy
-> updates from a plugin upgrade land. Never re-copy the lower-case seed prose
-> (`conventions.md`, `knowledge.md`, `harness-backlog.md`) — those are project-owned.
 
 ### Phase 0.5 — Preflight companion plugins (warn, never block)
 
