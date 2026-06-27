@@ -1,18 +1,25 @@
 name: tests
 
-# Run the durable-layer test suite on every push and PR so a change that breaks
-# harness-cli can't reach main. The CLI is stdlib-only; pytest is the only dep.
+# Two gates keep main green:
+#  - pytest: the durable-layer test suite (a change that breaks harness-cli can't land)
+#  - validate: plugin-manifest + structure check (version skew, invalid JSON, a skill
+#    whose frontmatter name != folder) — the drift classes a codebase audit found.
+# Both are stdlib-only; pytest is the sole dep.
 
 on:
   push:
     branches: [main]
     paths:
-      - "plugins/caw/harness/**"
+      - "plugins/caw/**"
+      - ".claude-plugin/**"
+      - "VERSION"
       - "requirements-dev.txt"
       - ".github/workflows/test.yml"
   pull_request:
     paths:
-      - "plugins/caw/harness/**"
+      - "plugins/caw/**"
+      - ".claude-plugin/**"
+      - "VERSION"
       - "requirements-dev.txt"
       - ".github/workflows/test.yml"
 
@@ -32,3 +39,14 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Run tests
         run: python -m pytest plugins/caw/harness/tests -q
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Validate plugin manifests + structure
+        run: python plugins/caw/harness/tests/validate_plugin.py

@@ -44,19 +44,23 @@ next reviewer treats the task as not-loaded. When recording skills in a task
 file, list only the skills you actually invoked the tool for — if a load step
 was skipped, write `none — <step> was skipped` and explain why.
 
-## On a failed load
+## On a failed load — the degradation contract
 
-If a `Skill` call errors:
+A `Skill` call can fail because a companion plugin isn't enabled. caw depends on three
+external plugins (Superpowers, Context7, Frontend Design); this is the documented
+trade-off (no vendored catalog to maintain). When a load fails, **degrade in a defined
+way — never crash mid-task, never silently substitute guessed knowledge.** Match the
+source:
 
-- For an **authored** skill (`caw:*`) — the `caw` plugin is not enabled.
-  Tell the user to enable it: `/plugin install caw@caw`.
-- For a **workflow** skill — the Superpowers plugin is not enabled. Tell the user
-  to enable it.
-- For a **framework** topic — query Context7 instead of failing; that is the live
-  docs source and needs no install.
+| Missing skill | What it means | What the agent does |
+|---|---|---|
+| **Authored `caw:*`** | the `caw` plugin itself isn't enabled — nothing works | **Hard stop.** Tell the user `/plugin install caw@caw` and abort the step. This is unrecoverable, not a degrade. |
+| **Workflow (Superpowers)** | Superpowers not enabled | **Announce the gap, then proceed degraded.** State one line: `⚠️ <skill> unavailable (Superpowers not enabled) — proceeding without it; quality reduced`. Apply the skill's intent from first principles (e.g. still write tests first for a `high_risk` lane even without the TDD skill). Note it in the task file so the reviewer knows. Do **not** loop or fail the pipeline. |
+| **Framework (Context7)** | Context7 not enabled / rate-limited / offline | **Fall back, don't fail.** Try the library's own docs via WebFetch; if unreachable, implement conservatively and flag every framework-specific call as `unverified — Context7 unavailable` so the reviewer scrutinizes it. The `source-driven` rule's "don't guess an API" still holds — flag, don't fabricate. |
 
-Do not proceed with a missing authored/workflow skill — agents must not silently
-fall back to generic/outdated knowledge.
+The principle: a missing **companion** degrades the *quality* of a step, but must not
+break the *pipeline*. A missing **caw plugin** is the only hard stop. Always surface the
+degradation in the task file — an unannounced degrade is a reporting failure (above).
 
 ## Why
 
