@@ -15,6 +15,11 @@
     "frontend-design@claude-plugins-official": true,
     "context7@claude-plugins-official": true
   },
+  "// statusLine note": "Surfaces the harness state (in-progress story · lane · done/total) in the status bar — the DB source of truth, not markdown. Reads harness.db read-only; prints nothing outside a caw project. Remove this block to disable.",
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"${CLAUDE_PLUGIN_ROOT}/statusline/caw-statusline.sh\""
+  },
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80",
     "CAW_HOOK_PROFILE": "standard",

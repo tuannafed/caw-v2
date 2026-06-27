@@ -45,7 +45,7 @@ above. Installing `caw` alone does not pull the companions.
 | **skills/** | 4 authored skills: `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing` (namespaced `caw:<name>`) |
 | **hooks/** | Safety + workflow hooks (`hooks.json`), profile-gated by `CAW_HOOK_PROFILE` |
 | **harness/** | Durable layer — `harness-cli` (Python stdlib) + SQLite schema. State lives in `harness.db` at the **project root**, not the plugin cache. |
-| **rules/** | Non-overridable rules agents `Read` explicitly (Claude Code does not auto-attach them) |
+| **rules/** | Non-overridable rules. Coding rules (`paths:` frontmatter) are scaffolded to the project's `.claude/rules/` and auto-load on matching file touch; state/spec rules stay in the plugin and agents `Read` them explicitly |
 
 ## What moved out (and where)
 

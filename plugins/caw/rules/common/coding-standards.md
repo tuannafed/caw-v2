@@ -1,11 +1,25 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.py"
+  - "**/*.go"
+  - "**/*.rs"
+  - "**/*.java"
+  - "**/*.rb"
+  - "**/*.php"
+---
 # Rule: Coding Standards (language-agnostic)
 
 **Layer:** rules — non-negotiable project-wide conventions.
-**Loaded by:** coder (Step 3.5, every code task) and reviewer (Step 1.5) via
-explicit `Read` — Claude Code does not auto-attach rules.
+**Loaded:** lazily by Claude Code when a code file is touched, once `/caw:setup`
+scaffolds this file to the project's `.claude/rules/` (the `paths:` frontmatter
+above drives the conditional load — native to Claude Code at `.claude/rules/`).
 **Scope:** universal rules that apply in any language. TS/JS-specific style
 (types, `any`, React props) lives in [`typescript/coding-style.md`](../typescript/coding-style.md)
-and must be read in addition for `.ts`/`.tsx`/`.js`/`.jsx` work.
+which loads on `.ts`/`.tsx`/`.js`/`.jsx`.
 **Note:** These are *rules*, not patterns. They cannot be overridden by `conventions.md`.
 
 ---

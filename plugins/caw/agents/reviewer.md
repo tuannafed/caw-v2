@@ -114,19 +114,18 @@ After loading, restate the lane and the skills actually loaded: `Reviewer lane:
 
 Read `code.md` to get the full list of files changed across all tasks. Also use `git diff` to confirm.
 
-### Step 1.5 — Load the coding rules you review against
+### Step 1.5 — Coding rules are your quality checklist
 
-The same non-negotiable rules the coder must follow are your checklist for the
-refactor / quality dimension. Claude Code does NOT auto-attach them (the `paths:`
-frontmatter is a Cursor convention) — `Read` the ones matching the changed files:
-
-- **Any code changed:** `Read ${CLAUDE_PLUGIN_ROOT}/rules/common/coding-standards.md`.
-- **`.ts`/`.tsx`/`.js`/`.jsx` changed:** `Read ${CLAUDE_PLUGIN_ROOT}/rules/typescript/coding-style.md`.
-- **`package.json`/`.npmrc`/deps changed:** `Read ${CLAUDE_PLUGIN_ROOT}/rules/common/package-manager.md`.
-- **React components changed:** `Read ${CLAUDE_PLUGIN_ROOT}/rules/react/react-state-deps.md`.
+The same non-negotiable coding rules the coder follows are your checklist for the
+refactor / quality dimension. They live in the project's `.claude/rules/` with `paths:`
+frontmatter, so Claude Code **auto-injects** each one when you open a matching changed
+file — `Read` the actual changed source files (you do this in Step 2 anyway) and the
+relevant rule (`coding-standards`, `typescript/coding-style`, `package-manager`,
+`react/react-state-deps`) loads itself.
 
 A clear violation of one of these is at least a MEDIUM finding (HIGH if it's a
-correctness/security rule like input validation or the `any` ban).
+correctness/security rule like input validation or the `any` ban). If `.claude/rules/`
+is absent (project never ran `/caw:setup`), note it and review from the rule intent.
 
 ### Step 2 — Multi-dimensional review
 

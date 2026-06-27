@@ -245,8 +245,10 @@ exit 1
 WRAP
 chmod +x scripts/caw/bin/harness-cli
 
-# Gitignore the machine-local artifacts caw scaffolds, so a member never commits
-# them. harness.db (+ WAL/SHM) is per-machine state; .claude/ holds local config.
+# Gitignore the machine-local artifacts. Be SURGICAL: harness.db is per-machine
+# state and .claude/settings.json carries the member's own permissions/env — those
+# stay local. But .claude/rules/ (coding rules) and .claude/agent-memory/ (project
+# memory) are TEAM-SHARED and must be committed, so don't ignore all of .claude/.
 # Idempotent — only appends the block if it isn't already there.
 if ! grep -q "# >>> caw (machine-local) >>>" .gitignore 2>/dev/null; then
   cat >> .gitignore <<'GITIGNORE'
@@ -255,16 +257,36 @@ if ! grep -q "# >>> caw (machine-local) >>>" .gitignore 2>/dev/null; then
 harness.db
 harness.db-wal
 harness.db-shm
-.claude/
+.claude/settings.json
+.claude/settings.local.json
+.claude/settings.json.sample
+# (committed, team-shared: .claude/rules/, .claude/agent-memory/, .claude/project.yaml)
 # <<< caw (machine-local) <<<
 GITIGNORE
-  echo "✓ .gitignore updated (harness.db, .claude/ are machine-local)"
+  echo "✓ .gitignore updated (harness.db + .claude/settings*.json are machine-local)"
 fi
+
+# Coding rules → .claude/rules/ for NATIVE lazy-load. Claude Code auto-injects a
+# .claude/rules/*.md file (only at the PROJECT level — NOT plugin rules) when the
+# agent touches a file matching its `paths:` frontmatter. So we copy the coding
+# rules out of the plugin into the project; the coder/reviewer no longer Read them
+# eagerly — they load on demand when a matching file is edited. Refreshable on
+# --refresh (read-only convention docs). Rules WITHOUT paths: (harness-contract,
+# skill-loading) stay in the plugin and are Read explicitly by agents as before.
+RULES_SRC="${CLAUDE_PLUGIN_ROOT}/rules"
+mkdir -p .claude/rules/common .claude/rules/typescript .claude/rules/react
+RGUARD="-n"; [[ "$REFRESH" == "1" ]] && RGUARD="-f"
+cp $RGUARD "$RULES_SRC/common/coding-standards.md"    .claude/rules/common/      2>/dev/null || true
+cp $RGUARD "$RULES_SRC/common/package-manager.md"     .claude/rules/common/      2>/dev/null || true
+cp $RGUARD "$RULES_SRC/common/commit-conventions.md"  .claude/rules/common/      2>/dev/null || true
+cp $RGUARD "$RULES_SRC/typescript/coding-style.md"    .claude/rules/typescript/  2>/dev/null || true
+cp $RGUARD "$RULES_SRC/react/react-state-deps.md"     .claude/rules/react/       2>/dev/null || true
+echo "✓ coding rules scaffolded to .claude/rules/ (lazy-load via paths: frontmatter)"
 ```
 
-> The wrapper at `scripts/caw/bin/harness-cli` and the `docs/caw/` seeds ARE meant to
-> be committed (they're shared project config); only `harness.db` and `.claude/` are
-> machine-local and gitignored above.
+> The wrapper at `scripts/caw/bin/harness-cli`, the `docs/caw/` seeds, and the
+> `.claude/rules/` coding rules ARE meant to be committed (shared project config);
+> only `harness.db` and `.claude/settings*.json` are machine-local (gitignored above).
 
 > **Note on `CLAUDE_PLUGIN_ROOT` in the wrapper:** that env var is set when Claude
 > Code invokes a hook/command, so the wrapper resolves correctly in-session. Outside

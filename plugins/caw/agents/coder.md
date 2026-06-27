@@ -99,28 +99,19 @@ the active skills:
 Skills active for task=<id>: <skill-1>, <skill-2>, <skill-3>
 ```
 
-### Step 3.5 — Load coding rules (Claude Code does NOT auto-attach them)
+### Step 3.5 — Coding rules load themselves
 
-The `paths:` frontmatter on the rule files is a Cursor convention — Claude Code
-ignores it. caw rules reach you ONLY when you **`Read` them explicitly**. Before
-writing any code, Read the rules that match what this task touches:
+The coding rules (`coding-standards`, `typescript/coding-style`, `package-manager`,
+`commit-conventions`, `react/react-state-deps`) live in the project's `.claude/rules/`
+(scaffolded by `/caw:setup`) and carry `paths:` frontmatter. Claude Code **auto-injects**
+each one when you touch a file matching its glob — e.g. editing a `.ts` file pulls in
+`coding-standards` + `typescript/coding-style`; changing `package.json` pulls in
+`package-manager`. You do **not** Read them manually anymore.
 
-- **Always (any code task):**
-  `Read ${CLAUDE_PLUGIN_ROOT}/rules/common/coding-standards.md`
-  (immutability, file size, naming, error handling, input validation, no hardcoded values).
-- **If the task writes/edits `.ts`/`.tsx`/`.js`/`.jsx`:**
-  `Read ${CLAUDE_PLUGIN_ROOT}/rules/typescript/coding-style.md`
-  (types/interfaces, `any` ban, React props).
-- **If the task adds/changes dependencies or `package.json`/`.npmrc`:**
-  `Read ${CLAUDE_PLUGIN_ROOT}/rules/common/package-manager.md`.
-- **If the task touches React components (`.tsx`/`.jsx`):**
-  `Read ${CLAUDE_PLUGIN_ROOT}/rules/react/react-state-deps.md`.
-- **Before you author a commit message:**
-  `Read ${CLAUDE_PLUGIN_ROOT}/rules/common/commit-conventions.md`.
-
-These rules are non-negotiable and override your priors. After reading, restate
-in one line which rule files are active, e.g.
-`Coding rules active: coding-standards, typescript/coding-style`.
+These rules are non-negotiable and override your priors — when one is active, follow it.
+(If a project hasn't run `/caw:setup`, the `.claude/rules/` files are absent; tell the
+user to run setup. The harness-contract / skill-loading rules are NOT path-scoped and are
+still Read explicitly per the steps that reference them.)
 
 ### Step 4 — Implement
 

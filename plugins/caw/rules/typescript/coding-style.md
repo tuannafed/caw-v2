@@ -1,11 +1,18 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+---
 # Rule: TypeScript/JavaScript Coding Style
 
 **Layer:** rules — non-negotiable, TS/JS-specific.
-**Loaded by:** coder (Step 3.5) and reviewer (Step 1.5) via explicit `Read` when the
-task touches `.ts`/`.tsx`/`.js`/`.jsx` — Claude Code does not auto-attach rules.
+**Loaded:** lazily by Claude Code on `.ts`/`.tsx`/`.js`/`.jsx` touch, once `/caw:setup`
+scaffolds this file to the project's `.claude/rules/` (the `paths:` above drives it).
 **Scope:** TS/JS-specific style only. Language-agnostic rules (immutability, error
 handling, input validation, file size, naming, no-hardcoded-values) live in
-[`../common/coding-standards.md`](../common/coding-standards.md) — read that too.
+[`../common/coding-standards.md`](../common/coding-standards.md) which also loads here.
 
 ---
 

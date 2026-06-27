@@ -208,12 +208,21 @@ or query Context7 for the named framework. The full contract is in
 `plugins/caw/rules/common/skill-loading.md`.
 
 Rules (`plugins/caw/rules/`) are separate from skills — non-overridable, never
-installed as skills. Claude Code does **not** auto-attach them (the `paths:`
-frontmatter is a Cursor convention with no effect here); agents reach a rule only
-by **`Read`-ing it explicitly**. State/spec/test rules are pulled per lane via the
-CONTEXT_RULES matrix; the coding rules (`coding-standards`, `typescript/coding-style`,
-`package-manager`, `commit-conventions`, `react/react-state-deps`) are Read by the
-coder (Step 3.5) and reviewer (Step 1.5), gated by what the task touches.
+installed as skills. They load two ways:
+
+- **Coding rules → native lazy-load.** `coding-standards`, `typescript/coding-style`,
+  `package-manager`, `commit-conventions`, `react/react-state-deps` carry `paths:`
+  frontmatter and are **scaffolded by `/caw:setup` into the project's `.claude/rules/`**.
+  Claude Code auto-injects each when the agent touches a file matching its glob (this
+  `paths:` lazy-load works at the **project `.claude/rules/` level** — it does NOT work
+  for rules left inside the plugin). So agents no longer Read the coding rules manually.
+- **State/spec/test rules → explicit Read.** `harness-contract`, `skill-loading`,
+  `spec-traceability`, `feedback-traceability`, `test-tiers`, `runtime-smoke-test` have
+  no `paths:`; they stay in the plugin and agents `Read` them per lane (CONTEXT_RULES).
+
+> `.claude/rules/` (coding rules) and `.claude/agent-memory/` are **team-shared /
+> committed**; only `harness.db` and `.claude/settings*.json` are machine-local
+> (gitignored by `/caw:setup`).
 
 ## Hook Profile System
 
