@@ -132,7 +132,7 @@ activates (a CC bug disables it otherwise).
 |---|---|
 | `/caw:setup` | Detect stack, verify harness, generate conventions + project rules (one-time; `--refresh` to re-run) |
 | `/caw:plan "<desc>"` | Generate Plan |
-| `/caw:code <id> [<task>] [--all]` | Implement one task (or all tasks with `--all`) |
+| `/caw:code <id> [<task>] [--all]` | Implement one task, or all tasks with `--all` (parallel groups run each coder in its own git worktree — `isolation: "worktree"` — then merge back; `worktree.baseRef: head` in the settings template makes worktrees fork from the current branch) |
 | `/caw:test <id>` | Test (mode derived from Plan's lane) |
 | `/caw:review <id>` | Multi-dim review |
 | `/caw:verify <id>` | Test + review parallel |

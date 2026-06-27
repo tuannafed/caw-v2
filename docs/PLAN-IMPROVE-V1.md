@@ -29,8 +29,8 @@ check. Một số việc là **DECISION** (owner chọn nhánh trước, rồi a
 | **C3 canonical spec** (archive→spec) | ❌ **chưa làm** |  |
 | **C4 constitution** | ⏳ **một phần** | D3 đã làm constitution dùng `.claude/rules/project.md` (planner Step 0.5 + clarify gate). **Còn**: reviewer flag invariant + cân nhắc `CONSTITUTION.md` riêng |
 | D3 spec-kit (constitution + clarify) | ✅ done | planner Step 0.5 constitution + Step 0.7 clarify gate |
-| D1 parallelism + worktree | 🗺️ defer | khi có story nhiều task song song |
-| D2 monorepo skill scoping | 🗺️ defer | khi monorepo tràn context |
+| D1 parallelism + worktree | ✅ done | verified `isolation: "worktree"` native → `/caw:code --all` parallel groups dùng worktree riêng + merge; `worktree.baseRef: head`; planner ép group file-disjoint |
+| D2 monorepo skill scoping | 🗺️ defer | bỏ qua — caw chỉ 4 authored skill, chưa tràn context. Làm khi monorepo có nhiều skill per-package |
 
 > **Verify-trước-khi-làm đã cứu 2 lần:** A2/A3 (`model:`/`skills:` field không hoạt động → bỏ)
 > và B4 (`paths:` thực ra CÓ hoạt động ở `.claude/rules/` → làm). Đừng đoán fact.
@@ -178,12 +178,19 @@ auto-trigger event-driven.
 
 ---
 
-## TIER D — Roadmap (defer, khi scale team/monorepo)
-- **D1. Parallelism + git worktree isolation** cho agent chạy song song trên story lớn
-  (Superpowers dùng pattern này). Lưu ý: GIỮ lean 5 agent — **đừng nở agent kiểu GSD
-  (33a/67c) / ECC (48a/143c/230s)**; sprawl agent là nợ kỹ thuật, không phải sức mạnh.
-- **D2. Monorepo skill scoping**: đặt skill theo `packages/x/.claude/skills/` để discover
-  on-demand; theo dõi char budget (`/context`, `SLASH_COMMAND_TOOL_CHAR_BUDGET`).
+## TIER D — Roadmap
+- **D1. Parallelism + git worktree isolation**  → ✅ **ĐÃ LÀM**. Verify (claude-code-guide):
+  Agent tool có param native `isolation: "worktree"` — mỗi subagent một worktree riêng
+  (`.git/index` riêng, auto-cleanup). `/caw:code --all` giờ spawn coder song song với
+  `isolation: "worktree"` cho group ≥2 task, merge worktree về sau mỗi group; settings
+  `worktree.baseRef: "head"` để worktree fork từ branch hiện tại (không phải default);
+  planner ép `parallelization_groups` **file-disjoint** để merge không conflict. Vẫn GIỮ
+  lean **5 agent** — không nở agent (không GSD 33a/67c, không ECC 48a/143c); chỉ chạy
+  song song cùng coder agent trong worktree riêng.
+- **D2. Monorepo skill scoping**: 🗺️ **defer (bỏ qua)** — caw chỉ có 4 authored skill,
+  chưa tràn context. Đáng làm khi monorepo có **nhiều skill per-package**: đặt skill theo
+  `packages/x/.claude/skills/` để discover on-demand; theo dõi char budget (`/context`,
+  `SLASH_COMMAND_TOOL_CHAR_BUDGET`).
 - **D3. Tách specify (what/why) ↔ plan (how)** + bước `clarify`  → ✅ **ĐÃ LÀM** (clarify gate
   + constitution ở planner). Phần "tách specify↔plan" rõ ràng hơn + skill lẻ Matt Pocock
   (`to-prd`, `to-issues`, `diagnose`, `zoom-out`) vẫn có thể nhặt thêm.

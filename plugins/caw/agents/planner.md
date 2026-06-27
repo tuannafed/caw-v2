@@ -267,7 +267,11 @@ Before finalizing, critique your own plan:
 - **Gaps** — assumptions you made (the non-plan-breaking ones; plan-breaking ones were
   already resolved by the Step 0.7 clarify gate)
 - **ADRs needed** — list architectural decisions that should be formally recorded
-- **Parallelization opportunities** — which tasks can run in parallel
+- **Parallelization opportunities** — which tasks can run in parallel. **Tasks grouped
+  to run in parallel MUST be file-disjoint** — they must not write the same files.
+  `/caw:code --all` runs each parallel task in its own git worktree and merges them
+  back; two tasks touching the same file would merge-conflict. If two tasks need the
+  same file, they belong in different (sequential) groups, not the same parallel group.
 
 This is the "Challenge" section that previously was a separate stage.
 
@@ -275,7 +279,9 @@ This is the "Challenge" section that previously was a separate stage.
 
 Set:
 - `lane: tiny | standard | risky` — drives test behavior + pull depth
-- `parallelization_groups: [[...], [...]]`
+- `parallelization_groups: [[...], [...]]` — tasks in the same inner list run in
+  parallel (each in its own worktree), so they must be **file-disjoint** (see Step 5).
+  When in doubt, sequence them instead.
 
 ### Step 6b — Create ADRs (harness contract — MANDATORY when triggered)
 

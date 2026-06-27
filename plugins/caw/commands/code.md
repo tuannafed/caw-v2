@@ -50,25 +50,40 @@ After the task completes (next step depends on `lane` — read it from the DB,
 
 Read `parallelization_groups` from `plan.md`. For each group, in order:
 
-1. Group of 1 task → spawn one coder agent.
-2. Group of 2+ tasks → spawn coder agents **in parallel** (Agent tool, multiple
-   tool_use blocks in one message).
-3. Wait for all agents in the current group before starting the next group.
+1. **Group of 1 task → spawn one coder agent, NO isolation** (it has the working
+   tree to itself; a worktree would just add merge overhead).
+2. **Group of 2+ tasks → spawn coder agents in parallel, EACH in its own git
+   worktree** (Agent tool, multiple tool_use blocks in one message, each call with
+   `isolation: "worktree"`). Parallel coders editing the same working tree would
+   clobber each other; a per-agent worktree gives each an isolated checkout.
+3. Wait for all agents in the current group before starting the next group, then
+   **integrate the worktree results** (below) before the next group runs — later
+   groups (e.g. `integrate`) depend on the parallel group's files being merged in.
 
 Example:
 
 ```yaml
 parallelization_groups:
-  - [db]                          # Group 1: just db
-  - [backend, frontend-skeleton]  # Group 2: parallel
+  - [db]                          # Group 1: solo — no worktree
+  - [backend, frontend-skeleton]  # Group 2: parallel — one worktree each
   - [frontend-impl]               # Group 3: solo
   - [integrate]                   # Group 4: solo
 ```
 
-Run db → wait → run [backend + frontend-skeleton in parallel] → wait →
-run frontend-impl → wait → run integrate.
+Run db → wait → run [backend + frontend-skeleton, each in a worktree] → wait,
+merge both back → run frontend-impl → wait → run integrate.
 
-Each spawned coder: `"Run the coder flow for task <story-id>, task <task>"`.
+Each spawned coder: `"Run the coder flow for story <story-id>, task <task-key>"`.
+For parallel tasks add `isolation: "worktree"` to the Agent call.
+
+> **Worktree base + merge.** Each `isolation: "worktree"` checkout branches from
+> the repo's default branch unless `worktree.baseRef` is set to `"head"` in settings
+> (the caw settings template sets it, so worktrees fork from the CURRENT branch — what
+> you actually want). After a parallel group finishes, merge each worktree's changes
+> back into the working branch before the next group; a worktree with no changes is
+> auto-cleaned. If two parallel tasks turn out to touch the same files (they
+> shouldn't — the planner's `parallelization_groups` are meant to be file-disjoint),
+> the merge will conflict: stop and report it, the plan's grouping was wrong.
 
 If any coder agent reports its task `blocked` (self-verify gate failed), **stop
 the run** — do not start later groups, and do not set status `code-done`. Report
