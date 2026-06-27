@@ -130,14 +130,14 @@ The **spec format + traceability** every plan must satisfy comes from the
 acceptance-criteria format and task-splitting are your own competence as the architect;
 apply them directly.
 
-**Also Read these rules now (you WRITE `plan.md`, so the path-scoped auto-load
-won't fire for you — read them explicitly):**
+**Also Read these rules now (they live in the plugin and have no `paths:` — they
+load only when an agent `Read`s them explicitly):**
 - `Read` `${CLAUDE_PLUGIN_ROOT}/rules/common/spec-traceability.md` — the `## Spec mandate` contract every plan must satisfy.
 - If the task is driven by client/stakeholder feedback, also `Read` `${CLAUDE_PLUGIN_ROOT}/rules/common/feedback-traceability.md` — the quote-back gate for ambiguous feedback.
 - For `normal`/`high_risk` lanes, `Read` `${CLAUDE_PLUGIN_ROOT}/rules/common/runtime-smoke-test.md` — so you add the required `runtime-smoke-test` task.
 
-(Downstream, the reviewer gets these automatically: they are `paths:`-scoped to
-`plan.md`, which the reviewer Reads.)
+(The reviewer Reads these same rules explicitly per its CONTEXT_RULES matrix — they
+are not auto-attached, since plugin rules don't lazy-load.)
 
 ### Step 0.5 — Load the project constitution (invariants that bind every plan)
 

@@ -1,7 +1,3 @@
----
-paths:
-  - "**/stories/**/plan.md"
----
 # Rule: Feedback Traceability — Quote-Back Before Interpreting Client Feedback
 
 **Layer:** rules — non-negotiable project-wide convention

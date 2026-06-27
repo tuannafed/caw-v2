@@ -1,8 +1,3 @@
----
-paths:
-  - "**/stories/**/plan.md"
-  - "**/stories/**/code.md"
----
 # Rule: Runtime Smoke Test (mandatory checklist after verify)
 
 **Layer:** rules — non-negotiable, project-wide

@@ -1,9 +1,3 @@
----
-paths:
-  - "**/*.test.*"
-  - "**/*.spec.*"
-  - "**/*.db.test.*"
----
 # Rule: Test Tiers — mock-based by default, real-I/O declared & isolated
 
 **Layer:** rules — non-negotiable project-wide convention

@@ -1,7 +1,3 @@
----
-paths:
-  - "**/stories/**/plan.md"
----
 # Rule: Spec Traceability — Every Plan Must Cite Spec Verbatim
 
 **Layer:** rules — non-negotiable project-wide convention
