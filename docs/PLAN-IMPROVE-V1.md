@@ -27,7 +27,7 @@ check. Một số việc là **DECISION** (owner chọn nhánh trước, rồi a
 | C1 evolution | ⏳ **một phần** | có `/caw:maintain` (manual). Event-driven (auto khi story close) **chưa làm** |
 | C2 tools/backlog | ✅ done | fix chạy v2 (US-NNN/epics) + status overlay từ harness.db |
 | **C3 canonical spec** (archive→spec) | ❌ **chưa làm** |  |
-| **C4 constitution** | ⏳ **một phần** | D3 đã làm constitution dùng `.claude/rules/project.md` (planner Step 0.5 + clarify gate). **Còn**: reviewer flag invariant + cân nhắc `CONSTITUTION.md` riêng |
+| **C4 constitution** | ✅ done | planner enforce (Step 0.5 + clarify gate) + reviewer flag invariant (Constitution dimension). Tuỳ chọn `CONSTITUTION.md` riêng để ngỏ |
 | D3 spec-kit (constitution + clarify) | ✅ done | planner Step 0.5 constitution + Step 0.7 clarify gate |
 | D1 parallelism + worktree | ✅ done | verified `isolation: "worktree"` native → `/caw:code --all` parallel groups dùng worktree riêng + merge; `worktree.baseRef: head`; planner ép group file-disjoint |
 | D2 monorepo skill scoping | 🗺️ defer | bỏ qua — caw chỉ 4 authored skill, chưa tràn context. Làm khi monorepo có nhiều skill per-package |
@@ -167,14 +167,16 @@ auto-trigger event-driven.
 - Lợi: cho human/agent một nguồn "current truth" query được; input tốt cho C1 maturity/audit.
 - Markdown-native (không đụng DB). Accept: archive một story → canonical spec tương ứng cập nhật.
 
-### C4. Constitution layer (pattern Spec Kit `/speckit.constitution`)  ⏳ MỘT PHẦN
-- ✅ **Đã làm (D3):** planner Step 0.5 đọc constitution (`.claude/rules/project.md` lock-ins,
+### C4. Constitution layer (pattern Spec Kit `/speckit.constitution`)  ✅ DONE
+- ✅ **planner (D3):** Step 0.5 đọc constitution (`.claude/rules/project.md` lock-ins,
   forbidden, domain rules + conventions + CLAUDE.md) + Step 0.7 clarify gate + Step 5
   constitution-compliance check. Plan vi phạm lock-in mà không có ADR = invalid.
-- ⏳ **Còn:** (a) **reviewer** flag vi phạm invariant rõ ràng như một dimension (hiện chỉ
-  planner enforce); (b) cân nhắc tách `docs/caw/CONSTITUTION.md` riêng cấp **sản phẩm/kiến
-  trúc** (module boundary, data principle, security) thay vì chỉ stack lock-ins trong
-  `project.md`. Accept: planner đọc constitution (✅); reviewer flag vi phạm invariant (⏳).
+- ✅ **reviewer (C4-b):** thêm **Constitution** vào bảng dimension — flag code vi phạm
+  invariant (lock-in/forbidden/domain) như HIGH (CRITICAL nếu là security/data invariant);
+  không skip ở lane nào (no-op chỉ khi `.claude/rules/project.md` vắng). Giờ cả 2 đầu enforce.
+- 🔵 **Tuỳ chọn còn ngỏ:** tách `docs/caw/CONSTITUTION.md` riêng cấp **sản phẩm/kiến trúc**
+  (module boundary, data principle) thay vì chỉ stack lock-ins trong `project.md` — làm khi
+  dự án lớn cần invariant cấp sản phẩm. Hiện `project.md` đủ cho stack-level.
 
 ---
 

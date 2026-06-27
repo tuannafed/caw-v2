@@ -124,7 +124,7 @@ activates (a CC bug disables it otherwise).
 | `planner` | Constitution + Clarify + Plan | Loads project constitution (lock-ins), clarify-gates plan-breaking ambiguity (blocks with questions vs guessing), then spec, API contract, tasks (test_scenarios + skills_hint), self-challenge (incl. constitution compliance), lane |
 | `coder` | Code (per task) | Implement one task at a time. Loads skills via `Skill` from the task's `skills_hint`. Generic across stack. |
 | `tester` | Test | Test mode derived from Plan's `lane`: tiny=skip / standard=backend-only / risky=all (red+green). Mobile = unit tests only. |
-| `reviewer` | Review | Multi-dim review (security, perf, a11y, refactor, architecture). Severity-based findings. May amend Plan. |
+| `reviewer` | Review | Multi-dim review (security, perf, a11y, architecture, constitution, refactor, harness-compliance). Constitution flags violations of project invariants (`.claude/rules/project.md` lock-ins). Severity-based findings. May amend Plan. |
 
 ### Commands (7)
 

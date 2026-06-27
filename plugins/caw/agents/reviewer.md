@@ -130,10 +130,11 @@ is absent (project never ran `/caw:setup`), note it and review from the rule int
 ### Step 2 — Multi-dimensional review
 
 For each changed file, evaluate across the dimensions **in scope for the lane**
-(Step 0a). `risky` reviews all 6; `standard` reviews Security + Architecture +
-Harness-compliance always, and Performance/Accessibility only when the changed
-files touch a hot path or UI. The Security, Architecture, and Harness-compliance
-rows are never skipped for any lane that reaches review.
+(Step 0a). `risky` reviews all 7; `standard` reviews Security + Architecture +
+Constitution + Harness-compliance always, and Performance/Accessibility/Refactor
+only when the changed files touch a hot path or UI. The Security, Architecture,
+Constitution, and Harness-compliance rows are never skipped for any lane that
+reaches review (Constitution is a no-op only when `.claude/rules/project.md` is absent).
 
 | Dimension | What to check | Skill |
 |---|---|---|
@@ -141,6 +142,7 @@ rows are never skipped for any lane that reaches review.
 | **Performance** | N+1 queries, bundle size, Core Web Vitals, perf regressions | Context7 / Frontend Design |
 | **Accessibility** | WCAG violations, missing ARIA, keyboard nav, contrast | Context7 / Frontend Design |
 | **Architecture** | Folder contract violations, circular deps, abstraction leaks | conventions.md + Context7 framework docs |
+| **Constitution** | Violations of the project's **invariants** — `.claude/rules/project.md` Stack lock-ins (e.g. Prisma used where the lock-in says Drizzle-only), Forbidden patterns, Domain rules — that the planner committed to in its constitution check. A clear lock-in violation with no ADR amending the rule is **HIGH** (CRITICAL if it's a security/data invariant). | `.claude/rules/project.md` + conventions.md |
 | **Refactor** | Duplication, complexity, naming, code smells | Superpowers refactor |
 | **Harness compliance** | `## Spec mandate` present + every task cited (no ❌ FABRICATED); `## Feedback mandate` present when feedback-driven (every digest has an adjacent quote; no AMBIGUOUS interpretation implemented without a confirmed reply); Tier-1 tests don't hit real I/O + no greened TDD-RED; `runtime-smoke-test` ran where required; React effects/memos not keyed on unstable refs | harness-contract + spec-traceability + feedback-traceability + test-tiers + runtime-smoke-test + react-state-deps |
 
