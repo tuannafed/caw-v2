@@ -37,8 +37,11 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dev deps
         run: pip install -r requirements-dev.txt
-      - name: Run tests
-        run: python -m pytest plugins/caw/harness/tests -q
+      - name: Run tests under coverage (gate ≥ 85%)
+        working-directory: plugins/caw/harness
+        run: |
+          python -m coverage run --source=src -m pytest tests -q
+          python -m coverage report --fail-under=85
 
   validate:
     runs-on: ubuntu-latest

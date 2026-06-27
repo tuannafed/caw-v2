@@ -26,3 +26,8 @@ __pycache__/
 
 # Test + tooling caches (auto-generated)
 .pytest_cache
+
+# coverage artifacts (CI runs coverage; never commit the data file)
+.coverage
+.coverage.*
+htmlcov/

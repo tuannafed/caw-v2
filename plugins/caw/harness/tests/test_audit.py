@@ -166,3 +166,38 @@ def test_missing_conductor_dir_is_noop(conn, tmp_path):
 ])
 def test_interpret_bands(score, word):
     assert word in audit.interpret(score)
+
+
+# --- format_report + interpret (the human/json output of `audit`) -------------
+
+def _finding(count, label, points):
+    return {"count": count, "label": label, "points": points, "key": "k", "details": []}
+
+
+def test_format_report_json_shape():
+    import json
+    out = audit.format_report(12, [_finding(2, "x", 12)], fmt="json")
+    d = json.loads(out)
+    assert d["score"] == 12
+    assert "interpretation" in d
+    assert d["findings"][0]["label"] == "x"
+
+
+def test_format_report_table_clean_when_no_active_findings():
+    out = audit.format_report(0, [_finding(0, "x", 0)], fmt="table")
+    assert "No drift detected" in out
+
+
+def test_format_report_table_lists_active_findings():
+    f = {"count": 3, "label": "orphans", "points": 30, "key": "o",
+         "details": [f"item-{i}" for i in range(12)]}
+    out = audit.format_report(30, [f], fmt="table")
+    assert "orphans" in out
+    assert "and 2 more" in out  # details truncated at 10
+
+
+def test_interpret_covers_score_bands():
+    # low score = healthy, high score = action required
+    assert isinstance(audit.interpret(0), str)
+    assert isinstance(audit.interpret(100), str)
+    assert audit.interpret(0) != audit.interpret(100)

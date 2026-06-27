@@ -4,6 +4,38 @@ Claude Agent Workflow — a 5-agent pipeline (plan → code → test → review)
 durable SQLite harness, safety hooks, and 9 authored skills, packaged as a Claude
 Code plugin.
 
+## Quickstart (5 minutes)
+
+From zero to a verified story. Run these in Claude Code, in your project repo:
+
+```text
+# 1. Add the marketplace + install caw and its 3 companions (all official)
+/plugin marketplace add tuannafed/caw-v2
+/plugin install caw@caw
+/plugin install superpowers@claude-plugins-official
+/plugin install frontend-design@claude-plugins-official
+/plugin install context7@claude-plugins-official
+
+# 2. One-time project setup — detect stack, verify the harness, scaffold docs/caw
+/caw:setup
+
+# 3. Plan → implement → verify a feature
+/caw:plan "add a soft-delete flag to the tickets table"
+/caw:code  US-001-soft-delete-tickets --all
+/caw:verify US-001-soft-delete-tickets
+```
+
+That's the whole loop. `/caw:plan` writes the spec + tasks (state in `harness.db`,
+prose in `docs/caw/stories/`), `/caw:code --all` implements every task (parallel tasks
+each run in their own git worktree), and `/caw:verify` runs tests + a multi-dimension
+review with a mechanical proof gate. The status bar shows the active story · lane ·
+progress the whole time.
+
+> **Team install (no manual commands):** commit a `.claude/settings.json` whose
+> `enabledPlugins` lists caw + the 3 companions (template:
+> [`templates/project/settings.json`](./templates/project/settings.json)). A member who
+> trusts the file installs the whole stack on open. See [Install](#install) for details.
+
 ## Install
 
 ```

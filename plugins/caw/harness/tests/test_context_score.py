@@ -83,3 +83,49 @@ def test_format_assessment_renders_counts():
     text = cs.format_assessment(7, cs.score_row(row))
     assert "trace #7" in text
     assert "must-read:" in text
+
+
+# --- cover every lane × phase branch in _base_rules + the dynamic triggers ---
+
+def test_base_rules_trace_phase_normal_requires_matrix():
+    must, should, _ = cs._base_rules("normal", "trace")
+    labels = [l for l, _ in must]
+    assert "Trace specification" in labels and "Durable matrix" in labels
+
+
+def test_base_rules_trace_phase_tiny_matrix_is_should():
+    must, should, _ = cs._base_rules("tiny", "trace")
+    assert "Durable matrix" in [l for l, _ in should]
+
+
+def test_base_rules_implementation_high_risk_adds_arch_and_template():
+    must, _, _ = cs._base_rules("high_risk", "implementation")
+    labels = [l for l, _ in must]
+    assert "Architecture rules" in labels
+    assert "High-risk story template" in labels
+
+
+def test_base_rules_planning_high_risk_adds_maturity():
+    must, _, _ = cs._base_rules("high_risk", "planning")
+    assert "Harness maturity" in [l for l, _ in must]
+
+
+def test_base_rules_intake_tiny_skips_architecture():
+    must, _, skipped = cs._base_rules("tiny", "intake")
+    assert "docs/caw/ARCHITECTURE.md" in skipped
+
+
+def test_base_rules_intake_normal_requires_readme_and_harness():
+    must, _, _ = cs._base_rules("normal", "intake")
+    labels = [l for l, _ in must]
+    assert "README" in labels and "Harness operating model" in labels
+
+
+def test_dynamic_rules_triggered_by_schema_change():
+    extra = cs._dynamic_rules(["scripts/caw/schema/001-init.sql"])
+    assert any("decision" in l.lower() for l, _ in extra)
+
+
+def test_dynamic_rules_triggered_by_cli_change():
+    extra = cs._dynamic_rules(["scripts/caw/bin/harness-cli"])
+    assert any("HARNESS.md" in t for _, t in extra)
