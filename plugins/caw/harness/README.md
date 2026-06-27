@@ -64,7 +64,7 @@ Run `harness-cli <command> --help` for flags.
 
 ```bash
 harness-cli init
-harness-cli story add  --id story-1 --title "feature X" --risk-lane normal
+harness-cli story add  --story-id story-1 --title "feature X" --risk-lane normal
 harness-cli task add    --story-id story-1 --task-key backend --verify "pnpm test"
 # ...code the backend task...
 harness-cli task verify --story-id story-1 --task-key backend   # runs the proof

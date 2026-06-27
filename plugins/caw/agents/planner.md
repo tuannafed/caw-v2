@@ -399,7 +399,7 @@ harness-cli intake add --input-type <new_spec|spec_slice|change_request|new_init
   --risk-lane <tiny|normal|high_risk> --summary "<one line>" --story-id <story-id>
 
 # 2. task
-harness-cli story add --id <story-id> --title "<title>" --risk-lane <tiny|normal|high_risk> \
+harness-cli story add --story-id <story-id> --title "<title>" --risk-lane <tiny|normal|high_risk> \
   --contract-doc docs/caw/stories/<story-id>/plan.md
 
 # 3. one task per plan task (add --verify for tasks with a mechanical proof,

@@ -112,8 +112,8 @@ Common commands:
 ```bash
 scripts/caw/bin/harness-cli init
 scripts/caw/bin/harness-cli intake  --type <type> --summary <text> --lane <lane>
-scripts/caw/bin/harness-cli story add --id <id> --title <text> --lane <lane>
-scripts/caw/bin/harness-cli story update --id <id> --status <status>
+scripts/caw/bin/harness-cli story add --story-id <id> --title <text> --risk-lane <lane>
+scripts/caw/bin/harness-cli story update --story-id <id> --status <status>
 scripts/caw/bin/harness-cli story gate --story-id <id>
 scripts/caw/bin/harness-cli story verify-all
 scripts/caw/bin/harness-cli task   add --story-id <id> --task-key <name> [--verify "<cmd>"]
@@ -267,7 +267,7 @@ A **story** owns many **tasks** (db, backend, frontend, smoke…); a task may ca
 a mechanical proof command:
 
 ```bash
-scripts/caw/bin/harness-cli story add --id story-012 --title "Login flow" --risk-lane normal
+scripts/caw/bin/harness-cli story add --story-id story-012 --title "Login flow" --risk-lane normal
 scripts/caw/bin/harness-cli task add    --story-id story-012 --task-key backend --verify "pytest tests/"
 scripts/caw/bin/harness-cli task update --story-id story-012 --task-key backend --status in_progress
 scripts/caw/bin/harness-cli task verify --story-id story-012 --task-key backend

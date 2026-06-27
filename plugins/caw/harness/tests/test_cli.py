@@ -319,3 +319,28 @@ def test_version_flag(dbfile, capsys):
         run(dbfile, "--version")
     assert exc.value.code == 0
     assert "harness-cli" in capsys.readouterr().out
+
+
+# --- flag consistency: story commands accept --story-id (alias of --id) --------
+
+def test_story_add_accepts_story_id_alias(dbfile):
+    run(dbfile, "init")
+    # --story-id matches task/intake/gate; must work the same as --id
+    assert run(dbfile, "story", "add", "--story-id", "US-1", "--title", "T",
+               "--risk-lane", "tiny") == 0
+    assert rows(dbfile, "story")[0]["id"] == "US-1"
+
+
+def test_story_add_still_accepts_id(dbfile):
+    run(dbfile, "init")
+    assert run(dbfile, "story", "add", "--id", "US-2", "--title", "T",
+               "--risk-lane", "tiny") == 0
+    assert rows(dbfile, "story")[0]["id"] == "US-2"
+
+
+def test_story_update_accepts_story_id_alias(dbfile):
+    run(dbfile, "init")
+    run(dbfile, "story", "add", "--id", "US-3", "--title", "T", "--risk-lane", "tiny")
+    assert run(dbfile, "story", "update", "--story-id", "US-3",
+               "--status", "implemented") == 0
+    assert rows(dbfile, "story")[0]["status"] == "implemented"

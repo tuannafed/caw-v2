@@ -8,7 +8,7 @@ harness.db. Stdlib only. Stable command path: scripts/caw/bin/harness-cli <comma
 Usage examples:
   harness-cli init
   harness-cli intake add --input-type change_request --risk-lane normal --summary "..."
-  harness-cli story add --id story-001 --title "..." --risk-lane normal
+  harness-cli story add --story-id story-001 --title "..." --risk-lane normal
   harness-cli task add --story-id story-001 --task-key backend --verify "pnpm test"
   harness-cli trace --summary "..." --outcome completed --agent coder
   harness-cli backlog add --title "..." --risk tiny --predicted "..."
@@ -57,8 +57,10 @@ def build_parser():
     ia.set_defaults(_fn=commands.intake_add)
 
     # story add / update
+    # Accept BOTH --id and --story-id so the story commands match task/intake/gate
+    # (which use --story-id). --id stays as a back-compat alias.
     ta = _nest("story", "add")
-    ta.add_argument("--id", dest="id", required=True)
+    ta.add_argument("--id", "--story-id", dest="id", required=True)
     ta.add_argument("--title", required=True)
     ta.add_argument("--risk-lane", dest="risk_lane", required=True)
     ta.add_argument("--contract-doc", dest="contract_doc")
@@ -67,7 +69,7 @@ def build_parser():
     ta.set_defaults(_fn=commands.story_add)
 
     tu = _nest("story", "update")
-    tu.add_argument("--id", required=True)
+    tu.add_argument("--id", "--story-id", dest="id", required=True)
     tu.add_argument("--status")
     tu.add_argument("--title")
     tu.add_argument("--contract-doc", dest="contract_doc")
