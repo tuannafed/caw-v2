@@ -61,12 +61,35 @@ def connect(db_path=None):
     return conn
 
 
+def find_project_root(start=None):
+    """Walk up from `start` (default cwd) to locate the caw project root.
+
+    A subfolder invocation (e.g. `cd packages/api-client && harness-cli …`) must
+    resolve to the ONE project DB, not create a fresh empty one in the subfolder.
+    Marker priority, checked at each ancestor from the deepest up:
+      1. an existing `harness.db`  — already-initialized project DB wins
+      2. `docs/caw/`               — a caw-scaffolded project
+      3. `.git/`                   — the repo root
+    Returns the matched directory, or None if no marker is found anywhere up the tree.
+    """
+    here = (start or Path.cwd()).resolve()
+    for d in (here, *here.parents):
+        if (d / DEFAULT_DB_NAME).is_file():
+            return d
+        if (d / "docs" / "caw").is_dir():
+            return d
+        if (d / ".git").exists():
+            return d
+    return None
+
+
 def resolve_db_path(explicit=None):
     """Where harness.db lives for a project.
 
     caw v2 layout (mirrors repository-harness): harness.db lives at the project
     ROOT, alongside scripts/ and docs/ — not under .claude/.
-    Order: explicit arg > HARNESS_DB env > ./harness.db (project root / cwd).
+    Order: explicit arg > HARNESS_DB env > project root (walked up from cwd) >
+    cwd (only when no project marker is found anywhere up the tree).
     """
     import os
 
@@ -75,4 +98,5 @@ def resolve_db_path(explicit=None):
     env = os.environ.get("HARNESS_DB")
     if env:
         return Path(env)
-    return Path.cwd() / DEFAULT_DB_NAME
+    root = find_project_root()
+    return (root or Path.cwd()) / DEFAULT_DB_NAME
