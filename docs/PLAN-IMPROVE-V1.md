@@ -24,7 +24,7 @@ check. Một số việc là **DECISION** (owner chọn nhánh trước, rồi a
 | B4 rules → .claude/rules lazy | ✅ done | scaffold + `paths:` native lazy-load + bỏ Read eager |
 | B5 dangerous-actions → permissions.deny | ✅ done | hook xoá, deny block bật mặc định |
 | B6 status line | ✅ done | `caw-statusline.sh` đọc harness.db (DB source of truth) |
-| C1 evolution | ⏳ **một phần** | có `/caw:maintain` (manual). Event-driven (auto khi story close) **chưa làm** |
+| C1 evolution | ✅ done | `/caw:maintain` (manual deep pass) + **event-driven**: reviewer chạy `audit`+`maturity` snapshot khi story close (clean approval), nudge `/caw:maintain` nếu entropy tăng |
 | C2 tools/backlog | ✅ done | fix chạy v2 (US-NNN/epics) + status overlay từ harness.db |
 | **C3 canonical spec** (archive→spec) | ❌ **chưa làm** |  |
 | **C4 constitution** | ✅ done | planner enforce (Step 0.5 + clarify gate) + reviewer flag invariant (Constitution dimension). Tuỳ chọn `CONSTITUTION.md` riêng để ngỏ |
@@ -142,16 +142,15 @@ CẤP phần rule này sang lazy-load — không phải làm lại.)
 
 ## TIER C — DECISION trước, rồi thực thi (lớn hơn)
 
-### C1. Tầng evolution (audit/propose/maturity/state-drift/scoring, ~1090 LOC)  ⏳ MỘT PHẦN
-Hiện document trong HARNESS.md; pipeline gọi qua `/caw:maintain` (manual). **Chưa** có
-auto-trigger event-driven.
-- ✅ **Đã làm:** `/caw:maintain` command (audit + maturity + propose, `--commit` file proposals)
-  — biến "chạy tay theo doc dài" thành 1 bước khám phá được.
-- ⏳ **Còn (C1-A nâng cao):** wire `audit/maturity/propose` chạy **event-driven tại điểm
-  phản tỉnh tự nhiên** — khi **story/milestone hoàn tất** (pattern gstack `/retro`, GSD
-  `complete-milestone`). Trigger tốt hơn cron: đúng lúc, không dựa kỷ luật. (Ý tưởng: hook
-  Stop hoặc coder cuối story gọi `harness-cli audit` khi story status → implemented.)
-- Quyết: team có chạy audit/maturity định kỳ không? Nếu có → làm event-driven trigger.
+### C1. Tầng evolution (audit/propose/maturity/state-drift/scoring, ~1090 LOC)  ✅ DONE
+- ✅ **Manual deep pass:** `/caw:maintain` command (audit + maturity + propose,
+  `--commit` file proposals) — biến "chạy tay theo doc dài" thành 1 bước khám phá được.
+- ✅ **Event-driven heartbeat (C1-A):** reviewer Step 7b chạy `harness-cli audit` +
+  `maturity` **khi story close** (clean approval → story `implemented`) — đúng điểm phản
+  tỉnh tự nhiên (pattern gstack `/retro`, GSD `complete-milestone`), không dựa kỷ luật,
+  không cần cron. Nudge `/caw:maintain` nếu entropy/drift tăng. KHÔNG `propose --commit`
+  tự động (file backlog là hành động owner chủ động). Chọn reviewer (không phải Stop hook):
+  deterministic, đúng lúc story đóng, không ồn trên session chat.
 
 ### C2. `tools/backlog` (~7000 LOC Astro/React)  ✅ DONE
 - ✅ **verify status-drift:** board trước đọc markdown `overview.yaml` (board TRỐNG với v2).

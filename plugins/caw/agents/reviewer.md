@@ -302,7 +302,27 @@ State lives in the DB, not markdown. Record the verdict via `harness-cli`:
 `review.md` holds the prose (findings, verdict narrative) — never restate task
 status there; the `harness-cli lint` state-drift gate rejects it.
 
-### Step 8 — Report
+On a **clean approval** (no blocking findings), advance the story to `implemented`:
+`harness-cli story update --story-id <id> --status implemented`. This is the story's
+close — the natural reflection point for Step 7b.
+
+### Step 7b — Evolution snapshot at story close (event-driven audit)
+
+ONLY on a clean approval that just moved the story to `implemented` — i.e. at the
+**reflection point** where a unit of work is done — run a lightweight evolution
+snapshot so the harness's observability layer gets a reading without depending on
+anyone remembering to run `/caw:maintain`:
+
+```
+harness-cli audit       # entropy/drift score (lower is better)
+harness-cli maturity    # harness maturity level
+```
+
+Surface the two numbers in the Step 8 report. **Do not** run `propose --commit` here
+(that files backlog items — a deliberate, owner-driven action). If `audit` reports a
+**rising/high entropy score or drift**, add one line to the report nudging the owner to
+run `/caw:maintain` for the full audit + proposals. Skip this step entirely on a
+blocked verdict (the story isn't closing) or if the CLI lacks `audit` (older harness).
 
 ```
 🔍 Review complete
@@ -321,6 +341,22 @@ Follow-up tasks created:
   - US-NNN-improve-dashboard-style
   ...
 ```
+
+On a clean approval, append the Step 7b evolution snapshot:
+
+```
+✅ Review complete — approved, story implemented
+
+Findings: 0 CRITICAL, 0 HIGH, 2 MEDIUM, 3 LOW
+Verdict: ✓ Approved
+
+Evolution snapshot (at story close):
+  entropy: 12/100 (audit, lower=better)   ·   maturity: H2 — Specification layer
+  ↳ drift/entropy rising — run /caw:maintain for the full audit + proposals   # only if high
+```
+
+(`audit` prints `Harness entropy score: N/100` + any drift; `maturity` prints
+`Harness maturity: H<n> — <layer>`. Quote the numbers as printed — don't invent a scale.)
 
 ## Constraints
 

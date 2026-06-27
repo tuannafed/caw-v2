@@ -10,6 +10,11 @@ Run the harness self-maintenance pass: $ARGUMENTS
 step, so audit / maturity / proposal generation actually run instead of waiting for
 someone to remember the manual commands in `docs/caw/HARNESS.md`.
 
+> The reviewer already runs a lightweight `audit` + `maturity` snapshot **at story
+> close** (clean approval) and nudges here if entropy is rising — that's the
+> event-driven heartbeat. `/caw:maintain` is the deeper, owner-driven pass: it also
+> previews proposals and can file them with `--commit`.
+
 `$ARGUMENTS` (optional):
 - (no args) → report-only: run audit + maturity + proposal preview. Writes nothing.
 - `--commit` → also file the generated improvement proposals as `proposed` backlog
