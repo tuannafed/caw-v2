@@ -88,7 +88,7 @@ line as `REFRESH=1` if the invocation included `--refresh`, otherwise `REFRESH=0
 REFRESH=0   # ← set to 1 when /caw:setup was invoked with --refresh
 SEED="${CLAUDE_PLUGIN_ROOT}/templates/docs-caw"
 DEST="docs/caw"
-mkdir -p "$DEST/templates" "$DEST/decisions" "$DEST/advisories" "$DEST/stories/epics"
+mkdir -p "$DEST/templates" "$DEST/decisions" "$DEST/advisories" "$DEST/stories/epics" "$DEST/specs"
 
 # UPPER_CASE policy docs: overwrite on --refresh, else don't clobber.
 GUARD="-n"; [[ "$REFRESH" == "1" ]] && GUARD="-f"

@@ -41,7 +41,7 @@ above. Installing `caw` alone does not pull the companions.
 | Component | What |
 |---|---|
 | **agents/** | 5 agents: `setup`, `planner`, `coder`, `tester`, `reviewer` |
-| **commands/** | 7 commands: `/caw:setup`, `/caw:plan`, `/caw:code`, `/caw:test`, `/caw:review`, `/caw:verify`, `/caw:maintain` |
+| **commands/** | 8 commands: `/caw:setup`, `/caw:plan`, `/caw:code`, `/caw:test`, `/caw:review`, `/caw:verify`, `/caw:maintain`, `/caw:spec` |
 | **skills/** | 4 authored skills: `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing` (namespaced `caw:<name>`) |
 | **hooks/** | Safety + workflow hooks (`hooks.json`), profile-gated by `CAW_HOOK_PROFILE` |
 | **harness/** | Durable layer — `harness-cli` (Python stdlib) + SQLite schema. State lives in `harness.db` at the **project root**, not the plugin cache. |

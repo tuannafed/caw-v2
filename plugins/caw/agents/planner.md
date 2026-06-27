@@ -306,6 +306,7 @@ architecture decision, state that explicitly in the Challenge section.
 **Story:** US-<NNN>-<slug>
 **Type:** feature | bug | chore | refactor
 **Lane:** tiny | standard | risky
+**Capability:** <capability-slug>   <!-- optional: groups stories for /caw:spec to fold into docs/caw/specs/<capability>.md; omit if standalone -->
 **Created:** 2026-05-10T15:00
 **Planner skills loaded via Skill tool:** business-analyst, prd-development, create-specification, user-story, user-story-splitting, prioritization-advisor, roadmap-planning
 

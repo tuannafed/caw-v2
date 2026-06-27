@@ -26,7 +26,7 @@ check. Một số việc là **DECISION** (owner chọn nhánh trước, rồi a
 | B6 status line | ✅ done | `caw-statusline.sh` đọc harness.db (DB source of truth) |
 | C1 evolution | ✅ done | `/caw:maintain` (manual deep pass) + **event-driven**: reviewer chạy `audit`+`maturity` snapshot khi story close (clean approval), nudge `/caw:maintain` nếu entropy tăng |
 | C2 tools/backlog | ✅ done | fix chạy v2 (US-NNN/epics) + status overlay từ harness.db |
-| **C3 canonical spec** (archive→spec) | ❌ **chưa làm** |  |
+| **C3 canonical spec** (archive→spec) | ✅ done | lệnh `/caw:spec <capability>` fold story `implemented` → `docs/caw/specs/<cap>.md` (current truth, prose-only) |
 | **C4 constitution** | ✅ done | planner enforce (Step 0.5 + clarify gate) + reviewer flag invariant (Constitution dimension). Tuỳ chọn `CONSTITUTION.md` riêng để ngỏ |
 | D3 spec-kit (constitution + clarify) | ✅ done | planner Step 0.5 constitution + Step 0.7 clarify gate |
 | D1 parallelism + worktree | ✅ done | verified `isolation: "worktree"` native → `/caw:code --all` parallel groups dùng worktree riêng + merge; `worktree.baseRef: head`; planner ép group file-disjoint |
@@ -159,12 +159,16 @@ CẤP phần rule này sang lazy-load — không phải làm lại.)
 - **DECISION value-vs-maintenance** (còn ngỏ): sau B6 status line, viewer 7000 LOC còn xứng
   bảo trì? — để owner quyết khi cần; hiện đã chạy đúng v2.
 
-### C3. Canonical capability spec (pattern OpenSpec propose→apply→**archive**)  ❌ CHƯA LÀM
-- caw tích **đống story đã xong** nhưng không fold lại → sau N story, "hệ thống HIỆN làm
-  gì" nằm rải rác. Học OpenSpec: khi **archive story**, fold delta vào một **canonical
-  spec per-capability** (markdown, vd `docs/caw/specs/<capability>.md`).
-- Lợi: cho human/agent một nguồn "current truth" query được; input tốt cho C1 maturity/audit.
-- Markdown-native (không đụng DB). Accept: archive một story → canonical spec tương ứng cập nhật.
+### C3. Canonical capability spec (pattern OpenSpec propose→apply→**archive**)  ✅ DONE
+- ✅ **Lệnh `/caw:spec <capability>`** (owner-driven, đã chọn nhánh thủ công thay vì auto
+  để tránh scope-creep): đọc các story `implemented`/`changed` thuộc capability (membership
+  qua `epics/<cap>/` HOẶC `capability:` trong plan.md HOẶC owner xác nhận), fold thành
+  `docs/caw/specs/<capability>.md` — "current truth" (dedupe + reconcile, `retired` = xoá
+  behaviour, KHÔNG concatenate changelog). Idempotent (regenerate từ full member set).
+- planner thêm field optional `**Capability:**` trong plan.md để gắn nhóm; setup scaffold
+  `docs/caw/specs/`. Markdown-native (không đụng DB, theo ADR-0001).
+- Là command (không phải agent mới) — giữ lean 5 agent. Accept: ✅ chạy `/caw:spec <cap>`
+  → canonical spec sinh/cập nhật từ các story đã xong.
 
 ### C4. Constitution layer (pattern Spec Kit `/speckit.constitution`)  ✅ DONE
 - ✅ **planner (D3):** Step 0.5 đọc constitution (`.claude/rules/project.md` lock-ins,

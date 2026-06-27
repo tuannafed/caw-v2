@@ -73,7 +73,7 @@ fixed — `claude-plugins-official` is built in, no `marketplace add`):
 plugins/caw/                    # THE plugin
   .claude-plugin/plugin.json         # plugin manifest
   agents/        # 5 agents: setup, planner, coder, tester, reviewer
-  commands/      # 7 commands: setup, plan, code, test, review, verify, maintain (invoked as /caw:setup, /caw:plan, …)
+  commands/      # 8 commands: setup, plan, code, test, review, verify, maintain, spec (invoked as /caw:setup, /caw:plan, …)
   skills/        # 4 AUTHORED skills: api-contract, error-handling-patterns,
                  #   nextjs-feature, react-component-testing (namespaced caw:<name>)
   hooks/         # hooks.json (uses ${CLAUDE_PLUGIN_ROOT}) + hook .js files
@@ -137,6 +137,7 @@ activates (a CC bug disables it otherwise).
 | `/caw:review <id>` | Multi-dim review |
 | `/caw:verify <id>` | Test + review parallel |
 | `/caw:maintain` | Harness self-maintenance: audit + maturity + propose (`--commit` files proposals) |
+| `/caw:spec [<capability>]` | Fold a capability's implemented stories into a canonical `docs/caw/specs/<capability>.md` (current-truth spec; prose-only, no DB) |
 
 Commands are namespaced `/caw:<name>` by the plugin, so they never collide with
 other Claude Code skills/commands.
