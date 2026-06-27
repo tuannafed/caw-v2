@@ -121,7 +121,7 @@ activates (a CC bug disables it otherwise).
 | Agent | Stage | Purpose |
 |---|---|---|
 | `setup` | Bootstrap | Detect stack, verify the harness, generate conventions.md + project.yaml + project rules |
-| `planner` | Plan + Challenge | Spec, API contract, tasks (with test_scenarios + skills_hint), self-challenge, lane |
+| `planner` | Constitution + Clarify + Plan | Loads project constitution (lock-ins), clarify-gates plan-breaking ambiguity (blocks with questions vs guessing), then spec, API contract, tasks (test_scenarios + skills_hint), self-challenge (incl. constitution compliance), lane |
 | `coder` | Code (per task) | Implement one task at a time. Loads skills via `Skill` from the task's `skills_hint`. Generic across stack. |
 | `tester` | Test | Test mode derived from Plan's `lane`: tiny=skip / standard=backend-only / risky=all (red+green). Mobile = unit tests only. |
 | `reviewer` | Review | Multi-dim review (security, perf, a11y, refactor, architecture). Severity-based findings. May amend Plan. |
