@@ -33,6 +33,8 @@ export const STAGES: Stage[] = [
 const STATUS_TO_STAGE: Record<string, string> = {
   pending: 'pending',
   'plan-pending': 'pending',
+  // v2 DB story status: planned | in_progress | implemented | changed | retired
+  planned: 'pending',
 
   planning: 'planning',
   'plan-done': 'planning',
@@ -42,6 +44,11 @@ const STATUS_TO_STAGE: Record<string, string> = {
   'code-done': 'coding',
   'in-progress': 'coding',
   in_progress: 'coding',
+  changed: 'coding', // v2: story re-opened / being amended
+
+  // v2: story has shipped its implementation.
+  implemented: 'done',
+  retired: 'done', // v2: closed / superseded
 
   testing: 'testing',
   'red-done': 'testing',
@@ -160,8 +167,9 @@ export function stageColor(task: Task): string {
 
 export function laneColor(lane: string): string {
   const v = (lane || '').toLowerCase();
-  if (v === 'risky') return '#fc8181';
-  if (v === 'standard') return '#63b3ed';
+  // v2 DB lanes: tiny | normal | high_risk. v1 lanes: tiny | standard | risky.
+  if (v === 'risky' || v === 'high_risk') return '#fc8181';
+  if (v === 'standard' || v === 'normal') return '#63b3ed';
   if (v === 'tiny') return '#68d391';
   return '#718096';
 }

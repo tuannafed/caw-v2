@@ -38,6 +38,10 @@ export default defineConfig({
   },
   server: {
     port: Number(process.env.PORT) || 4321,
-    host: true,
+    // Bind to localhost by default. The API routes serve project files + host
+    // telemetry with NO server-side auth (auth is cosmetic, client-side only),
+    // so `host: true` (0.0.0.0) would expose them to anyone on the LAN. Set
+    // HOST=0.0.0.0 explicitly to opt into network access.
+    host: process.env.HOST || '127.0.0.1',
   },
 });
