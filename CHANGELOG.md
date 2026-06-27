@@ -7,6 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.2] — 2026-06-27
+
+Found by a real-world end-to-end verification on a throwaway sample project.
+
+### Fixed
+- **CLI flag consistency** — `story add` / `story update` now accept `--story-id` (the
+  same flag `task`, `intake`, and `gate` already use); `--id` kept as a back-compat alias.
+  Removes a foot-gun where following one example then another would fail. Docs updated to
+  `--story-id`; a stale `--lane` → `--risk-lane` fixed in the HARNESS.md template
+  (154 → 157 tests).
+
+### Verified (no change — confirmed working on a real project)
+- DB resolves to the project root (no scattered `harness.db`); the lane vocabulary rejects
+  the old `risky`/`standard` tokens; the proof gate blocks (exit 2) until a task's verify
+  command actually passes; state-drift + audit scan `docs/caw/stories/` (incl. `epics/`).
+
 ## [2.4.1] — 2026-06-27
 
 Score-upgrade pass (coverage + CI + onboarding). Doc/test/CI only — no behavior change.
