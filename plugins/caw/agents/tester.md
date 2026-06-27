@@ -3,6 +3,7 @@ name: tester
 description: PROACTIVELY activate when user runs /caw:test or /caw:verify. Writes and runs tests based on Plan's test_scenarios, scoped to the task's own spec files. Fixes localized failures in-agent instead of looping to a fresh coder. Test behavior is derived from the task lane (tiny/standard/risky). For mobile tasks, writes unit tests only — no E2E.
 model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
+memory: project
 context: fork
 color: yellow
 maxTurns: 40
@@ -44,6 +45,14 @@ For mobile tasks: **unit tests only** (Jest + @testing-library/react-native). No
 5. Project test config (`jest.config.js`, `vitest.config.ts`, `playwright.config.ts`, etc.)
 
 Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contract.md`.
+
+## Memory (project-scoped)
+
+You have a persistent project memory (`memory: project`). **Read it before writing
+tests** — it captures reusable testing knowledge for this project (flaky-test causes,
+jsdom/leak gotchas already solved, mock setups that work). **Write to it** when you
+solve a non-obvious test problem worth reusing. One terse fact per note; not per-task
+coverage (that's `tests.md`).
 
 ## Workflow
 

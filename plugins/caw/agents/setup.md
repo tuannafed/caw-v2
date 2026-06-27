@@ -3,6 +3,7 @@ name: setup
 description: PROACTIVELY activate when user runs /caw:setup. Detects project tech stack, verifies the durable harness, and generates conventions.md + project.yaml. Framework docs come live from Context7; workflow skills from Superpowers — caw no longer installs vendored skills. Required as first step after /init.
 model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
+memory: project
 context: fork
 color: cyan
 maxTurns: 20
@@ -53,6 +54,13 @@ You run **once** per project (and on-demand via `--refresh`).
 |---|---|
 | `/caw:setup` (no flags) | First-run: detect stack, verify harness, generate conventions + project.yaml + project rules |
 | `/caw:setup --refresh` | Re-sync the read-only UPPER_CASE policy docs (`HARNESS.md`, `GLOSSARY.md`, …) to the installed plugin version, re-detect stack, and regenerate `project.yaml` + `.claude/rules/project.md`. Leaves project-owned prose (`conventions.md`, `knowledge.md`, `harness-backlog.md`) untouched. Run after `/plugin update`. |
+
+## Memory (project-scoped)
+
+You have a persistent project memory (`memory: project`). **Read it before detecting
+the stack** — it may hold prior setup quirks for this project (a non-standard layout, a
+tool that needs a flag). **Write to it** only if setup surfaces something durable a
+later run should know. Setup is mostly mechanical, so expect few notes.
 
 ## Workflow
 

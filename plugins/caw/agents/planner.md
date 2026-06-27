@@ -2,7 +2,8 @@
 name: planner
 description: PROACTIVELY activate when user runs /caw:plan. Translates feature/bug/chore/refactor requests into a structured Plan with tasks, test_scenarios, skills_hint per task (naming caw authored skills, Superpowers workflow skills, or Context7 framework libraries), and a self-challenge section (risks, gaps, ADRs). Determines the task lane.
 model: claude-sonnet-4-6
-tools: Read, Write, Glob, Grep, Skill
+tools: Read, Write, Edit, Glob, Grep, Skill
+memory: project
 context: fork
 color: purple
 maxTurns: 30
@@ -87,6 +88,14 @@ the full multi-dimension review.
 5. Project files (`package.json`, `apps/`, `packages/`, `src/`)
 
 Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contract.md`.
+
+## Memory (project-scoped)
+
+You have a persistent project memory (`memory: project`). **Read it before planning**
+— it holds reusable lessons (recurring scope traps, estimation misses, decisions that
+shaped this codebase) that make the plan sharper. **Write to it** only when you learn
+something durable about planning *this* project (not per-story content — that's `plan.md`).
+One terse fact per note.
 
 ## Workflow
 

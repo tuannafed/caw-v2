@@ -101,7 +101,22 @@ See [docs/CONCEPT.md](docs/CONCEPT.md) for the full design.
 ### Agents (5)
 
 Each agent file (`plugins/caw/agents/*.md`) has YAML frontmatter (model, tools,
-maxTurns, permissionMode). All 5 have `Skill` in their `tools:` list.
+memory, maxTurns, permissionMode). All 5 have `Skill` in their `tools:` list.
+
+**Agent memory.** All 5 agents set `memory: project` — a native Claude Code
+project-scoped memory (`.claude/agent-memory/<agent>/MEMORY.md`, team-shared /
+version-controlled). It adds the "knowledge learned across sessions" layer the harness
+lacked (the DB holds task *state*, markdown holds per-task *prose*; memory holds durable
+*lessons* — recurring bugs, conventions, gotchas). The agent prompts tell each agent to
+read memory before acting and append a terse note after, when it learns something
+reusable. The `tools:` list keeps `Read`/`Write`/`Edit` so the memory subsystem
+activates (a CC bug disables it otherwise).
+
+> **Maintainer note — two frontmatter fields that do NOT work, don't re-add them:**
+> `model:` per-agent is currently **ignored** by Claude Code (bug #44385 — subagents use
+> the parent model regardless), and there is **no `skills:` preload field** for subagents
+> (skills load only via the Skill tool at runtime). Both were proposed but verified
+> non-functional; revisit only if Claude Code ships fixes.
 
 | Agent | Stage | Purpose |
 |---|---|---|
