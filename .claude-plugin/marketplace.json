@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Claude Agent Workflow marketplace — the caw pipeline plugin.",
-    "version": "2.0.7"
+    "version": "2.0.8"
   },
   "plugins": [
     {
       "name": "caw",
       "source": "./plugins/caw",
       "description": "5-agent pipeline (plan/code/test/review), durable SQLite harness, safety hooks, 4 authored skills.",
-      "version": "2.0.7",
+      "version": "2.0.8",
       "category": "workflow"
     }
   ]
