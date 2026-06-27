@@ -1,0 +1,137 @@
+# Changelog
+
+All notable changes to the **caw** plugin are documented here.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/), and the project
+adheres to [Semantic Versioning](https://semver.org/). Versions are released by pushing
+to `main` (the marketplace `ref` tracks `main`); members pull them via
+`/plugin marketplace update`.
+
+## [2.4.1] — 2026-06-27
+
+Score-upgrade pass (coverage + CI + onboarding). Doc/test/CI only — no behavior change.
+
+### Added
+- **README quickstart** — a copy-paste "5 minutes" block: marketplace add → install caw
+  + the 3 companion plugins → `/caw:setup` → plan/code/verify one story.
+- **CI coverage gate** — the pytest job now runs under `coverage` and fails the build
+  below `--fail-under=85`, so test coverage can't erode silently. `coverage==7.6.10`
+  pinned in `requirements-dev.txt`; `.coverage` artifacts gitignored.
+- **+19 tests** — `test_db.py` for `find_project_root`/`resolve_db_path` (the DB-location
+  logic; `db.py` 72→100%), plus branch coverage for `audit.format_report`/`interpret`
+  (80→98%) and every lane×phase rule in `context_score` (80→95%).
+
+### Changed
+- Harness test coverage **85% → 90%** (135 → 154 tests).
+
+## [2.4.0] — 2026-06-27
+
+Score-upgrade pass driven by a multi-agent codebase review — hardening, validation, and
+an end-to-end gate.
+
+### Added
+- **Dependency-degradation contract** — the skill-loading rule now defines exactly how an
+  agent degrades when a companion plugin is missing: a missing `caw` plugin is the only
+  hard stop; a missing Superpowers/Context7 degrades the *quality* of a step (announce +
+  apply intent from first principles / fall back) but must never break the pipeline.
+- **Plugin validator + CI gate** — `validate_plugin.py` (stdlib) checks version sync
+  across `VERSION`/`plugin.json`/`marketplace.json`, valid JSON manifests, and every
+  skill's frontmatter `name` matching its folder. Wired as a second CI job + a pytest
+  wrapper. Guards against the drift classes the audit found.
+- **End-to-end binary test** — `test_e2e_binary.py` runs the shipped `bin/harness-cli` via
+  subprocess through the full story lifecycle (init → intake → story → task → gate FAILS
+  unverified → task verify → gate PASSES → query json), exercising the proof gate over the
+  wire (135 tests).
+- **NOTICE** — root attribution file crediting `addyosmani/agent-skills` (MIT) for the
+  five adapted skills + the `source-driven` rule.
+
+### Changed
+- Removed inert `paths:` frontmatter from four explicit-Read rules (`test-tiers`,
+  `spec-traceability`, `runtime-smoke-test`, `feedback-traceability`) — plugin rules don't
+  lazy-load, so the `paths:` was dead and misleading.
+- Fleshed out the thin `context-engineering` skill with a worked drift example + a recovery
+  checklist.
+- `docs/CONCEPT.md` authored (was referenced but missing); README hook-profile section and
+  marketplace description corrected.
+
+## [2.3.1] — 2026-06-27
+
+Bug-fix release — three integration-seam defects a multi-agent review surfaced (all
+verified against the code before fixing).
+
+### Fixed
+- **Planner self-block (CRITICAL)** — Step 0 mandated loading 7 product/BA skills
+  (`business-analyst`, `prd-development`, …) that exist in **no** plugin, while the
+  skill-loading contract forbids proceeding on a failed load — so the lead agent blocked on
+  its first instruction. Now loads the real Superpowers planning skills (`brainstorming`,
+  `writing-plans`) when relevant and never blocks on a missing skill.
+- **Lane vocabulary mismatch (HIGH)** — prose said `lane: tiny|standard|risky` but the DB
+  field is `risk_lane` with `tiny|normal|high_risk` (CHECK-constrained; CLI flag is
+  `--risk-lane`). Aligned all prose to the DB tokens across 5 commands + 4 agents + the
+  intake template + the doubt-check skill. Fixed a stale "all 6 dimensions" → 7.
+- **State-drift + audit no-op (HIGH)** — `state_drift` and `audit` scanned the v1 `tasks/`
+  directory; v2 keeps stories at `docs/caw/stories/`, so the anti-drift commit gate and the
+  plandone/spec-mandate audit checks were silent no-ops on every real project. Both now scan
+  `stories/` (recursing `epics/`), key off `plan.md` instead of the retired `overview.yaml`,
+  and keep a v1 `tasks/` fallback (105 → 108 tests).
+- Hook never-block guarantee — `run-with-flags` legacy path exited non-zero on
+  spawn-error/timeout/signal, which could *deny* a PreToolUse call; an infra failure now
+  exits 0 (a real block is still a deliberate exit 2).
+
+## [2.3.0] — 2026-06-27
+
+### Added
+- **Cherry-picked quality skills from `addyosmani/agent-skills` (MIT)** — adapted, not
+  copied wholesale:
+  - `caw:doubt-check` — in-flight adversarial self-check before a non-trivial decision
+    ships. Orchestrator-only (spawns a fresh-context reviewer), so `/caw:code` runs it in
+    the main session for `high_risk` non-trivial tasks; hard-gated so trivial work and
+    `tiny`/`normal` lanes never pay the cost.
+  - `caw:security-hardening`, `caw:performance-optimization`, `caw:observability` —
+    load-when-relevant quality skills (via a task's `skills_hint`).
+  - `caw:context-engineering` — context-budget discipline for long sessions / monorepos.
+  - `source-driven` rule — query Context7 docs before framework-specific code; don't
+    implement an API from memory.
+- Authored skills count **4 → 9**.
+
+## [2.2.0] — 2026-06-27
+
+Tier C of the master plan — evolution, constitution, and canonical specs.
+
+### Added
+- **`/caw:spec <capability>`** — folds a capability's implemented stories into a canonical
+  `docs/caw/specs/<capability>.md` ("current truth"; prose-only, dedupe + reconcile, a
+  `retired` story = removed behaviour). Planner gained an optional `**Capability:**` field;
+  setup scaffolds `docs/caw/specs/`.
+- **Event-driven evolution snapshot** — the reviewer runs `audit` + `maturity` at story
+  close (clean approval) and nudges `/caw:maintain` when entropy is rising. The
+  heartbeat that complements the manual deep pass.
+- **Constitution at review time** — the reviewer adds a Constitution dimension, flagging
+  code that violates `.claude/rules/project.md` invariants (lock-ins / forbidden patterns /
+  domain rules). Constitution is now enforced at both ends: planner at plan time, reviewer
+  at review (7 review dimensions).
+
+## [2.1.0] — 2026-06-27
+
+### Added
+- **Parallel coders in isolated git worktrees** — `/caw:code --all` runs each parallel
+  task group in its own `isolation: "worktree"` checkout and merges back, so parallel edits
+  can't clobber each other. The settings template sets `worktree.baseRef: "head"` (fork from
+  the current branch); the planner now requires `parallelization_groups` to be file-disjoint.
+
+### Changed
+- Merged the updated master action plan (`docs/PLAN-IMPROVE-V1.md`) — added the C3/C4 and
+  C1 event-driven items, expanded the Tier D scope.
+
+---
+
+For 2.0.x history, see the git log (`git log --oneline`). The 2.0 line covered the
+shell-hub → plugin migration, the durable harness, agent project-memory, the gitleaks +
+`@-import` setup fixes, story/task model standardization, and project-root DB resolution.
+
+[2.4.1]: https://github.com/tuannafed/caw-v2/releases/tag/v2.4.1
+[2.4.0]: https://github.com/tuannafed/caw-v2/releases/tag/v2.4.0
+[2.3.1]: https://github.com/tuannafed/caw-v2/releases/tag/v2.3.1
+[2.3.0]: https://github.com/tuannafed/caw-v2/releases/tag/v2.3.0
+[2.2.0]: https://github.com/tuannafed/caw-v2/releases/tag/v2.2.0
+[2.1.0]: https://github.com/tuannafed/caw-v2/releases/tag/v2.1.0
