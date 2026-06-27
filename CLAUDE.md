@@ -11,7 +11,7 @@ application; there is no build step. Everything ships as markdown, shell, and
 Python stdlib.
 
 `caw` provides a 5-agent pipeline (plan → code → test → review), a durable
-SQLite harness, safety hooks, and 4 authored skills. Workflow knowledge, framework
+SQLite harness, safety hooks, and 9 authored skills. Workflow knowledge, framework
 docs, and UI quality come from companion plugins (Superpowers, Context7, Frontend
 Design) rather than vendored skills.
 
@@ -28,7 +28,8 @@ Design) rather than vendored skills.
 > - **Framework/library docs** (Next.js, Prisma, Stripe, TanStack, Supabase, …) →
 >   **Context7** (live docs, no static catalog)
 > - **Frontend UI quality** → **Frontend Design** plugin
-> - caw keeps only **4 authored skills**, bundled in `caw/skills/`.
+> - caw keeps a small set of **authored skills** (originally 4; now 9 after
+>   cherry-picking quality/gap skills from addyosmani/agent-skills), bundled in `caw/skills/`.
 
 ## Installing (how a team consumes this)
 
@@ -74,8 +75,10 @@ plugins/caw/                    # THE plugin
   .claude-plugin/plugin.json         # plugin manifest
   agents/        # 5 agents: setup, planner, coder, tester, reviewer
   commands/      # 8 commands: setup, plan, code, test, review, verify, maintain, spec (invoked as /caw:setup, /caw:plan, …)
-  skills/        # 4 AUTHORED skills: api-contract, error-handling-patterns,
-                 #   nextjs-feature, react-component-testing (namespaced caw:<name>)
+  skills/        # 9 AUTHORED skills (namespaced caw:<name>): api-contract,
+                 #   error-handling-patterns, nextjs-feature, react-component-testing,
+                 #   doubt-check, security-hardening, performance-optimization,
+                 #   observability, context-engineering
   hooks/         # hooks.json (uses ${CLAUDE_PLUGIN_ROOT}) + hook .js files
   rules/         # non-overridable rules agents Read explicitly (common/, react/, typescript/)
   harness/       # durable layer: bin/harness-cli (Python stdlib) + src/*.py + schema/*.sql + tests/
@@ -95,7 +98,7 @@ tools/backlog/                       # Astro + React + shadcn Kanban UI (vendore
 
 Caw uses a **skill-first architecture**: 5 generic agents load domain knowledge by
 invoking the `Skill` tool, not by recalling it from priors. Skills come from the
-caw plugin (4 authored), Superpowers (workflow), and Context7 (framework docs).
+caw plugin (9 authored), Superpowers (workflow), and Context7 (framework docs).
 See [docs/CONCEPT.md](docs/CONCEPT.md) for the full design.
 
 ### Agents (5)
@@ -198,7 +201,7 @@ enabled:
 
 | Source | Where | Role | Examples |
 |---|---|---|---|
-| **Authored (caw)** | `plugins/caw/skills/<name>/SKILL.md`, namespaced `caw:<name>` | Workflow/archetype skills caw can't delegate | `caw:api-contract`, `caw:error-handling-patterns`, `caw:nextjs-feature`, `caw:react-component-testing` |
+| **Authored (caw)** | `plugins/caw/skills/<name>/SKILL.md`, namespaced `caw:<name>` | Workflow/archetype + quality skills caw can't delegate | archetype: `caw:api-contract`, `caw:error-handling-patterns`, `caw:nextjs-feature`, `caw:react-component-testing`, `caw:doubt-check`; quality (cherry-picked from addyosmani/agent-skills, MIT): `caw:security-hardening`, `caw:performance-optimization`, `caw:observability`, `caw:context-engineering` |
 | **Workflow (Superpowers)** | external plugin | TDD, systematic debugging, verification, code review | loaded by their Superpowers namespace |
 | **Framework docs (Context7)** | external plugin | Live library docs (Next.js, Prisma, Stripe, TanStack, Supabase, …) | queried on demand; no static catalog |
 

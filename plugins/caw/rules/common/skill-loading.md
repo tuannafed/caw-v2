@@ -21,9 +21,11 @@ caw v2 ships as the **`caw` plugin**. There is no `/caw:setup --add`, no
 `skill-map.yaml`, and no symlinked vendored skills. Skills come from three places,
 all available the moment the relevant plugins are enabled:
 
-- **Authored (caw)** — the 4 skills bundled in this plugin, namespaced:
-  `caw:api-contract`, `caw:error-handling-patterns`,
-  `caw:nextjs-feature`, `caw:react-component-testing`. Always present.
+- **Authored (caw)** — the 9 skills bundled in this plugin, namespaced. Archetype:
+  `caw:api-contract`, `caw:error-handling-patterns`, `caw:nextjs-feature`,
+  `caw:react-component-testing`, `caw:doubt-check`. Quality (load when the task
+  warrants): `caw:security-hardening`, `caw:performance-optimization`,
+  `caw:observability`, `caw:context-engineering`. Always present.
 - **Workflow (Superpowers)** — TDD, systematic debugging, verification, code
   review. Loaded by their Superpowers namespace.
 - **Framework docs (Context7)** — live library docs (Next.js, Prisma, Stripe,

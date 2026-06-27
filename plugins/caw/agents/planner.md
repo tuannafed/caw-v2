@@ -83,7 +83,7 @@ the full multi-dimension review.
 
 1. `CLAUDE.md` — project intent, custom instructions
 2. `docs/caw/conventions.md` — archetype, folder contract, forbidden patterns (from /caw:setup)
-3. Available skills (no install manifest) — the 4 authored `caw:*` skills are always present in the plugin; framework docs come from Context7; workflow skills from the Superpowers plugin
+3. Available skills (no install manifest) — the authored `caw:*` skills are always present in the plugin; framework docs come from Context7; workflow skills from the Superpowers plugin
 4. `docs/caw/decisions/` — list ADRs, read those tagged with relevant concerns
 5. Project files (`package.json`, `apps/`, `packages/`, `src/`)
 
@@ -233,13 +233,21 @@ For each task, specify:
 - `id` — short task identifier (db, backend, frontend, mobile, integrate, etc.)
 - `description` — one-line of what gets built
 - `test_scenarios` — list of acceptance criteria, will become tests in TDD
-- `skills_hint` — list of skills/frameworks to load when this task runs (a hint, not a verified manifest): the 4 authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries
+- `skills_hint` — list of skills/frameworks to load when this task runs (a hint, not a verified manifest): the authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries
 - `depends_on` — list of task ids that must complete first
 
 **Rules for skills_hint:**
-- Only reference the 4 authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries. Never invent skill names.
+- Only reference authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries. Never invent skill names.
 - Choose 2-5 most relevant skills per task. Don't over-load.
 - Match task to domain: db → backend frameworks (via Context7), frontend → frontend frameworks, etc.
+- **Quality/gap skills — add when the task warrants:** `caw:security-hardening` (task touches
+  user input, auth, secrets, uploads, payments/PII, webhooks, or LLM features),
+  `caw:performance-optimization` (explicit perf requirement / large dataset / high traffic),
+  `caw:observability` (production feature with retries/queues/external deps). These are
+  load-when-relevant, not every task.
+- **`caw:doubt-check` is NOT a skills_hint** — it's an orchestrator-only in-flight check
+  that `/caw:code` runs in the main session for `risky` non-trivial tasks (a subagent
+  can't run it). Don't list it in a task.
 
 Example task entry:
 
@@ -416,7 +424,7 @@ v2 values with `harness-cli`.
 ## Constraints
 
 - **Load skills per `${CLAUDE_PLUGIN_ROOT}/rules/common/skill-loading.md` before drafting the plan (Step 0).**
-- **Never invent skill names.** Only use the 4 authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries.
+- **Never invent skill names.** Only use the authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries.
 - **Be explicit about lane.** Don't auto-downgrade `risky` to `standard`.
 - **Self-challenge is mandatory.** Even simple plans get a Challenge section (can be brief).
 - **API contract is the source of truth.** Once written, downstream agents follow it exactly.

@@ -528,7 +528,7 @@ Durable layer:
   ✓ harness.db initialized + queryable
 
 Skills:
-  ✓ 4 authored skills available via caw plugin (no install needed)
+  ✓ 9 authored skills available via caw plugin (no install needed)
   ✓ Framework docs → Context7 (live); workflow skills → Superpowers
 
 Generated:
@@ -541,7 +541,7 @@ Next: /caw:plan "<feature description>"
 
 ## Constraints
 
-- **No skill installation.** caw ships 4 authored skills via the plugin (always on);
+- **No skill installation.** caw ships 9 authored skills via the plugin (always on);
   framework docs come from Context7, workflow skills from Superpowers. There is no
   catalog to match, no symlinks to create, no `skill-map.yaml` to write.
 - **harness.db lives at the project root**, never in the plugin cache. The CLI binary

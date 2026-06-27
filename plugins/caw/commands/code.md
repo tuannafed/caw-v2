@@ -22,6 +22,21 @@ Run the coding workflow: $ARGUMENTS
 > tool (authored `caw:*` skills are always present; framework topics →
 > Context7; workflow skills → Superpowers).
 
+### Doubt-check gate (lane `risky` + non-trivial task — runs in THIS session)
+
+Before spawning the coder, check the story's `lane` (`harness-cli query story --json`).
+If `lane: risky` **and** the target task carries a non-trivial decision (branching,
+crosses a module/service boundary, asserts a property the type system can't verify —
+idempotence/ordering/thread-safety/an invariant — or has irreversible blast radius):
+
+**Invoke `Skill({skill: "caw:doubt-check"})` HERE, in the command's main session**, and
+run its bounded doubt cycle on that decision *before* the coder builds it. This is
+in-flight (cheap to course-correct) vs the post-hoc reviewer gate (expensive re-code).
+It MUST run here, not inside the coder — the coder is a subagent and can't spawn the
+fresh-context reviewer the skill needs. If the cycle revises the decision, pass the
+revised version into the coder's task description. Skip entirely for `tiny`/`standard`
+lanes, trivial tasks, or when the user asked for speed.
+
 ### Single-task mode (`<story-id>` or `<story-id> <task>`)
 
 Spawn the **coder** agent: `"Run the coder flow for story <story-id>, task <task-key-or-auto>"`

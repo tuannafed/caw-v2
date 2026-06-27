@@ -1,7 +1,7 @@
 # caw
 
 Claude Agent Workflow — a 5-agent pipeline (plan → code → test → review) with a
-durable SQLite harness, safety hooks, and 4 authored skills, packaged as a Claude
+durable SQLite harness, safety hooks, and 9 authored skills, packaged as a Claude
 Code plugin.
 
 ## Install
@@ -42,7 +42,7 @@ above. Installing `caw` alone does not pull the companions.
 |---|---|
 | **agents/** | 5 agents: `setup`, `planner`, `coder`, `tester`, `reviewer` |
 | **commands/** | 8 commands: `/caw:setup`, `/caw:plan`, `/caw:code`, `/caw:test`, `/caw:review`, `/caw:verify`, `/caw:maintain`, `/caw:spec` |
-| **skills/** | 4 authored skills: `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing` (namespaced `caw:<name>`) |
+| **skills/** | 9 authored skills (namespaced `caw:<name>`): archetype/workflow — `api-contract`, `error-handling-patterns`, `nextjs-feature`, `react-component-testing`, `doubt-check`; quality/gap — `security-hardening`, `performance-optimization`, `observability`, `context-engineering` |
 | **hooks/** | Safety + workflow hooks (`hooks.json`), profile-gated by `CAW_HOOK_PROFILE` |
 | **harness/** | Durable layer — `harness-cli` (Python stdlib) + SQLite schema. State lives in `harness.db` at the **project root**, not the plugin cache. |
 | **rules/** | Non-overridable rules. Coding rules (`paths:` frontmatter) are scaffolded to the project's `.claude/rules/` and auto-load on matching file touch; state/spec rules stay in the plugin and agents `Read` them explicitly |
