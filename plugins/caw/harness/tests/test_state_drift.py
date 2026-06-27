@@ -16,9 +16,10 @@ from src import state_drift  # noqa: E402
 
 
 def _task(tmp_path, fname, body):
-    tasks = tmp_path / "conductor" / "tasks" / "task-1"
-    tasks.mkdir(parents=True)
-    (tasks / fname).write_text(body)
+    # v2 layout: stories live under <conductor>/stories/<story-id>/.
+    story = tmp_path / "conductor" / "stories" / "US-001-x"
+    story.mkdir(parents=True)
+    (story / fname).write_text(body)
     return str(tmp_path / "conductor")
 
 
@@ -73,6 +74,25 @@ def test_clean_task_passes(tmp_path):
     assert "no DB-owned status" in state_drift.format_findings([])
 
 
-def test_missing_tasks_dir_is_noop(tmp_path):
+def test_missing_stories_dir_is_noop(tmp_path):
     (tmp_path / "conductor").mkdir()
     assert state_drift.run(str(tmp_path / "conductor")) == []
+
+
+def test_story_nested_under_epics_is_scanned(tmp_path):
+    # Stories may live under stories/epics/<epic>/<story>/ — must recurse.
+    story = tmp_path / "conductor" / "stories" / "epics" / "billing" / "US-002-y"
+    story.mkdir(parents=True)
+    (story / "code.md").write_text("# Code\n\nstatus: done\n")
+    findings = state_drift.run(str(tmp_path / "conductor"))
+    assert any(f["rule"] == "state-in-prose" for f in findings)
+
+
+def test_v1_tasks_layout_still_scanned(tmp_path):
+    # Back-compat: an un-migrated v1 tree (tasks/) is still scanned when there's
+    # no stories/ dir.
+    task = tmp_path / "conductor" / "tasks" / "task-1"
+    task.mkdir(parents=True)
+    (task / "code.md").write_text("# Code\n\nstatus: done\n")
+    findings = state_drift.run(str(tmp_path / "conductor"))
+    assert any(f["rule"] == "state-in-prose" for f in findings)

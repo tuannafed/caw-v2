@@ -71,11 +71,15 @@ caw no longer vendors framework/library skills. Use these alongside `caw`:
 
 Hooks are gated by `CAW_HOOK_PROFILE`:
 
-- `minimal` — no hooks
-- `standard` — all hooks except the dangerous-actions blocker
-- `strict` — all hooks, including the dangerous-actions blocker
+- `minimal` — no hooks run
+- `standard` — the standard set (record-trace, session-summary, stop-format-typecheck, post-edit-accumulator)
+- `strict` — the standard set **plus** the strict-only hooks (task-read-gate, prompt-injection-detector)
 
 Disable individual hooks with `CAW_DISABLED_HOOKS` (comma-separated).
+
+(Destructive-command blocking moved to native `permissions.deny` in the settings
+template; secret scanning is a gitleaks `pre-commit` hook `/caw:setup` installs — neither
+is a `CAW_HOOK_PROFILE` hook anymore.)
 
 ## Notes
 

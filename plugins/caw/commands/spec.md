@@ -40,7 +40,7 @@ scripts/caw/bin/harness-cli query story --json
 
 A story belongs to `<capability>` when ANY of these hold:
 - it lives under `docs/caw/stories/epics/<capability>/…`, OR
-- its `plan.md` / `overview.yaml` carries `capability: <capability>`, OR
+- its `plan.md` carries a `**Capability:**` field, OR
 - the owner names it when prompted (ambiguous → ask, don't guess).
 
 Consider only stories whose DB status is **`implemented`** or **`changed`** — those
@@ -53,7 +53,8 @@ owner to confirm before writing — a wrong fold corrupts the "current truth".
 ### Step 2 — Read each member story's truth
 
 For each member story, read `plan.md` (`## Spec`, `## API contract`, the `## Plan`
-tasks, and any `## Revisions` the reviewer appended) and `overview.yaml`. The
+tasks, and any `## Revisions` the reviewer appended) and the story's DB row
+(`harness-cli query story --json`). The
 **reviewer's revisions win** over the original spec — they're the corrected truth.
 
 ### Step 3 — Fold into the canonical spec

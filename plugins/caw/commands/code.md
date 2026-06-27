@@ -22,10 +22,10 @@ Run the coding workflow: $ARGUMENTS
 > tool (authored `caw:*` skills are always present; framework topics →
 > Context7; workflow skills → Superpowers).
 
-### Doubt-check gate (lane `risky` + non-trivial task — runs in THIS session)
+### Doubt-check gate (`risk_lane: high_risk` + non-trivial task — runs in THIS session)
 
 Before spawning the coder, check the story's `lane` (`harness-cli query story --json`).
-If `lane: risky` **and** the target task carries a non-trivial decision (branching,
+If `risk_lane: high_risk` **and** the target task carries a non-trivial decision (branching,
 crosses a module/service boundary, asserts a property the type system can't verify —
 idempotence/ordering/thread-safety/an invariant — or has irreversible blast radius):
 
@@ -34,7 +34,7 @@ run its bounded doubt cycle on that decision *before* the coder builds it. This 
 in-flight (cheap to course-correct) vs the post-hoc reviewer gate (expensive re-code).
 It MUST run here, not inside the coder — the coder is a subagent and can't spawn the
 fresh-context reviewer the skill needs. If the cycle revises the decision, pass the
-revised version into the coder's task description. Skip entirely for `tiny`/`standard`
+revised version into the coder's task description. Skip entirely for `tiny`/`normal`
 lanes, trivial tasks, or when the user asked for speed.
 
 ### Single-task mode (`<story-id>` or `<story-id> <task>`)
@@ -56,7 +56,7 @@ After the task completes (next step depends on `lane` — read it from the DB,
 - Gate passed, more pending tasks → `/caw:code <story-id>` (next task)
 - Gate passed, all tasks done, `lane: tiny` → **done.** Skip test + review (the
   self-verify gate is the proof for tiny). Proceed to commit.
-- Gate passed, all tasks done, `lane: standard` or `risky` → `/caw:verify
+- Gate passed, all tasks done, `risk_lane: normal` or `high_risk` → `/caw:verify
   <story-id>` (test + review parallel).
 - Gate failed (task `blocked`) → fix the reported type-check/lint errors, then
   re-run `/caw:code <story-id> <task>`. Do NOT proceed to `/caw:verify`.
@@ -114,6 +114,6 @@ Tasks run: db, backend, frontend, integrate
 Parallel groups: [db] → [backend|frontend-skel] → [frontend-impl] → [integrate]
 Self-verify gate: all tasks type-check ✓ + lint ✓
 
-Next: /caw:verify <story-id>   (lane: standard|risky)
+Next: /caw:verify <story-id>   (risk_lane: normal|high_risk)
       — or commit directly if lane: tiny (test + review skipped)
 ```

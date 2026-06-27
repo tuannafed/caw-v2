@@ -130,25 +130,33 @@ def _conductor_checks(conductor_dir):
         return []
 
     findings = []
-    tasks_dir = root / "tasks"
+    # v2 keeps stories at docs/caw/stories/ (incl. epics/); v1 used tasks/. Status
+    # lives in the DB now, not overview.yaml, so the file-level checks key off the
+    # presence + content of plan.md, which is the markdown contract the planner owns.
+    stories_dir = root / "stories"
+    if not stories_dir.is_dir():
+        stories_dir = root / "tasks"          # v1 fallback
 
     plandone_no_plan = []
     plan_no_spec = []
-    if tasks_dir.is_dir():
-        for story_dir in sorted(p for p in tasks_dir.iterdir() if p.is_dir()):
-            overview = story_dir / "overview.yaml"
+    if stories_dir.is_dir():
+        markers = ("plan.md", "code.md", "tests.md", "review.md")
+        for story_dir in sorted(p for p in stories_dir.rglob("*") if p.is_dir()):
+            # a story folder is one holding any of the prose markers (recurses epics/)
+            if not any((story_dir / m).is_file() for m in markers):
+                continue
             plan = story_dir / "plan.md"
-            status = _read_status(overview)
-            # *-done status (plan-done, code-done, ...) but no plan.md authored
-            if status and status.endswith("-done") and not plan.is_file():
-                plandone_no_plan.append(f"{story_dir.name} (status: {status})")
+            # work products exist (code/tests/review authored) but no plan.md
+            has_work = any((story_dir / m).is_file() for m in markers[1:])
+            if has_work and not plan.is_file():
+                plandone_no_plan.append(f"{story_dir.name} (work products, no plan.md)")
             # plan.md present but missing the mandatory Spec mandate block
             if plan.is_file() and "## Spec mandate" not in _read(plan):
                 plan_no_spec.append(story_dir.name)
 
     findings.append(_finding(
         len(plandone_no_plan), "plandone_no_plan",
-        "conductor stories marked *-done with no plan.md",
+        "stories with code/tests/review but no plan.md",
         plandone_no_plan,
     ))
     findings.append(_finding(
@@ -181,20 +189,6 @@ def _read(path):
         return path.read_text(errors="replace")
     except OSError:
         return ""
-
-
-def _read_status(overview_path):
-    """Cheap YAML status read without a yaml dep — find a top-level `status:` line.
-
-    Returns the first `status:` value found (task-level), or None.
-    """
-    if not overview_path.is_file():
-        return None
-    for line in _read(overview_path).splitlines():
-        stripped = line.strip()
-        if stripped.startswith("status:"):
-            return stripped.split(":", 1)[1].strip().strip("'\"")
-    return None
 
 
 # ----------------------------------------------------------------- entrypoint

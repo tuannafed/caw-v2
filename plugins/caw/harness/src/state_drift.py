@@ -100,13 +100,38 @@ def scan_task(task_dir):
     return findings
 
 
+def _story_dirs(stories_root):
+    """Yield every story folder under <stories_root>, recursing into epics/.
+
+    A story folder is one that holds at least one prose file (plan.md is the
+    planner's marker; code/tests/review.md appear as work proceeds). This mirrors
+    how the rest of caw v2 detects stories — by content, not an `<NNN>-` prefix —
+    and recurses `stories/epics/<epic>/<story>/`.
+    """
+    markers = ("plan.md",) + PROSE_FILES
+    for p in sorted(stories_root.rglob("*")):
+        if p.is_dir() and any((p / m).is_file() for m in markers):
+            yield p
+
+
 def run(conductor_dir):
-    """Scan every story under <conductor>/tasks/. Returns findings list."""
-    tasks = Path(conductor_dir) / "tasks"
-    if not tasks.is_dir():
-        return []
+    """Scan every story under <conductor>/stories/ (incl. epics/). Returns findings.
+
+    v2 keeps stories at `docs/caw/stories/` (the v1 `tasks/` layout is gone). The
+    `tasks/` fallback is kept only so an un-migrated v1 tree still gets scanned.
+    """
+    root = Path(conductor_dir)
+    stories = root / "stories"
+    if not stories.is_dir():
+        stories = root / "tasks"          # v1 fallback
+        if not stories.is_dir():
+            return []
+        findings = []
+        for story_dir in sorted(p for p in stories.iterdir() if p.is_dir()):
+            findings.extend(scan_task(story_dir))
+        return findings
     findings = []
-    for story_dir in sorted(p for p in tasks.iterdir() if p.is_dir()):
+    for story_dir in _story_dirs(stories):
         findings.extend(scan_task(story_dir))
     return findings
 

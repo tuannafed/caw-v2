@@ -74,13 +74,13 @@ Skills come from three sources — load directly via the `Skill` tool (no instal
 
 Read the story `lane` from the DB: `harness-cli query story --json` (find the row
 for `<story-id>`).
-The lane scopes how wide this review goes — a scoped review for `standard` work
+The lane scopes how wide this review goes — a scoped review for `normal` work
 is the single biggest latency saving in the pipeline:
 
 | Lane | Dimensions reviewed | Skills to load |
 |---|---|---|
-| `standard` | Security, Architecture, Harness-compliance — **always**. Performance + Accessibility **only if** changed files touch a hot path (DB queries, loops, large payloads) or UI. Refactor: note in passing, don't deep-dive. | Superpowers `code-review` + `systematic-debugging`; query Context7 / Frontend Design for perf/a11y only when their dimension is in scope. |
-| `risky` | All 6 dimensions, full depth. | All sources below. |
+| `normal` | Security, Architecture, Harness-compliance — **always**. Performance + Accessibility **only if** changed files touch a hot path (DB queries, loops, large payloads) or UI. Refactor: note in passing, don't deep-dive. | Superpowers `code-review` + `systematic-debugging`; query Context7 / Frontend Design for perf/a11y only when their dimension is in scope. |
+| `high_risk` | All 7 dimensions, full depth. | All sources below. |
 
 (`tiny` never reaches review — the pipeline skips this stage for it.)
 
@@ -95,9 +95,9 @@ Required (call `Skill({skill: "<name>"})` in parallel — query Context7 / Front
 Design for the perf/a11y entries only when those dimensions are in scope for the lane):
 
 1. Superpowers `code-review` — review framework + severity matrix (always)
-2. Context7 / Frontend Design — performance-dimension guidance (risky, or standard touching a hot path)
-3. Context7 / Frontend Design — accessibility-dimension guidance (risky, or standard touching UI)
-4. Superpowers `refactor` — refactor-dimension checks (risky; standard notes only)
+2. Context7 / Frontend Design — performance-dimension guidance (high_risk, or normal touching a hot path)
+3. Context7 / Frontend Design — accessibility-dimension guidance (high_risk, or normal touching UI)
+4. Superpowers `refactor` — refactor-dimension checks (high_risk; normal notes only)
 5. Superpowers `systematic-debugging` — root cause analysis when chasing a finding (always)
 
 Conditional loads — read `code.md` to see which framework files changed, then
@@ -108,7 +108,7 @@ load the matching Superpowers workflow skill and/or query Context7 for the chang
 - Edge changes → query Context7 for Cloudflare / Workers etc.
 
 After loading, restate the lane and the skills actually loaded: `Reviewer lane:
-<standard|risky>. Skills active: code-review, systematic-debugging, <perf/a11y via Context7 + refactor if in scope>, <framework docs queried>`.
+<normal|high_risk>. Skills active: code-review, systematic-debugging, <perf/a11y via Context7 + refactor if in scope>, <framework docs queried>`.
 
 ### Step 1 — Identify changed files
 
@@ -130,7 +130,7 @@ is absent (project never ran `/caw:setup`), note it and review from the rule int
 ### Step 2 — Multi-dimensional review
 
 For each changed file, evaluate across the dimensions **in scope for the lane**
-(Step 0a). `risky` reviews all 7; `standard` reviews Security + Architecture +
+(Step 0a). `high_risk` reviews all 7; `normal` reviews Security + Architecture +
 Constitution + Harness-compliance always, and Performance/Accessibility/Refactor
 only when the changed files touch a hot path or UI. The Security, Architecture,
 Constitution, and Harness-compliance rows are never skipped for any lane that

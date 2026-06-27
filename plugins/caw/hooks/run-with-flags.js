@@ -173,7 +173,11 @@ async function main() {
         ? `terminated by signal ${result.signal}`
         : 'missing exit status';
     writeStderr(`[Hook] legacy hook execution failed for ${hookId}: ${failureDetail}`);
-    process.exit(1);
+    // An INFRA failure (spawn error / timeout / signal) is not a hook DECISION.
+    // Exiting non-zero here would let a slow or crashed hook DENY a PreToolUse tool
+    // call — breaking caw's "hooks warn, never block" guarantee. A genuine block is
+    // a hook deliberately returning exit 2 (passed through below), not a crash.
+    process.exit(0);
   }
 
   process.exit(Number.isInteger(result.status) ? result.status : 0);

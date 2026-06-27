@@ -1,6 +1,6 @@
 ---
 name: doubt-check
-description: In-flight adversarial self-check for a non-trivial decision BEFORE it ships down the pipeline. Spawn a fresh-context reviewer biased to disprove the decision while course-correction is still cheap. Use on lane=risky work when a decision introduces branching, crosses a module/service boundary, asserts a property the type system can't verify (idempotence, ordering, thread-safety, an invariant), or has irreversible blast radius (prod deploy, data migration, public API change). NOT for renames, formatting, one-line obvious changes, or reads.
+description: In-flight adversarial self-check for a non-trivial decision BEFORE it ships down the pipeline. Spawn a fresh-context reviewer biased to disprove the decision while course-correction is still cheap. Use on risk_lane=high_risk work when a decision introduces branching, crosses a module/service boundary, asserts a property the type system can't verify (idempotence, ordering, thread-safety, an invariant), or has irreversible blast radius (prod deploy, data migration, public API change). NOT for renames, formatting, one-line obvious changes, or reads.
 ---
 
 # Doubt-Check — in-flight adversarial review
@@ -26,7 +26,7 @@ fresh-context review and gives false confidence).
 ## When to run (gate hard)
 
 Run ONLY when **both** hold:
-1. The story's `lane` is `risky` (read it from `overview.yaml` / the Plan), AND
+1. The story's `risk_lane` is `high_risk` (read it from the DB via `harness-cli query story --json`, or the Plan), AND
 2. The about-to-be-coded task carries a **non-trivial decision** — at least one of:
    - introduces or changes branching/control logic,
    - crosses a module/service/package boundary,
@@ -36,7 +36,7 @@ Run ONLY when **both** hold:
    - has irreversible blast radius (prod deploy, data migration, public API/contract change).
 
 **Do NOT run** for: renames, formatting, file moves, one-line obvious changes, pure
-reads/summaries, tooling-only edits, `tiny`/`standard` lanes, or when the user asked
+reads/summaries, tooling-only edits, `tiny`/`normal` lanes, or when the user asked
 explicitly for speed. Over-running this is the failure mode — it turns into validation
 theatre and slows the lane for no gain.
 
@@ -81,4 +81,4 @@ ship. Never exceed 3 cycles solo — escalate to the user instead.
 - Asking "is this good?" instead of "find what's wrong."
 - Treating the reviewer's output as gospel without re-reading the artifact yourself.
 - Looping >3 cycles, or 2+ cycles with zero actionable findings (validation theatre).
-- Running it on `tiny`/`standard` lanes or when speed was requested.
+- Running it on `tiny`/`normal` lanes or when speed was requested.

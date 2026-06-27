@@ -21,9 +21,9 @@ Verify all coder tasks are complete (`harness-cli query task --json` shows each 
 Spawn the **reviewer** agent: `"Run the review flow for task <story-id>"`
 
 Reviewer agent will:
-1. Read the story `lane` (it scopes the review — `standard` reviews security +
+1. Read the story `risk_lane` (it scopes the review — `normal` reviews security +
    architecture + harness-compliance, adding perf/a11y only for hot-path/UI
-   changes; `risky` reviews all 6 dimensions). `tiny` never reaches review.
+   changes; `high_risk` reviews all 7 dimensions). `tiny` never reaches review.
 2. Read `code.md` to identify changed files
 3. Multi-dim review (dimensions in scope for the lane): security, architecture,
    harness-compliance always; performance, accessibility, refactor per lane

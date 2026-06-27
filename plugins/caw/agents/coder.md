@@ -122,8 +122,8 @@ Apply task description + test_scenarios + skills_hint to write code:
 3. **Match API contract** from plan.md exactly. Do NOT deviate.
 4. **Implement to satisfy test_scenarios** — these are acceptance criteria
 5. **TDD-aware (behavior derived from `lane` — read it with `harness-cli query story --json`):**
-   - `lane: risky` → if tester has written failing tests, make them pass
-   - `lane: standard` → for a backend task, write code the tester can validate post-impl
+   - `risk_lane: high_risk` → if tester has written failing tests, make them pass
+   - `risk_lane: normal` → for a backend task, write code the tester can validate post-impl
    - `lane: tiny` → implement, no test coupling
 6. **Follow forbidden patterns** from conventions.md
 
@@ -333,7 +333,7 @@ Task NOT marked done. Fix the errors, then re-run /caw:code <story-id> <id>.
 - **Always cap jest/vitest workers in self-verify (`--maxWorkers=2 --workerIdleMemoryLimit=512MB`).** Default parallelism can spike to 5+ GB RAM. Prefer single-file or `--findRelatedTests` over full suite at this stage.
 - **Don't deviate from API contract.** Frontend and Backend must match.
 - **Don't modify plan.md.** Only reviewer can amend the plan.
-- **Don't write tests** in this task unless `lane: risky` requires red-first. Tester writes tests separately.
+- **Don't write tests** in this task unless `risk_lane: high_risk` requires red-first. Tester writes tests separately.
 
 ## Output
 

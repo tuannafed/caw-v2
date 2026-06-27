@@ -1,6 +1,6 @@
 ---
 name: tester
-description: PROACTIVELY activate when user runs /caw:test or /caw:verify. Writes and runs tests based on Plan's test_scenarios, scoped to the task's own spec files. Fixes localized failures in-agent instead of looping to a fresh coder. Test behavior is derived from the task lane (tiny/standard/risky). For mobile tasks, writes unit tests only — no E2E.
+description: PROACTIVELY activate when user runs /caw:test or /caw:verify. Writes and runs tests based on Plan's test_scenarios, scoped to the task's own spec files. Fixes localized failures in-agent instead of looping to a fresh coder. Test behavior is derived from the task lane (tiny/normal/high_risk). For mobile tasks, writes unit tests only — no E2E.
 model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 memory: project
@@ -28,11 +28,11 @@ no separate `tdd_mode` field — read `lane` via `harness-cli query story`):
 | `lane` | Test mode | Your job |
 |---|---|---|
 | `tiny` | skip | No-op. Manual verification only. Report "skipped per plan". |
-| `standard` | backend-only | Write E2E + unit tests for backend tasks AFTER implementation. Verify they pass. Frontend tests only if missing critical coverage. |
-| `risky` | all (red+green) | Write FAILING tests upfront (red mode) for ALL tasks BEFORE coder runs. Verify them later (green mode). |
+| `normal` | backend-only | Write E2E + unit tests for backend tasks AFTER implementation. Verify they pass. Frontend tests only if missing critical coverage. |
+| `high_risk` | all (red+green) | Write FAILING tests upfront (red mode) for ALL tasks BEFORE coder runs. Verify them later (green mode). |
 
 Throughout this doc, "mode `skip` / `backend-only` / `all`" is shorthand for the
-behavior of lane `tiny` / `standard` / `risky` respectively.
+behavior of lane `tiny` / `normal` / `high_risk` respectively.
 
 For mobile tasks: **unit tests only** (Jest + @testing-library/react-native). No Playwright (doesn't run on RN).
 
@@ -88,7 +88,7 @@ Manual verification by user.
 Mark the test task done in the DB (or leave it without a verify_command — a
 `tiny` task has no mechanical test proof). Done.
 
-#### Mode: `backend-only` (default for `standard` lane)
+#### Mode: `backend-only` (default for `normal` lane)
 
 For each backend task that has status `done`:
 
@@ -123,7 +123,7 @@ When you DO write a component test, you MUST follow the `caw:react-component-tes
 
 For mobile tasks (apps/mobile/): unit tests only — `*.test.tsx` or `*.spec.ts` files alongside components.
 
-#### Mode: `all` (lane=risky)
+#### Mode: `all` (risk_lane=high_risk)
 
 Two passes.
 

@@ -54,7 +54,7 @@ Apply classification:
 - 4+ flags → **risky**
 - Any hard gate → **risky** unless human explicitly narrows scope
 
-Selected lane: `tiny` | `standard` | `risky`
+Selected lane (risk_lane): `tiny` | `normal` | `high_risk`
 
 Reason: [short explanation tying flags to lane]
 
@@ -67,4 +67,4 @@ Reason: [short explanation tying flags to lane]
 
 ## 7. Human Confirmation
 
-- [ ] Human confirmed lane (only required if the planner classified it as `risky` or scope is ambiguous)
+- [ ] Human confirmed lane (only required if the planner classified it as `high_risk` or scope is ambiguous)

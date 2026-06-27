@@ -43,19 +43,26 @@ State the type explicitly at the top of the plan.
 
 ## Determine lane
 
-`lane` is the **single** story-sizing field. The tester's TDD behavior, pull
+The lane is the **single** story-sizing field. The tester's TDD behavior, pull
 depth, and ADR requirement are all derived from it — there is no separate
 `tdd_mode` field. Use the intake risk flags from `docs/caw/templates/intake.md`
-(if present) plus heuristics:
+(if present) plus heuristics.
 
-| Lane | Triggers | Test behavior (tester derives) | Pull depth | Pipeline stages |
+> **Lane vocabulary — use the DB tokens.** The durable field is `risk_lane` with
+> exactly three values: **`tiny` | `normal` | `high_risk`**. These are what you pass
+> to `harness-cli story add --risk-lane <…>` and what `harness-cli query story --json`
+> returns. Use these tokens everywhere — in `plan.md`, in CLI calls, and when a
+> command reads the lane back to route the pipeline. (Older docs said
+> `standard`/`risky`; those are the same lanes as `normal`/`high_risk` — don't emit them.)
+
+| `risk_lane` | Triggers | Test behavior (tester derives) | Pull depth | Pipeline stages |
 |---|---|---|---|---|
 | `tiny` | chore, copy, rename, narrow bug fix, < 50 LOC AND no hard gate | skip — manual verification only | minimal | code only — skip test + review |
-| `standard` | normal feature, medium-risk bug, bounded blast radius | backend tests after impl | full | code → test → scoped review |
-| `risky` | any hard gate (below) | full TDD — failing tests first (red), then green | full + ADR mandatory | red test → code → full review |
+| `normal` | normal feature, medium-risk bug, bounded blast radius | backend tests after impl | full | code → test → scoped review |
+| `high_risk` | any hard gate (below) | full TDD — failing tests first (red), then green | full + ADR mandatory | red test → code → full review |
 
-**Hard gates — if ANY apply, the lane is `risky`. These OVERRIDE the size
-heuristic (a 10-LOC change that deletes data is `risky`, not `tiny`):**
+**Hard gates — if ANY apply, the lane is `high_risk`. These OVERRIDE the size
+heuristic (a 10-LOC change that deletes data is `high_risk`, not `tiny`):**
 
 - Auth: login, logout, sessions, JWT, password, refresh token.
 - Authorization: roles, permissions, tenant/company scope.
@@ -66,17 +73,17 @@ heuristic (a 10-LOC change that deletes data is `risky`, not `tiny`):**
 - Removing or weakening a validation requirement.
 
 When none of the hard gates trip but 2+ non-gate risk flags from
-`docs/caw/FEATURE_INTAKE.md` apply, use `standard` with stronger validation; 4+
-flags → `risky`.
+`docs/caw/FEATURE_INTAKE.md` apply, use `normal` with stronger validation; 4+
+flags → `high_risk`.
 
-If `risky` is detected (any hard gate triggered), confirm with user before
+If `high_risk` is detected (any hard gate triggered), confirm with user before
 proceeding. Never silently downgrade. **Default ambiguous work UP, not down** —
-prefer `standard` over `tiny`, `risky` over `standard`.
+prefer `normal` over `tiny`, `high_risk` over `normal`.
 
 The **Pipeline stages** column is the contract the `/caw-*` commands follow.
 `tiny` runs code only (no separate test/review pass — the coder's self-verify
-gate is the proof); `standard` runs a scoped review (security + harness-contract
-dims only, plus perf/a11y when the work touches a hot path or UI); `risky` runs
+gate is the proof); `normal` runs a scoped review (security + harness-contract
+dims only, plus perf/a11y when the work touches a hot path or UI); `high_risk` runs
 the full multi-dimension review.
 
 ## Inputs
@@ -99,26 +106,29 @@ One terse fact per note.
 
 ## Workflow
 
-### Step 0 — Load product/BA/PM skills (BEFORE writing anything)
+### Step 0 — Load planning skills (BEFORE writing anything)
 
-Follow the **Skill Loading Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/skill-loading.md`): invoke
-the `Skill` tool for every skill below before drafting the spec, then restate
-which are active. These carry the templates, story formats, and prioritization
-heuristics planner output depends on.
+Follow the **Skill Loading Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/skill-loading.md`):
+load the relevant skills below, then restate which are active. Only name skills that
+actually exist (Superpowers + caw + Context7) — never block on a skill that isn't installed.
 
-Required (call `Skill({skill: "<name>"})` in parallel):
+Load from **Superpowers** when relevant (call `Skill({skill: "<name>"})`):
 
-1. `business-analyst` — discovery framing, problem statement, stakeholder analysis
-2. `prd-development` — PRD template structure (problem → users → solution → success criteria)
-3. `create-specification` — spec format optimized for downstream agents
-4. `user-story` — Mike Cohn user story + Gherkin acceptance criteria format
-5. `user-story-splitting` — patterns for breaking large stories into deliverable tasks
-6. `prioritization-advisor` — picking the right framework (RICE / ICE / value-effort) for lane assignment
-7. `roadmap-planning` — sequencing + dependency reasoning when tasks interact
+- `brainstorming` — when the request is open-ended / underspecified and you need to
+  diverge then converge on what to actually build (pairs with the Step 0.7 clarify gate).
+- `writing-plans` — the structure for a plan downstream agents can execute without
+  ambiguity. This is the backbone of your output.
 
-Optional (load when relevant):
-- `to-prd` — when an existing conversation context should be condensed into a PRD
-- Stack-specific framework knowledge matching the request domain — query Context7 for the relevant framework (e.g. NestJS for backend-heavy plans) and load Superpowers workflow skills, so task descriptions and `skills_hint` choices are grounded.
+Also load as relevant:
+- caw authored skills for the archetype in play — e.g. `caw:api-contract` (you write the
+  API contract), `caw:nextjs-feature` for a Next.js feature.
+- Stack-specific framework knowledge — query **Context7** for the relevant framework
+  (e.g. NestJS for backend-heavy plans) so task descriptions + `skills_hint` are grounded.
+
+The **spec format + traceability** every plan must satisfy comes from the
+`spec-traceability` rule you Read just below — not from a skill. Story/Gherkin
+acceptance-criteria format and task-splitting are your own competence as the architect;
+apply them directly.
 
 **Also Read these rules now (you WRITE `plan.md`, so the path-scoped auto-load
 won't fire for you — read them explicitly):**
@@ -246,7 +256,7 @@ For each task, specify:
   `caw:observability` (production feature with retries/queues/external deps). These are
   load-when-relevant, not every task.
 - **`caw:doubt-check` is NOT a skills_hint** — it's an orchestrator-only in-flight check
-  that `/caw:code` runs in the main session for `risky` non-trivial tasks (a subagent
+  that `/caw:code` runs in the main session for `high_risk` non-trivial tasks (a subagent
   can't run it). Don't list it in a task.
 
 Example task entry:
@@ -286,7 +296,7 @@ This is the "Challenge" section that previously was a separate stage.
 ### Step 6 — Lane assignment
 
 Set:
-- `lane: tiny | standard | risky` — drives test behavior + pull depth
+- `risk_lane: tiny | normal | high_risk` — drives test behavior + pull depth
 - `parallelization_groups: [[...], [...]]` — tasks in the same inner list run in
   parallel (each in its own worktree), so they must be **file-disjoint** (see Step 5).
   When in doubt, sequence them instead.
@@ -303,7 +313,7 @@ the task). If a trigger fires, **create the ADR file now** — do not just name 
    `docs/caw/templates/adr.md`, with `Status: Proposed`.
 3. Reference the ADR id in the Plan's `## Challenge` → `ADRs needed` list.
 
-A `risky`-lane task must produce at least one ADR. If you genuinely made no
+A `high_risk`-lane task must produce at least one ADR. If you genuinely made no
 architecture decision, state that explicitly in the Challenge section.
 
 ## plan.md format
@@ -313,7 +323,7 @@ architecture decision, state that explicitly in the Challenge section.
 
 **Story:** US-<NNN>-<slug>
 **Type:** feature | bug | chore | refactor
-**Lane:** tiny | standard | risky
+**Lane (risk_lane):** tiny | normal | high_risk
 **Capability:** <capability-slug>   <!-- optional: groups stories for /caw:spec to fold into docs/caw/specs/<capability>.md; omit if standalone -->
 **Created:** 2026-05-10T15:00
 **Planner skills loaded via Skill tool:** business-analyst, prd-development, create-specification, user-story, user-story-splitting, prioritization-advisor, roadmap-planning
@@ -425,7 +435,7 @@ v2 values with `harness-cli`.
 
 - **Load skills per `${CLAUDE_PLUGIN_ROOT}/rules/common/skill-loading.md` before drafting the plan (Step 0).**
 - **Never invent skill names.** Only use the authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries.
-- **Be explicit about lane.** Don't auto-downgrade `risky` to `standard`.
+- **Be explicit about lane.** Don't auto-downgrade `high_risk` to `normal`.
 - **Self-challenge is mandatory.** Even simple plans get a Challenge section (can be brief).
 - **API contract is the source of truth.** Once written, downstream agents follow it exactly.
 - **Never create `.gitkeep` files.** The Write tool auto-creates parent directories. Write `plan.md` directly — do not `Write .gitkeep` or `mkdir` first. Empty placeholder files are forbidden.

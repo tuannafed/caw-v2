@@ -96,42 +96,52 @@ def test_score_capped_at_100(conn):
 
 
 # ----------------------------------------------------------------- file checks
-def _make_task(conductor, name, status=None, plan_text=None):
-    d = conductor / "tasks" / name
+def _make_story(conductor, name, work=False, plan_text=None):
+    # v2 layout: docs/caw/stories/<story-id>/. Status lives in the DB, not a file,
+    # so a "work product" is the presence of code/tests/review.md.
+    d = conductor / "stories" / name
     d.mkdir(parents=True)
-    if status is not None:
-        (d / "overview.yaml").write_text(f"id: {name}\nstatus: {status}\nlane: normal\n")
+    if work:
+        (d / "code.md").write_text(f"# Code for {name}\n\nWrote the handler.\n")
     if plan_text is not None:
         (d / "plan.md").write_text(plan_text)
     return d
 
 
-def test_plandone_without_plan_scores_10(conn, tmp_path):
+def test_work_without_plan_scores_10(conn, tmp_path):
     conductor = tmp_path / "conductor"
-    _make_task(conductor, "task-001", status="plan-done")  # no plan.md
+    _make_story(conductor, "US-001-x", work=True)  # code.md but no plan.md
     score, findings = audit.run(conn, conductor_dir=str(conductor))
     assert score == 10
     f = next(f for f in findings if f["key"] == "plandone_no_plan")
-    assert "task-001" in f["details"][0]
+    assert "US-001-x" in f["details"][0]
 
 
 def test_plan_missing_spec_mandate_scores_8(conn, tmp_path):
     conductor = tmp_path / "conductor"
-    _make_task(conductor, "task-002", status="code-done",
-               plan_text="# Plan\n\nSome plan without the mandate block.\n")
+    _make_story(conductor, "US-002-y", work=True,
+                plan_text="# Plan\n\nSome plan without the mandate block.\n")
     score, findings = audit.run(conn, conductor_dir=str(conductor))
     # plan.md exists (so not plandone_no_plan) but lacks `## Spec mandate`
     assert score == 8
     f = next(f for f in findings if f["key"] == "plan_no_spec_mandate")
-    assert f["details"] == ["task-002"]
+    assert f["details"] == ["US-002-y"]
 
 
-def test_compliant_task_scores_zero(conn, tmp_path):
+def test_compliant_story_scores_zero(conn, tmp_path):
     conductor = tmp_path / "conductor"
-    _make_task(conductor, "task-003", status="code-done",
-               plan_text="# Plan\n\n## Spec mandate\n\n> quote\n")
+    _make_story(conductor, "US-003-z", work=True,
+                plan_text="# Plan\n\n## Spec mandate\n\n> quote\n")
     score, _ = audit.run(conn, conductor_dir=str(conductor))
     assert score == 0
+
+
+def test_story_nested_under_epics_is_scanned(conn, tmp_path):
+    conductor = tmp_path / "conductor"
+    _make_story(conductor, "epics/billing/US-004-w", work=True)  # no plan.md
+    score, findings = audit.run(conn, conductor_dir=str(conductor))
+    f = next(f for f in findings if f["key"] == "plandone_no_plan")
+    assert f["count"] == 1
 
 
 def test_unbounded_backlog_flagged(conn, tmp_path):
