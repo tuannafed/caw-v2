@@ -7,6 +7,37 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.6] — 2026-06-28
+
+### Changed
+- **Project rules are now the single source of truth — `conventions.md` and `project.yaml`
+  removed.** `/caw:setup` generated three overlapping project files (`project.yaml`,
+  `conventions.md`, `.claude/rules/project.md`) that duplicated each other and the project's
+  own `README.md`. Now there is **one** file, `.claude/rules/project.md`:
+  - It carries `paths:` frontmatter so Claude Code **auto-injects it on every matching code
+    edit** — agents can't skip the project's folder/naming/pattern/forbidden/domain LAW.
+  - It is **generated dynamically from a real codebase scan**: rule groups are chosen by the
+    detected stack (FE / NestJS / FastAPI / …) and contents come from patterns observed
+    repeated in the code, not canned templates. Monorepos get one rule file per area.
+  - It also folds in the **verify commands** (the coder's self-verify gate) and the
+    **Context7 library names** that previously lived in `conventions.md`.
+  - `project.yaml` was an orphan (generated every setup, read by nobody) — removed entirely,
+    along with its schema template.
+
+### Fixed
+- **Setup no longer leaks the `{{PROJECT_NAME}}` placeholder.** `AGENTS.md` and
+  `knowledge.md` are copied raw (not Write-rendered), so their title placeholder survived.
+  Setup now substitutes the detected project name (from `package.json` / `pyproject.toml` /
+  dir name) into both.
+- **Superpowers skills no longer write specs/plans outside the harness.** Running `/caw:plan`
+  could land a spec at `docs/superpowers/specs/<date>-design.md` — outside `docs/caw/`,
+  invisible to the harness — because `brainstorming` / `writing-plans` hard-code their own
+  output paths (and Superpowers auto-loads `brainstorming` even uninvited). The CLAUDE.md +
+  AGENTS.md templates and the planner now assert caw's directory contract as a
+  precedence-winning project instruction: specs/plans → `docs/caw/stories/<id>/plan.md`,
+  decisions → `docs/caw/decisions/`, state → `harness.db`; no `docs/superpowers/`, no
+  auto-commit, no approval pause.
+
 ## [2.4.5] — 2026-06-28
 
 ### Fixed
