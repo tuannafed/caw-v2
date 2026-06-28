@@ -67,15 +67,15 @@ above. Installing `caw` alone does not pull the companions.
 > limit*, never an auth error). To use your own quota:
 >
 > 1. Free key at [context7.com/dashboard](https://context7.com/dashboard).
-> 2. **Export it in your shell:** `echo 'export CONTEXT7_API_KEY=<key>' >> ~/.zshrc`,
->    then `source ~/.zshrc` and **restart Claude Code**.
-> 3. `/caw:setup` scaffolds a project `.mcp.json` whose context7 `env` reads
->    `${CONTEXT7_API_KEY}` from that shell environment.
+> 2. Paste it into the scaffolded `.mcp.json` → `mcpServers.context7.env.CONTEXT7_API_KEY`.
+> 3. **Restart Claude Code.**
 >
-> ⚠️ **Do NOT put the key in `settings.json` `env`** (top-level) — a settings env is not
-> passed to MCP subprocesses, so the key is silently ignored and Context7 stays anonymous.
-> The shell export (or a literal key in a gitignored `.mcp.json`) is the path that works.
-> The scaffolded `.mcp.json` is safe to commit — it holds a `${VAR}` reference, never the key.
+> A **literal key in `.mcp.json`** is the only place that reliably reaches the server, so
+> `/caw:setup` **gitignores `.mcp.json`** (it holds your key). Two things that look right
+> but **don't** work (verified): a key in `settings.json`/`settings.local.json` `env` — a
+> settings env is **not** passed to MCP subprocesses; and `${CONTEXT7_API_KEY}` expansion
+> in `.mcp.json` — a GUI/VSCode launch doesn't load `~/.zshrc`, so the var is empty. Never
+> commit the key.
 
 ## What's inside
 

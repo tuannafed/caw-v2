@@ -90,6 +90,33 @@ SEED="${CLAUDE_PLUGIN_ROOT}/templates/docs-caw"
 DEST="docs/caw"
 mkdir -p "$DEST/templates" "$DEST/decisions" "$DEST/advisories" "$DEST/stories/epics" "$DEST/specs"
 
+# Detect the project name once, up front — used to substitute {{PROJECT_NAME}} in the
+# raw-cp'd seeds (knowledge.md here, AGENTS.md in the next block). Prefer package.json's
+# "name" (Node), then pyproject.toml's [project] name (Python), else the repo dir name.
+# Keep it the SAME name you write into project.yaml/project.md/conventions.md. The python
+# helper is stdlib-only (the harness already requires python3).
+_CAW_NAMEPY="$(mktemp -t caw-name.XXXXXX.py)"
+cat > "$_CAW_NAMEPY" <<'PY'
+import json, os, re
+name = ""
+try:
+    with open("package.json") as f:
+        name = (json.load(f).get("name") or "").strip()
+except Exception:
+    pass
+if not name:
+    try:
+        with open("pyproject.toml") as f:
+            m = re.search(r'(?m)^\s*name\s*=\s*["\']([^"\']+)["\']', f.read())
+            name = m.group(1).strip() if m else ""
+    except Exception:
+        pass
+print(name or os.path.basename(os.getcwd()))
+PY
+PROJECT_NAME="$(python3 "$_CAW_NAMEPY" 2>/dev/null || true)"
+rm -f "$_CAW_NAMEPY"
+[[ -z "$PROJECT_NAME" ]] && PROJECT_NAME="$(basename "$PWD")"
+
 # UPPER_CASE policy docs: overwrite on --refresh, else don't clobber.
 GUARD="-n"; [[ "$REFRESH" == "1" ]] && GUARD="-f"
 for f in "$SEED"/*.md; do
@@ -100,6 +127,15 @@ for f in "$SEED"/*.md; do
     cp -n "$f" "$DEST/$base" 2>/dev/null || true       # lower seed → never clobber
   fi
 done
+
+# knowledge.md is a lower-case seed (cp'd raw, not Write-rendered), so its
+# `# Knowledge — {{PROJECT_NAME}}` title keeps the placeholder. Substitute it in
+# place — guarded on the marker so a member's edited knowledge.md is never touched.
+# (project.yaml.schema intentionally KEEPS its placeholders — it is a fill-in mthat
+# agents read; do not substitute there.)
+if grep -qF "{{PROJECT_NAME}}" "$DEST/knowledge.md" 2>/dev/null; then
+  sed -i.bak "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$DEST/knowledge.md" && rm -f "$DEST/knowledge.md.bak"
+fi
 
 # Templates + advisories: read-only too → refreshable like policy docs.
 cp $GUARD "$SEED"/templates/*.md   "$DEST/templates/"  2>/dev/null || true
@@ -123,16 +159,46 @@ Antigravity, CI) while the real binary lives in the plugin:
 ```bash
 PROJ="${CLAUDE_PLUGIN_ROOT}/templates/project"
 
+# Re-detect the project name (this is a separate bash block from the docs/caw scaffold —
+# shell vars do NOT persist across blocks, so derive it again). Same logic, same result.
+_CAW_NAMEPY="$(mktemp -t caw-name.XXXXXX.py)"
+cat > "$_CAW_NAMEPY" <<'PY'
+import json, os, re
+name = ""
+try:
+    with open("package.json") as f:
+        name = (json.load(f).get("name") or "").strip()
+except Exception:
+    pass
+if not name:
+    try:
+        with open("pyproject.toml") as f:
+            m = re.search(r'(?m)^\s*name\s*=\s*["\']([^"\']+)["\']', f.read())
+            name = m.group(1).strip() if m else ""
+    except Exception:
+        pass
+print(name or os.path.basename(os.getcwd()))
+PY
+PROJECT_NAME="$(python3 "$_CAW_NAMEPY" 2>/dev/null || true)"
+rm -f "$_CAW_NAMEPY"
+[[ -z "$PROJECT_NAME" ]] && PROJECT_NAME="$(basename "$PWD")"
+
 # Project config (do not clobber existing)
-cp -n "$PROJ/AGENTS.md"     AGENTS.md       2>/dev/null || true
+# AGENTS.md ships with a {{PROJECT_NAME}} placeholder (it is cp'd raw, not Write-rendered
+# like project.yaml/project.md), so substitute the detected name after copying. Only touch
+# a file we just created — never rewrite an AGENTS.md the member already had.
+if [[ ! -e AGENTS.md ]]; then
+  cp "$PROJ/AGENTS.md" AGENTS.md
+  sed -i.bak "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" AGENTS.md && rm -f AGENTS.md.bak
+fi
 cp -n "$PROJ/.claudeignore" .claudeignore   2>/dev/null || true
 cp -n "$PROJ/gitleaks.toml" gitleaks.toml   2>/dev/null || true
 # .mcp.json: project-level override so the Context7 API key actually reaches the
-# server (the plugin's context7 MCP has no env block, and a top-level settings.json
-# `env` is NOT documented to propagate into MCP subprocesses). Safe to commit — it
-# holds a ${CONTEXT7_API_KEY:} reference, never the key. The member sets the real key
-# via `export CONTEXT7_API_KEY=…` in their shell rc (NOT a settings.json env — that
-# is not passed to MCP subprocesses).
+# server. VERIFIED reality: settings.json `env` does NOT reach MCP subprocesses, and
+# ${VAR} expansion here is unreliable (a GUI/VSCode launch doesn't load ~/.zshrc, so
+# the var is empty). The only reliable place is a LITERAL key in this file's env block
+# — so .mcp.json is treated as SECRET and gitignored (below). Scaffolded with an empty
+# key (= anonymous tier); the member pastes their key from context7.com/dashboard.
 cp -n "$PROJ/.mcp.json"     .mcp.json       2>/dev/null || true
 # settings.json: drop a SAMPLE next to the live file (never overwrite an
 # existing .claude/settings.json — it carries the member's own permissions/env).
@@ -254,7 +320,9 @@ chmod +x scripts/caw/bin/harness-cli
 
 # Gitignore the machine-local artifacts. Be SURGICAL: harness.db is per-machine
 # state and .claude/settings.json carries the member's own permissions/env — those
-# stay local. But .claude/rules/ (coding rules) and .claude/agent-memory/ (project
+# stay local. .mcp.json holds the literal CONTEXT7_API_KEY (the only reliable place
+# for it — see that file's note), so it is per-machine/SECRET and must never be
+# committed. But .claude/rules/ (coding rules) and .claude/agent-memory/ (project
 # memory) are TEAM-SHARED and must be committed, so don't ignore all of .claude/.
 # Idempotent — only appends the block if it isn't already there.
 if ! grep -q "# >>> caw (machine-local) >>>" .gitignore 2>/dev/null; then
@@ -267,10 +335,11 @@ harness.db-shm
 .claude/settings.json
 .claude/settings.local.json
 .claude/settings.json.sample
+.mcp.json
 # (committed, team-shared: .claude/rules/, .claude/agent-memory/, .claude/project.yaml)
 # <<< caw (machine-local) <<<
 GITIGNORE
-  echo "✓ .gitignore updated (harness.db + .claude/settings*.json are machine-local)"
+  echo "✓ .gitignore updated (harness.db, .claude/settings*.json, .mcp.json are machine-local)"
 fi
 
 # Coding rules → .claude/rules/ for NATIVE lazy-load. Claude Code auto-injects a
@@ -293,7 +362,8 @@ echo "✓ coding rules scaffolded to .claude/rules/ (lazy-load via paths: frontm
 
 > The wrapper at `scripts/caw/bin/harness-cli`, the `docs/caw/` seeds, and the
 > `.claude/rules/` coding rules ARE meant to be committed (shared project config);
-> only `harness.db` and `.claude/settings*.json` are machine-local (gitignored above).
+> `harness.db`, `.claude/settings*.json`, and `.mcp.json` (holds the literal Context7
+> key) are machine-local/secret and gitignored above.
 
 > **Note on `CLAUDE_PLUGIN_ROOT` in the wrapper:** that env var is set when Claude
 > Code invokes a hook/command, so the wrapper resolves correctly in-session. Outside
@@ -542,26 +612,27 @@ Generated:
   ✓ docs/caw/conventions.md
   ✓ .claude/project.yaml
   ✓ .claude/rules/project.md
-  ✓ .mcp.json (Context7 key override)
+  ✓ .mcp.json (Context7 server override — gitignored, holds your key)
 
 Context7 (optional — for your own rate-limit quota):
   Context7 runs on the free anonymous tier by default — fine for normal use; you
-  only hit a rate limit (not an auth error) under heavy use. To use your own quota:
+  only ever hit a rate limit (never an auth error). To use your own quota:
     1. Get a free key: https://context7.com/dashboard
-    2. Export it in your shell  →  echo 'export CONTEXT7_API_KEY=<key>' >> ~/.zshrc
-       then  source ~/.zshrc  and RESTART Claude Code.
-    3. The scaffolded .mcp.json reads ${CONTEXT7_API_KEY} from that shell env.
-  ⚠️ Do NOT put the key in settings.json `env` — a top-level env is not passed to the
-     Context7 MCP server, so the key would be silently ignored (Context7 stays anonymous).
+    2. Paste it into .mcp.json → mcpServers.context7.env.CONTEXT7_API_KEY
+    3. RESTART Claude Code.
+  .mcp.json is gitignored (it holds the literal key) — that is the ONLY reliable place.
+  ⚠️ Do NOT put the key in settings.json/settings.local.json `env` (not passed to MCP
+     subprocesses) and do NOT rely on a ${CONTEXT7_API_KEY} shell var in .mcp.json (a
+     GUI/VSCode launch doesn't load ~/.zshrc, so it's empty). A literal key is the way.
 
 Next: /caw:plan "<feature description>"
 ```
 
-> **When reporting the Context7 line, check the live shell env:** if `CONTEXT7_API_KEY`
-> is already set, print `✓ Context7: using your API key`. If it's empty, print the
-> 3-step block above so the user knows how to add one (and that anonymous is OK). If the
-> user mentions they put a key in `settings.json`, warn them it won't reach the MCP server
-> and point them to the shell-export path instead.
+> **When reporting the Context7 line:** read `.mcp.json` → `mcpServers.context7.env.CONTEXT7_API_KEY`.
+> If non-empty, print `✓ Context7: using your API key`. If empty, print the 3-step block
+> above (and note anonymous is fine). If the user says they put the key in
+> `settings.json`/`settings.local.json` or used a `${VAR}` in `.mcp.json`, warn it won't
+> reach the server and point them to the literal-key-in-.mcp.json path. Never echo the key.
 
 ## Constraints
 

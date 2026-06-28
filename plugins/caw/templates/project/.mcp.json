@@ -1,11 +1,11 @@
 {
-  "// note": "Project-level MCP override. This REPLACES the context7 plugin's MCP server definition so the Context7 API key actually reaches the server (the plugin ships context7 with NO env block). The key is read from ${CONTEXT7_API_KEY} below, which Claude Code expands from your SHELL ENVIRONMENT at launch. TO SET IT: `export CONTEXT7_API_KEY=<key>` in ~/.zshrc (or ~/.bashrc), then restart Claude Code. DO NOT put the key in settings.json `env` — a top-level settings env is NOT passed to MCP subprocesses, so it is silently ignored and Context7 stays on the anonymous tier. SAFE TO COMMIT: this file holds a ${VAR} reference, never the key. Unset key → the ${CONTEXT7_API_KEY:} empty default falls back cleanly to the anonymous tier (free, just lower rate limits).",
+  "// note": "Project MCP config — overrides the context7 plugin server so the Context7 API key reaches it. VERIFIED the hard way: (1) a key in settings.json/settings.local.json `env` does NOT reach MCP subprocesses; (2) ${CONTEXT7_API_KEY} expansion here is UNRELIABLE because a GUI/VSCode launch doesn't load your shell rc (~/.zshrc), so the var is often empty. The only reliable place is a LITERAL key in this env block — it becomes the MCP server process's real environment. THEREFORE: paste your key below AND keep this file gitignored (/caw:setup adds it to .gitignore). Get a free key at context7.com/dashboard. Leave the empty string to stay on Context7's anonymous tier (free; only rate-limited). NEVER commit a real key.",
   "mcpServers": {
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"],
       "env": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:}"
+        "CONTEXT7_API_KEY": ""
       }
     }
   }
