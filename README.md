@@ -70,7 +70,7 @@ Commit a `.claude/settings.json` into your project so members are **prompted to 
 ## Usage
 
 ```
-/caw:setup                 # detect stack, scaffold docs/caw seeds, verify harness, write conventions.md + project rule file(s)
+/caw:setup                 # detect stack, scaffold docs/caw seeds, verify harness, write the project rule file(s)
 /caw:plan "<description>"   # generate a Plan (spec + API contract + phases + self-challenge + lane)
 /caw:code <id> --all       # implement all phases (parallel where the plan allows)
 /caw:verify <id>           # test + review in parallel
@@ -122,7 +122,7 @@ There is no more `caw init` / `caw upgrade` / `caw remove` / `caw sync`, no `set
 
 | Stage | Purpose | Agent |
 | --- | --- | --- |
-| **Setup** | One-time: detect stack, scaffold `docs/caw` seeds, verify harness, write `conventions.md` + project rule file(s) | setup |
+| **Setup** | One-time: detect stack, scaffold `docs/caw` seeds, verify harness, write the project rule file(s) | setup |
 | **Plan** | Spec, API contract, phases, self-challenge, lane | planner |
 | **Code** | Implement one phase at a time, loading skills as needed | coder |
 | **Test** | Lane-driven tests (red + green where required) | tester |

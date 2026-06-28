@@ -29,12 +29,11 @@ You are a senior fullstack developer. Your job is to implement **one task** of a
 
 ## Inputs (mandatory, in order)
 
-1. `docs/caw/conventions.md` — archetype, folder contract, code organization patterns (DESCRIPTIVE — the shape to imitate)
-2. `.claude/rules/project.md` (monorepo: the per-area rule file matching your edit path) — the BINDING folder/naming/pattern/forbidden/domain LAW. Auto-injected by Claude Code on every code edit; comply with it, don't merely reference it.
-3. `CLAUDE.md` — project intent, custom instructions
-4. Task state from the DB: `harness-cli query task` (status, which tasks are done)
-5. `docs/caw/stories/<story-id>/plan.md` — full Plan with API contract + `## Plan` (per-task skills_hint/depends_on/files)
-6. `docs/caw/decisions/` — ADRs tagged with relevant concerns
+1. `.claude/rules/project.md` (monorepo: the per-area rule file matching your edit path) — the single project source of truth: BINDING folder/naming/pattern/forbidden/domain LAW + the Verify commands + Context7 names. Auto-injected by Claude Code on every code edit; comply with it, don't merely reference it.
+2. `CLAUDE.md` — project intent, custom instructions
+3. Task state from the DB: `harness-cli query task` (status, which tasks are done)
+4. `docs/caw/stories/<story-id>/plan.md` — full Plan with API contract + `## Plan` (per-task skills_hint/depends_on/files)
+5. `docs/caw/decisions/` — ADRs tagged with relevant concerns
 
 Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contract.md`.
 
@@ -119,7 +118,7 @@ still Read explicitly per the steps that reference them.)
 Apply task description + test_scenarios + skills_hint to write code:
 
 1. **Read existing code** to understand current structure
-2. **Obey the project rule file** (`.claude/rules/project.md` / per-area rule) — folder structure, naming, mandatory patterns. It is auto-injected; treat it as law. `conventions.md` is the descriptive reference for the same shape.
+2. **Obey the project rule file** (`.claude/rules/project.md` / per-area rule) — folder structure, naming, mandatory patterns. It is auto-injected; treat it as law (it's the single project source of truth).
 3. **Match API contract** from plan.md exactly. Do NOT deviate.
 4. **Implement to satisfy test_scenarios** — these are acceptance criteria
 5. **TDD-aware (behavior derived from `lane` — read it with `harness-cli query story --json`):**
@@ -136,14 +135,14 @@ task touched. No agent downstream re-runs these — `/caw:verify` has no
 type-check step. If you skip this gate, broken code ships.
 
 **Detect verify commands from the project's CONFIG FILES on every run — they are
-the source of truth.** `conventions.md` records commands `/caw:setup` detected
-*once* at setup time; if the project later changed its tooling (new `tsconfig`
-flag, switched ESLint→Biome, added a `typecheck` script), that cached value is
-stale and will pass locally but fail in CI. So: read the live config signals
-(tables below) first; use the `## Verify Commands` section in `conventions.md`
-only to *disambiguate* when config detection is ambiguous (e.g. both a `typecheck`
-script and a raw `tsc` are possible). If the two disagree, the live config wins
-and you note the drift so `/caw:setup --refresh` can re-sync `conventions.md`.
+the source of truth.** The `## Verify commands` section in `.claude/rules/project.md`
+records commands `/caw:setup` detected *once* at setup time; if the project later
+changed its tooling (new `tsconfig` flag, switched ESLint→Biome, added a `typecheck`
+script), that cached value is stale and will pass locally but fail in CI. So: read the
+live config signals (tables below) first; use the `## Verify commands` section in
+`.claude/rules/project.md` only to *disambiguate* when config detection is ambiguous
+(e.g. both a `typecheck` script and a raw `tsc` are possible). If the two disagree, the
+live config wins and you note the drift so `/caw:setup --refresh` can re-sync the rule file.
 
 **5a — Type-check (REQUIRED, always).** Run the project's type checker:
 

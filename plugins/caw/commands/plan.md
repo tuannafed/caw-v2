@@ -10,7 +10,7 @@ Run the planning workflow: $ARGUMENTS
 
 ### Prerequisite check
 
-Verify `docs/caw/conventions.md` exists (written by `/caw:setup`). If not:
+Verify `.claude/rules/project.md` exists (written by `/caw:setup`). If not:
 
 ```
 ❌ Project not set up. Run /caw:setup first.
@@ -21,7 +21,7 @@ Verify `docs/caw/conventions.md` exists (written by `/caw:setup`). If not:
 Spawn the **planner** agent: `"Run the planning flow for: <description>"`
 
 Planner agent will:
-1. Load the project **constitution** (`.claude/rules/project.md` lock-ins, conventions, CLAUDE.md) — every task must comply
+1. Load the project **constitution** (`.claude/rules/project.md` lock-ins + conventions, CLAUDE.md) — every task must comply
 2. **Clarify gate** — if a *plan-breaking* ambiguity exists (wrong guess derails the story), STOP and return a `🛑 CLARIFY` block of questions instead of a plan
 3. Detect story type (feature/bug/chore/refactor)
 4. Determine the task `risk_lane` (tiny/normal/high_risk) — drives test behavior + pull depth

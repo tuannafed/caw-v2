@@ -102,7 +102,7 @@ caw no longer vendors framework/library skills. Use these alongside `caw`:
 ## Usage
 
 ```
-/caw:setup                 # detect stack, verify harness, write conventions.md + project rule file(s)
+/caw:setup                 # detect stack, verify harness, write the project rule file(s)
 /caw:plan "<description>"   # generate a Plan
 /caw:code <id> --all       # implement all tasks
 /caw:verify <id>           # test + review in parallel

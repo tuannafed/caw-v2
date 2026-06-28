@@ -6,8 +6,7 @@ PURPOSE
   are NOT obvious from the code itself: gotchas, domain rules, external
   integration quirks, and lessons learned across tasks.
 
-  Conventions go in `docs/caw/conventions.md` (style/architecture).
-  Rules go in `.claude/rules/` (non-overridable).
+  Conventions + rules go in `.claude/rules/project.md` (the single project source of truth).
   This file is for **discovered knowledge** the next agent should remember.
 
 WHO WRITES HERE

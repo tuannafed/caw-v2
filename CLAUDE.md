@@ -93,7 +93,7 @@ plugins/caw/                    # THE plugin
                  #   tests/ → pytest suite for the harness (CI runs this)
   templates/     # files /caw:setup scaffolds into a member project:
                  #   docs-caw/ → project docs/caw/ (policy docs, ADR/intake templates,
-                 #               conventions.md/knowledge.md seeds, advisories)
+                 #               knowledge.md seed, advisories)
                  #   project/  → AGENTS.md, CLAUDE.md (@-import), gitleaks.toml,
                  #               .claudeignore, settings.json
   README.md
@@ -130,7 +130,7 @@ activates (a CC bug disables it otherwise).
 
 | Agent | Stage | Purpose |
 |---|---|---|
-| `setup` | Bootstrap | Detect stack, verify the harness, generate conventions.md + project rule file(s) (`.claude/rules/project.md`, monorepo → one per area) |
+| `setup` | Bootstrap | Detect stack, verify the harness, generate the project rule file(s) (`.claude/rules/project.md`, monorepo → one per area — the single project source of truth: LAW + verify commands + Context7 names) |
 | `planner` | Constitution + Clarify + Plan | Loads project constitution (lock-ins), clarify-gates plan-breaking ambiguity (blocks with questions vs guessing), then spec, API contract, tasks (test_scenarios + skills_hint), self-challenge (incl. constitution compliance), lane |
 | `coder` | Code (per task) | Implement one task at a time. Loads skills via `Skill` from the task's `skills_hint`. Generic across stack. |
 | `tester` | Test | Test mode derived from Plan's `lane`: tiny=skip / standard=backend-only / risky=all (red+green). Mobile = unit tests only. |
@@ -312,15 +312,17 @@ Don't author a skill — use **Context7** (live docs, no static catalog to maint
   through this variable, never hardcoded absolute paths.
 - **Marketplace ref tracks `main`** — pushing to `main` ships the release; members
   pull it via `/plugin marketplace update`. Pin a tag/SHA only for a frozen install.
-- **`conventions.md`** (scaffolded into projects, not this repo) is the source of
-  truth for project-specific archetype + patterns; every code-writing agent reads it
-  before proposing architecture.
+- **`.claude/rules/project.md`** (scaffolded into projects, not this repo) is the
+  single project source of truth for project-specific archetype, folder/naming/pattern
+  LAW, forbidden patterns, domain rules, **plus** verify commands + Context7 names. It
+  carries `paths:` frontmatter so Claude Code auto-injects it on every matching code
+  edit. There is no separate `conventions.md` (folded in to avoid duplication).
 - **docs/caw file naming** — `UPPER_CASE.md` = read-only guide/policy (agent only
   reads it; identical across projects). `lower-case.md` = fill-in: format templates
   (`templates/docs-caw/templates/{adr,intake}.md` → `docs/caw/templates/`) or seed
-  prose the project writes into (`conventions.md`, `knowledge.md`,
-  `harness-backlog.md`). `README.md` is the universal UPPER exception. When adding a
-  doc: agent only reads it → UPPER; project writes into it → lower.
+  prose the project writes into (`knowledge.md`, `harness-backlog.md`). `README.md` is
+  the universal UPPER exception. When adding a doc: agent only reads it → UPPER;
+  project writes into it → lower.
 
 ## Backlog Viewer (tools/backlog)
 

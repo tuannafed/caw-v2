@@ -26,7 +26,7 @@ containing, for each major task, a **verbatim quote** from the source spec with
 **Lookup helper (if the project has a spec index):** Many projects keep a spec *index*
 (one line per section + line range) so the planner reads ~150 cheap lines to find which
 section backs a task, then reads only that range from the full spec to copy the verbatim
-quote. If your project has one, cite the index path in `conventions.md` and use it; don't
+quote. If your project has one, cite the index path in `.claude/rules/project.md` and use it; don't
 load the whole spec to write one plan.
 
 Each item in `## Spec mandate` falls into exactly one of three classifications:

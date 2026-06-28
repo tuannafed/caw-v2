@@ -48,7 +48,7 @@ A bug found during smoke is a `BLOCKER`: fix and re-smoke before commit.
 ## The smoke checklist (≈5 minutes after verify approves)
 
 Run each step explicitly. Any failure → STOP, treat as BLOCKER. Adapt the commands to your stack
-(your project's `conventions.md` should record the exact ones).
+(your project's `.claude/rules/project.md` should record the exact ones).
 
 ### 1. Database — migrations + seed apply clean (LOCAL only)
 Reset the local DB only when the task touched a migration, a schema column, or the seed file.

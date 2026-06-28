@@ -23,7 +23,7 @@ prose** an agent reads to decide *how* to work.
 | --- | --- | --- | --- |
 | `CLAUDE.md` / `AGENTS.md` | Must | Must | Must |
 | `harness-cli query intake` / `query matrix` | Must | Must | Must |
-| `conventions.md` | Should | Must | Must |
+| `.claude/rules/project.md` (auto-injects on code edits; read explicitly at intake/plan time) | Should | Must | Must |
 | `rules/common/spec-traceability.md` | Skip | Must | Must |
 | relevant ADRs (`query decision` + `decisions/*.md` content) | Skip | Should | Must |
 
@@ -65,5 +65,6 @@ lane tier. high_risk needs `detailed` (decisions_made, errors, duration, tokens)
 
 repository-harness ships an `ARCHITECTURE.md` for greenfield "no stack chosen
 yet" projects. caw installs **into an existing project** with a detected stack, so
-architecture context comes from the project's own `conventions.md` + detected
-`skill-map.yaml`, not a generic doc. Record stack-constraining choices as ADRs.
+architecture context comes from the project's own `.claude/rules/project.md`
+(generated from a codebase scan), not a generic doc. Record stack-constraining
+choices as ADRs.

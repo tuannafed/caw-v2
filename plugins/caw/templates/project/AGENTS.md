@@ -16,7 +16,7 @@ This repo uses the caw (Claude Agent Workflow) harness. Before work, read:
 - `docs/caw/ARCHITECTURE.md`
 - `docs/caw/CONTEXT_RULES.md`
 - `docs/caw/TOOL_REGISTRY.md`
-- `docs/caw/conventions.md` — project-specific archetype + patterns
+- `.claude/rules/project.md` — the single project source of truth (archetype, folder/naming/pattern LAW, forbidden, domain, verify commands, Context7 names)
 - `scripts/caw/bin/harness-cli query matrix` — current story/task state
 
 Use the harness CLI at `scripts/caw/bin/harness-cli` (Python 3, stdlib-only —

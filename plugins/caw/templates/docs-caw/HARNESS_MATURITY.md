@@ -17,7 +17,7 @@ classify, validate, or record work.
 ### H1 — Scaffolding & policy
 Static operating instructions, templates, risk lanes, source-of-truth rules.
 Agents follow a documented workflow; durable state may still be manual.
-- Criteria: `rules/common/harness-contract.md`, the 5 agents, `conventions.md`,
+- Criteria: `rules/common/harness-contract.md`, the 5 agents, `.claude/rules/project.md`,
   task templates exist. (caw v1 lives here.)
 
 ### H2 — Specification layer

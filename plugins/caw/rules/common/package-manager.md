@@ -8,7 +8,7 @@ paths:
 
 **Layer:** rules — non-negotiable project-wide conventions
 **Used by:** Setup agent, Coder, Tester, Reviewer — every agent that installs, updates, or reviews Node.js dependencies.
-**Note:** These are *rules*, not patterns. They cannot be overridden by `conventions.md`.
+**Note:** These are *rules*, not patterns. They cannot be overridden by `.claude/rules/project.md`.
 
 ---
 

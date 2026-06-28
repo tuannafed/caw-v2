@@ -30,7 +30,7 @@ WEIGHTS = {
     "open_proposals": 1,         # backlog items proposed but never accepted/rejected
 }
 
-BACKLOG_LINE_LIMIT = 250  # bounded-growth guard; tune in conventions.md
+BACKLOG_LINE_LIMIT = 250  # bounded-growth guard; tune in .claude/rules/project.md
 
 
 def _finding(count, key, label, details):

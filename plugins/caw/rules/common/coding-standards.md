@@ -20,7 +20,7 @@ above drives the conditional load — native to Claude Code at `.claude/rules/`)
 **Scope:** universal rules that apply in any language. TS/JS-specific style
 (types, `any`, React props) lives in [`typescript/coding-style.md`](../typescript/coding-style.md)
 which loads on `.ts`/`.tsx`/`.js`/`.jsx`.
-**Note:** These are *rules*, not patterns. They cannot be overridden by `conventions.md`.
+**Note:** These are *rules*, not patterns. They cannot be overridden by `.claude/rules/project.md`.
 
 ---
 

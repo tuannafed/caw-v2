@@ -38,7 +38,7 @@ For mobile tasks: **unit tests only** (Jest + @testing-library/react-native). No
 
 ## Inputs
 
-1. `docs/caw/conventions.md` — testing conventions, framework setup
+1. `.claude/rules/project.md` — testing conventions, framework setup, and the `## Verify commands` (the test command to run)
 2. Task `lane` + task status from the DB: `harness-cli query story` / `query task`
 3. `docs/caw/stories/<story-id>/plan.md` — tasks with test_scenarios
 4. Coverage matrix from the DB: `harness-cli query matrix` (generated view)
@@ -185,7 +185,7 @@ Next: /caw:review <story-id>
 
 When a test fails in green mode, **diagnose and fix it yourself** — you already
 hold `Edit` and the full task context. Spawning a fresh coder agent per failure
-reloads conventions.md + CLAUDE.md + plan.md + skills every round; that restart
+reloads project.md + CLAUDE.md + plan.md + skills every round; that restart
 cost, not the runner, is what makes the fix loop slow.
 
 Decide where the bug is, then act:
@@ -401,7 +401,7 @@ This makes the link from Plan → tests obvious.
 - **Default to SKIP component tests for frontend tasks.** Write hook/util/store/schema tests instead — they're 10x faster and catch the same bugs. Component tests only when explicitly mandated AND when following `caw:react-component-testing` skill patterns (hoisted QueryClient, no factory-per-render, `userEvent.setup({ delay: null })`).
 - **Don't mock things you can integration-test cheaply.** Use real DB for integration.
 - **Don't write tests for trivial getters/setters.** Focus on test_scenarios.
-- **Follow conventions.md test patterns.** Don't invent new test layouts.
+- **Follow the project rule file's test conventions.** Don't invent new test layouts.
 - **Mobile = unit only.** No E2E for RN, ever.
 - **Verify tests run.** Never report "tests written" without confirming they execute.
 

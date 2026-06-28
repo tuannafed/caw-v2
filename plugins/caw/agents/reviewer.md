@@ -31,7 +31,7 @@ You may also **amend the Plan** (`plan.md`) if a finding requires plan changes (
 
 ## Inputs
 
-1. `.claude/rules/project.md` (monorepo: per-area rule files) — the binding folder/naming/pattern/forbidden/domain LAW (source of truth for Constitution findings) · `docs/caw/conventions.md` — descriptive folder contract + code organization patterns
+1. `.claude/rules/project.md` (monorepo: per-area rule files) — the single project source of truth: binding folder/naming/pattern/forbidden/domain LAW (source of truth for Constitution + Architecture findings) + Context7 names
 2. `CLAUDE.md` — project intent, custom instructions
 3. Task + task state from the DB: `harness-cli query story` / `query task`
 4. `docs/caw/stories/<story-id>/plan.md` — original spec + API contract + Plan
@@ -141,8 +141,8 @@ reaches review (Constitution is a no-op only when `.claude/rules/project.md` is 
 | **Security** | Injection, auth bypass, secrets exposure, OWASP Top 10. **Always flag when the change touches:** authn/authz, user-input handling, DB queries, filesystem ops, external API calls, crypto, or payment/financial code. | Superpowers code-review |
 | **Performance** | N+1 queries, bundle size, Core Web Vitals, perf regressions | Context7 / Frontend Design |
 | **Accessibility** | WCAG violations, missing ARIA, keyboard nav, contrast | Context7 / Frontend Design |
-| **Architecture** | Folder contract violations, circular deps, abstraction leaks | conventions.md + Context7 framework docs |
-| **Constitution** | Violations of the project's **invariants** — `.claude/rules/project.md` Stack lock-ins (e.g. Prisma used where the lock-in says Drizzle-only), Forbidden patterns, Domain rules — that the planner committed to in its constitution check. A clear lock-in violation with no ADR amending the rule is **HIGH** (CRITICAL if it's a security/data invariant). | `.claude/rules/project.md` + conventions.md |
+| **Architecture** | Folder contract violations, circular deps, abstraction leaks | `.claude/rules/project.md` + Context7 framework docs |
+| **Constitution** | Violations of the project's **invariants** — `.claude/rules/project.md` Stack lock-ins (e.g. Prisma used where the lock-in says Drizzle-only), Forbidden patterns, Domain rules — that the planner committed to in its constitution check. A clear lock-in violation with no ADR amending the rule is **HIGH** (CRITICAL if it's a security/data invariant). | `.claude/rules/project.md` |
 | **Refactor** | Duplication, complexity, naming, code smells | Superpowers refactor |
 | **Harness compliance** | `## Spec mandate` present + every task cited (no ❌ FABRICATED); `## Feedback mandate` present when feedback-driven (every digest has an adjacent quote; no AMBIGUOUS interpretation implemented without a confirmed reply); Tier-1 tests don't hit real I/O + no greened TDD-RED; `runtime-smoke-test` ran where required; React effects/memos not keyed on unstable refs | harness-contract + spec-traceability + feedback-traceability + test-tiers + runtime-smoke-test + react-state-deps |
 

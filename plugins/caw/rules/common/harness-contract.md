@@ -13,7 +13,7 @@ caw v2 splits every artifact by who reads it (ADR-0001):
   status, traces, interventions. **Never** record this in markdown.
 - **PROSE → markdown** (read/write as files). Human-read rationale that does not
   change on every action: ADR *content*, `plan.md` approach, `code/tests/review.md`
-  narrative, `conventions.md`, `knowledge.md`, rules.
+  narrative, `.claude/rules/project.md`, `knowledge.md`, rules.
 
 | Information | Where | Command / file |
 | --- | --- | --- |
@@ -42,8 +42,8 @@ State is pulled with `harness-cli query …`; prose is read from markdown.
 | Agent      | Pull STATE (harness-cli) | Pull PROSE (markdown) |
 | ---------- | --- | --- |
 | `setup`    | — | `CLAUDE.md` |
-| `planner`  | `query intake`, `query matrix`, `query decision` | `CLAUDE.md`, `conventions.md`, `decisions/*.md` (ADR content), [`spec-traceability.md`](./spec-traceability.md) |
-| `coder`    | `query story`/`query task` (status), `query decision` | `conventions.md`, `plan.md`, relevant `decisions/*.md`; tests touch I/O → [`test-tiers.md`](./test-tiers.md); React UI → [`react-state-deps.md`](../react/react-state-deps.md) |
+| `planner`  | `query intake`, `query matrix`, `query decision` | `CLAUDE.md`, `.claude/rules/project.md`, `decisions/*.md` (ADR content), [`spec-traceability.md`](./spec-traceability.md) |
+| `coder`    | `query story`/`query task` (status), `query decision` | `.claude/rules/project.md`, `plan.md`, relevant `decisions/*.md`; tests touch I/O → [`test-tiers.md`](./test-tiers.md); React UI → [`react-state-deps.md`](../react/react-state-deps.md) |
 | `tester`   | `query task` (this task's proof state), `query matrix` | `plan.md` (test_scenarios), [`test-tiers.md`](./test-tiers.md) |
 | `reviewer` | `query story`/`query task`, `story gate`, `query decision` | `plan.md`, `code.md`, `tests.md`, `decisions/*.md`, [`spec-traceability.md`](./spec-traceability.md), [`test-tiers.md`](./test-tiers.md), [`runtime-smoke-test.md`](./runtime-smoke-test.md); React UI → [`react-state-deps.md`](../react/react-state-deps.md) |
 
@@ -81,7 +81,7 @@ Create an ADR when ANY of these is true:
 - A stack, framework, library, or external provider is selected.
 
 Do NOT create an ADR for: cosmetic naming, routine within-task decisions (which
-file a helper goes in), or choices fully derived from `conventions.md`.
+file a helper goes in), or choices fully derived from `.claude/rules/project.md`.
 
 ## Lane-gated pull depth
 
@@ -106,9 +106,9 @@ trigger. They encode hard-won failure modes; skipping a triggered rule is a revi
 | [`runtime-smoke-test.md`](./runtime-smoke-test.md) | Lane is `normal`/`high_risk` **and** the task touches HTTP routes, DB schema, edge/worker code, env config, or response schemas. | planner (add task), coder (execute), reviewer (verify it ran) |
 | [`react-state-deps.md`](../react/react-state-deps.md) | The project uses React **and** the task changes a component with `useEffect`/`useMemo`/`useCallback`. | coder, reviewer |
 
-A project's `conventions.md` records the stack-specific specifics each rule needs (the smoke
-boot/curl commands, the test-tier file-suffix convention, the spec-index path). The rules carry
-the universal discipline; `conventions.md` carries the project shape.
+A project's `.claude/rules/project.md` records the stack-specific specifics each rule needs (the
+smoke boot/curl commands, the test-tier file-suffix convention, the spec-index path). The
+generic rules carry the universal discipline; `.claude/rules/project.md` carries the project shape.
 
 ## ADR numbering
 

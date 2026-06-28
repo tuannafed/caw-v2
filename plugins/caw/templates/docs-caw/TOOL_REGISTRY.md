@@ -44,7 +44,7 @@ scripts/caw/bin/harness-cli tool remove --name "db:generate"
 Register a tool when:
 
 - An agent will need to invoke a project-specific command it can't infer from
-  `conventions.md` (a non-obvious generator, a custom verifier, a data seeder).
+  `.claude/rules/project.md` (a non-obvious generator, a custom verifier, a data seeder).
 - A `verify_command` on a task points at a project tool — register the tool
   so the command is documented, not just inlined.
 - The same manual command is typed across tasks — register it once.
