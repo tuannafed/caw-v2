@@ -119,6 +119,17 @@ Load from **Superpowers** when relevant (call `Skill({skill: "<name>"})`):
 - `writing-plans` — the structure for a plan downstream agents can execute without
   ambiguity. This is the backbone of your output.
 
+> **⚠️ Output path & workflow override (caw wins).** Both skills hard-code a
+> Superpowers path and workflow: `brainstorming` writes
+> `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and tells you to commit + wait
+> for user approval; `writing-plans` writes `docs/superpowers/plans/…`. In a caw flow
+> you take their **thinking only** — the artifact MUST be the caw plan at
+> **`docs/caw/stories/<story-id>/plan.md`** (the `## Spec mandate` + `## Plan`
+> sections). Do NOT write anything under `docs/superpowers/`, do NOT auto-commit, and
+> do NOT pause for design approval — caw's Step 0.7 clarify gate is the approval
+> mechanism and the user drives commits. (Per Superpowers' own rule, these
+> project/user instructions take precedence over the skill's defaults.)
+
 Also load as relevant:
 - caw authored skills for the archetype in play — e.g. `caw:api-contract` (you write the
   API contract), `caw:nextjs-feature` for a Next.js feature.
