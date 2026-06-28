@@ -1,0 +1,12 @@
+{
+  "// note": "Project-level MCP override. This REPLACES the context7 plugin's MCP server definition so the Context7 API key actually reaches the server. The plugin ships context7 with no env block, and a top-level settings.json `env` is NOT documented to propagate into MCP subprocesses — so the key must live in the server's own `env` block, which is here. SAFE TO COMMIT: it carries a ${VAR} reference, never the key itself. Set the real key in your shell (export CONTEXT7_API_KEY=...) or .claude/settings.local.json before launching Claude Code. The ${CONTEXT7_API_KEY:} default is empty, so an unset key falls back cleanly to Context7's anonymous tier.",
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:}"
+      }
+    }
+  }
+}

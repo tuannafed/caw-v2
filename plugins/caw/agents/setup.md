@@ -127,6 +127,12 @@ PROJ="${CLAUDE_PLUGIN_ROOT}/templates/project"
 cp -n "$PROJ/AGENTS.md"     AGENTS.md       2>/dev/null || true
 cp -n "$PROJ/.claudeignore" .claudeignore   2>/dev/null || true
 cp -n "$PROJ/gitleaks.toml" gitleaks.toml   2>/dev/null || true
+# .mcp.json: project-level override so the Context7 API key actually reaches the
+# server (the plugin's context7 MCP has no env block, and a top-level settings.json
+# `env` is NOT documented to propagate into MCP subprocesses). Safe to commit — it
+# holds a ${CONTEXT7_API_KEY:} reference, never the key. The member sets the real key
+# via `export CONTEXT7_API_KEY=…` or .claude/settings.local.json.
+cp -n "$PROJ/.mcp.json"     .mcp.json       2>/dev/null || true
 # settings.json: drop a SAMPLE next to the live file (never overwrite an
 # existing .claude/settings.json — it carries the member's own permissions/env).
 # The member reviews and merges it (it enables plugins + sets the allowlist).

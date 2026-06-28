@@ -52,7 +52,8 @@ def check_versions(problems):
 def check_json(problems):
     for rel in (".claude-plugin/marketplace.json",
                 "plugins/caw/.claude-plugin/plugin.json",
-                "plugins/caw/templates/project/settings.json"):
+                "plugins/caw/templates/project/settings.json",
+                "plugins/caw/templates/project/.mcp.json"):
         try:
             json.loads((REPO / rel).read_text())
         except (json.JSONDecodeError, OSError) as e:

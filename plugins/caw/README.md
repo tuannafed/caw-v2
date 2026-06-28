@@ -63,10 +63,14 @@ file is prompted to install the whole stack and does **not** need the manual com
 above. Installing `caw` alone does not pull the companions.
 
 > **Context7 API key (teams).** Context7 is an MCP server; without a key it uses a
-> shared anonymous rate-limit tier. Set `CONTEXT7_API_KEY` (free at
-> [context7.com/dashboard](https://context7.com/dashboard)) for your own quota. The
-> settings template has an empty `CONTEXT7_API_KEY` env slot — fill it locally, never
-> commit a real key.
+> shared anonymous rate-limit tier. The key is read by the **context7 MCP server**, so it
+> must live in that server's `env` block — `/caw:setup` scaffolds a project `.mcp.json`
+> that overrides the plugin's context7 definition with `"env": { "CONTEXT7_API_KEY":
+> "${CONTEXT7_API_KEY:}" }`. Get a free key at
+> [context7.com/dashboard](https://context7.com/dashboard), then provide it via your shell
+> (`export CONTEXT7_API_KEY=…`) or `.claude/settings.local.json` — **not** a top-level
+> `settings.json` `env`, which is not documented to reach MCP subprocesses. The `.mcp.json`
+> is safe to commit (it holds a `${VAR}` reference, never the key); never commit the key.
 
 ## What's inside
 

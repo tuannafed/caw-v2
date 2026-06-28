@@ -23,7 +23,7 @@
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "80",
     "CAW_HOOK_PROFILE": "standard",
-    "// CONTEXT7_API_KEY note": "Leave empty to use Context7's shared anonymous tier (low rate limit). For teams/large projects, get a free key at context7.com/dashboard and set it here for your own quota. NEVER commit a real key — set it locally (e.g. in .claude/settings.local.json) instead of committing this value.",
+    "// CONTEXT7_API_KEY note": "The Context7 key is consumed by the context7 MCP server, whose env block lives in the scaffolded .mcp.json (NOT here — a top-level settings.json env is not documented to reach MCP subprocesses). To use your own quota (free key at context7.com/dashboard): set CONTEXT7_API_KEY in your shell (export CONTEXT7_API_KEY=…) or in .claude/settings.local.json env; .mcp.json reads it via ${CONTEXT7_API_KEY:}. Leave it unset to use Context7's shared anonymous tier. NEVER commit a real key. The empty value below is only a convenience anchor for .claude/settings.local.json to override.",
     "CONTEXT7_API_KEY": ""
   },
   "// worktree note": "/caw:code --all runs parallel coders in isolated git worktrees (isolation: worktree). baseRef 'head' makes each worktree fork from the CURRENT branch, not the repo default — so parallel work sees the in-progress branch state. Required for the parallel-coder flow to be correct.",
