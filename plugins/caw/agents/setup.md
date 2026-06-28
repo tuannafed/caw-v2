@@ -131,7 +131,8 @@ cp -n "$PROJ/gitleaks.toml" gitleaks.toml   2>/dev/null || true
 # server (the plugin's context7 MCP has no env block, and a top-level settings.json
 # `env` is NOT documented to propagate into MCP subprocesses). Safe to commit — it
 # holds a ${CONTEXT7_API_KEY:} reference, never the key. The member sets the real key
-# via `export CONTEXT7_API_KEY=…` or .claude/settings.local.json.
+# via `export CONTEXT7_API_KEY=…` in their shell rc (NOT a settings.json env — that
+# is not passed to MCP subprocesses).
 cp -n "$PROJ/.mcp.json"     .mcp.json       2>/dev/null || true
 # settings.json: drop a SAMPLE next to the live file (never overwrite an
 # existing .claude/settings.json — it carries the member's own permissions/env).
@@ -541,9 +542,26 @@ Generated:
   ✓ docs/caw/conventions.md
   ✓ .claude/project.yaml
   ✓ .claude/rules/project.md
+  ✓ .mcp.json (Context7 key override)
+
+Context7 (optional — for your own rate-limit quota):
+  Context7 runs on the free anonymous tier by default — fine for normal use; you
+  only hit a rate limit (not an auth error) under heavy use. To use your own quota:
+    1. Get a free key: https://context7.com/dashboard
+    2. Export it in your shell  →  echo 'export CONTEXT7_API_KEY=<key>' >> ~/.zshrc
+       then  source ~/.zshrc  and RESTART Claude Code.
+    3. The scaffolded .mcp.json reads ${CONTEXT7_API_KEY} from that shell env.
+  ⚠️ Do NOT put the key in settings.json `env` — a top-level env is not passed to the
+     Context7 MCP server, so the key would be silently ignored (Context7 stays anonymous).
 
 Next: /caw:plan "<feature description>"
 ```
+
+> **When reporting the Context7 line, check the live shell env:** if `CONTEXT7_API_KEY`
+> is already set, print `✓ Context7: using your API key`. If it's empty, print the
+> 3-step block above so the user knows how to add one (and that anonymous is OK). If the
+> user mentions they put a key in `settings.json`, warn them it won't reach the MCP server
+> and point them to the shell-export path instead.
 
 ## Constraints
 

@@ -61,10 +61,11 @@ fixed — `claude-plugins-official` is built in, no `marketplace add`):
 > shared anonymous rate-limit tier. The key is consumed by the **context7 MCP server**, so
 > it must sit in that server's `env` block — `/caw:setup` scaffolds a project `.mcp.json`
 > (`templates/project/.mcp.json`) that overrides the plugin's context7 with
-> `"env": { "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:}" }`. Provide the real key via the
-> shell (`export CONTEXT7_API_KEY=…`) or `.claude/settings.local.json` — a top-level
-> `settings.json` `env` is **not** documented to reach MCP subprocesses, so don't rely on
-> it. The `.mcp.json` is committable (only a `${VAR}` ref); never commit the key.
+> `"env": { "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:}" }`, which reads the key from the
+> **shell env**. Provide it via `export CONTEXT7_API_KEY=…` in `~/.zshrc` (then restart
+> Claude Code). A top-level `env` in `settings.json` **or** `settings.local.json` is **not**
+> passed to MCP subprocesses, so a key placed there is silently ignored — don't rely on it.
+> The `.mcp.json` is committable (only a `${VAR}` ref); never commit the key.
 
 > **The marketplace ref tracks `main`.** `extraKnownMarketplaces.caw.source.ref`
 > is `"main"`, so a push to `main` ships the release and members get it via
