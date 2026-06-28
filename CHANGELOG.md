@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.5] — 2026-06-28
+
+### Fixed
+- **Context7 key — corrected to a literal value in a gitignored `.mcp.json`.** User testing
+  disproved the v2.4.3/2.4.4 guidance: a key in `settings.json`/`settings.local.json` `env`
+  is not passed to MCP subprocesses, and `${CONTEXT7_API_KEY}` expansion in `.mcp.json` is
+  unreliable (a GUI/VSCode launch doesn't load `~/.zshrc`, so the var is empty). The only
+  reliable place is a **literal** key in `.mcp.json` → `mcpServers.context7.env`. `/caw:setup`
+  now ships `.mcp.json` with an empty literal key and **gitignores it** (it holds a secret);
+  the setup report + README + CLAUDE.md + settings note all point to that single path.
+  Removed the dead `CONTEXT7_API_KEY` slot from the settings.json env template.
+
 ## [2.4.4] — 2026-06-27
 
 ### Changed
