@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.4] — 2026-06-27
+
+### Changed
+- **Context7 key onboarding made explicit.** Real-world use surfaced that the key path
+  wasn't obvious — a key in `settings.json` `env` never reaches the MCP server. The
+  `/caw:setup` report now prints how to add a key (free tier is fine; `export
+  CONTEXT7_API_KEY` in `~/.zshrc` → restart) and checks the live shell env. README /
+  CLAUDE.md / `.mcp.json` / `settings.json` notes corrected: the key lives in the shell
+  env (read by `.mcp.json`), never a top-level settings env (ignored by MCP).
+
 ## [2.4.3] — 2026-06-27
 
 ### Fixed
