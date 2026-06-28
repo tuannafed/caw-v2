@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.7] — 2026-06-28
+
+### Fixed
+- **`/caw:setup --refresh` now re-syncs the HARNESS block in existing `CLAUDE.md` and
+  `AGENTS.md`.** Previously setup only *appended* the marker-delimited block when it was
+  missing and left an existing block untouched — so any template change to that block
+  (e.g. the v2.4.6 "caw owns where work goes" guard) never reached a project that had
+  already run setup. Setup now replaces the content between `<!-- HARNESS:BEGIN -->` and
+  `<!-- HARNESS:END -->` with the installed template's version on every run, leaving the
+  member's own prose before/after the markers untouched. Existing projects pick up
+  harness-block fixes simply by re-running `/caw:setup --refresh`.
+
 ## [2.4.6] — 2026-06-28
 
 ### Changed

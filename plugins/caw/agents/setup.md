@@ -183,11 +183,27 @@ rm -f "$_CAW_NAMEPY"
 
 # Project config (do not clobber existing)
 # AGENTS.md ships with a {{PROJECT_NAME}} placeholder (it is cp'd raw, not Write-rendered
-# like project.md), so substitute the detected name after copying. Only touch
-# a file we just created — never rewrite an AGENTS.md the member already had.
+# like project.md), so substitute the detected name after copying. Like CLAUDE.md, the
+# member may add their own instructions ABOVE the marker-delimited HARNESS block, so:
+#   - no AGENTS.md     → copy the template + substitute the name
+#   - no HARNESS block → APPEND the template's block
+#   - stale block      → REPLACE the content between the markers (keeps the member's
+#                        own above-block instructions; lets template changes reach them)
+AG_HARNESS="$(awk '/<!-- HARNESS:BEGIN -->/{p=1} p{print} /<!-- HARNESS:END -->/{p=0}' "$PROJ/AGENTS.md")"
 if [[ ! -e AGENTS.md ]]; then
   cp "$PROJ/AGENTS.md" AGENTS.md
   sed -i.bak "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" AGENTS.md && rm -f AGENTS.md.bak
+elif ! grep -qF "<!-- HARNESS:BEGIN -->" AGENTS.md; then
+  printf '%s\n' "$AG_HARNESS" >> AGENTS.md
+  echo "✓ harness block appended to existing AGENTS.md"
+else
+  printf '%s\n' "$AG_HARNESS" > .caw-harness-block.tmp
+  awk '/<!-- HARNESS:BEGIN -->/{while((getline line < ".caw-harness-block.tmp")>0) print line; close(".caw-harness-block.tmp"); skip=1; next}
+       /<!-- HARNESS:END -->/{skip=0; next}
+       !skip{print}' AGENTS.md > AGENTS.md.new
+  mv AGENTS.md.new AGENTS.md
+  rm -f .caw-harness-block.tmp
+  echo "✓ AGENTS.md harness block re-synced to the installed template"
 fi
 cp -n "$PROJ/.claudeignore" .claudeignore   2>/dev/null || true
 cp -n "$PROJ/gitleaks.toml" gitleaks.toml   2>/dev/null || true
@@ -205,19 +221,34 @@ mkdir -p .claude
 cp -n "$PROJ/settings.json" .claude/settings.json.sample 2>/dev/null || true
 
 # CLAUDE.md: a member usually already has one from /init (richer than the caw
-# stub). DON'T overwrite it — but Claude Code does NOT auto-load AGENTS.md, so the
-# harness only loads if CLAUDE.md @-imports it. Ensure the marker-delimited harness
-# block is present: copy the template if absent, else APPEND just the block.
+# stub). DON'T overwrite the member's prose — but Claude Code does NOT auto-load
+# AGENTS.md, so the harness only loads if CLAUDE.md @-imports it. The marker-delimited
+# HARNESS block is 100% caw-managed (the member edits CLAUDE.md OUTSIDE the markers), so
+# we keep it in sync with the template on EVERY run:
+#   - no CLAUDE.md     → copy the template
+#   - no HARNESS block → APPEND the template's block
+#   - stale block      → REPLACE the content between the markers with the template's,
+#                        leaving the member's prose around it untouched. This is how a
+#                        template change (e.g. a new harness guard) reaches existing
+#                        projects — append-only would strand them on the old block.
+# Extract the template's HARNESS block once (reused below).
+HARNESS_BLOCK="$(awk '/<!-- HARNESS:BEGIN -->/{p=1} p{print} /<!-- HARNESS:END -->/{p=0}' "$PROJ/CLAUDE.md")"
 if [[ ! -e CLAUDE.md ]]; then
   cp "$PROJ/CLAUDE.md" CLAUDE.md
   echo "✓ CLAUDE.md scaffolded (caw template)"
 elif ! grep -qF "<!-- HARNESS:BEGIN -->" CLAUDE.md; then
-  # Extract just the HARNESS block from the template and append it.
-  awk '/<!-- HARNESS:BEGIN -->/{p=1} p{print} /<!-- HARNESS:END -->/{p=0}' \
-    "$PROJ/CLAUDE.md" >> CLAUDE.md
+  printf '%s\n' "$HARNESS_BLOCK" >> CLAUDE.md
   echo "✓ harness @-import block appended to existing CLAUDE.md"
 else
-  echo "⏭️  CLAUDE.md already has the harness block — left as-is"
+  # Replace the existing block (between markers, inclusive) with the template's,
+  # leaving the member's prose before/after the markers untouched.
+  printf '%s\n' "$HARNESS_BLOCK" > .caw-harness-block.tmp
+  awk '/<!-- HARNESS:BEGIN -->/{while((getline line < ".caw-harness-block.tmp")>0) print line; close(".caw-harness-block.tmp"); skip=1; next}
+       /<!-- HARNESS:END -->/{skip=0; next}
+       !skip{print}' CLAUDE.md > CLAUDE.md.new
+  mv CLAUDE.md.new CLAUDE.md
+  rm -f .caw-harness-block.tmp
+  echo "✓ CLAUDE.md harness block re-synced to the installed template"
 fi
 
 # Secret scanning: caw standardizes on gitleaks (industry standard) rather than a
