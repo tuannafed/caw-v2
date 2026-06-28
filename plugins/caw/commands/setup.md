@@ -8,8 +8,8 @@ Run the project setup workflow: $ARGUMENTS
 
 Parse `$ARGUMENTS` for flags:
 
-- No flag → first-time setup (detect stack, verify harness, generate conventions + project.yaml + project rules)
-- `--refresh` → re-detect stack, regenerate conventions + project.yaml + project rules
+- No flag → first-time setup (detect stack, verify harness, generate conventions + project rule file(s))
+- `--refresh` → re-detect stack, regenerate the project rule file(s)
 
 > caw v2 ships as the `caw` plugin. There is **no skill install step** — the
 > 9 authored skills are bundled in the plugin (always available), framework docs
@@ -32,6 +32,6 @@ Setup agent will:
 1. Read CLAUDE.md (project intent)
 2. Detect tech stack (package.json + file scan)
 3. Verify the durable harness (`${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli`) — DB resolves to the project root
-4. Generate `docs/caw/conventions.md`, `.claude/project.yaml`, `.claude/rules/project.md`
+4. Generate `docs/caw/conventions.md` (descriptive) + `.claude/rules/project.md` — the auto-injected LAW (monorepo: one rule file per area)
 
 After setup completes, the project is ready for `/caw:plan`.

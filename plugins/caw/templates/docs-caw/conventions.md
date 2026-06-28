@@ -1,8 +1,15 @@
 # Project Conventions
 
-Use this file to declare the neutral engineering conventions for this project.
-Agents must treat it as the source of truth for architecture choices that can vary
-between projects.
+Descriptive reference — the project **"shape"** agents read to understand and
+imitate the codebase: archetype, stack, folder layout, and the commands used to
+verify work.
+
+**This file is NOT the law.** Binding rules an agent MUST obey — folder structure,
+naming, mandatory/forbidden patterns, domain rules — live in
+`.claude/rules/project.md` (monorepo: the per-area rule files under `.claude/rules/`).
+Those carry a `paths:` frontmatter so Claude Code auto-injects them on every matching
+code edit. This file *describes* the shape and **points to** the rule file for the
+binding list; it does not duplicate it.
 
 **Project:** {{PROJECT_NAME}}
 **Team type:** {{TEAM_TYPE}}
@@ -18,16 +25,11 @@ between projects.
   - Backend style: `[define if applicable]`
   - Integration boundary: `[define if applicable]`
 
-## Forbidden Patterns
-
-- Hardcoded business/domain terminology copied from prior projects
-- Global state rules that contradict the selected project pattern
-- Ad-hoc folder layouts that bypass the folder contract below
-- Raw API usage in components when a typed client convention exists
-
 ## Folder Contract
 
-Document only the paths that matter for this project. Delete unused rows.
+The descriptive map of where things live. The BINDING "code MUST go here" version is
+in the rule file; this is the fuller reference. Document only paths that matter; delete
+unused rows.
 
 | Area             | Required location            | Notes                                          |
 | ---------------- | ---------------------------- | ---------------------------------------------- |
@@ -36,6 +38,12 @@ Document only the paths that matter for this project. Delete unused rows.
 | Shared UI        | `src/components/...`         | Reusable presentational components only        |
 | Shared libraries | `src/lib/...`                | Typed API client, auth, permissions, utilities |
 | Permissions      | `src/lib/permissions/...`    | Permission checks, capability helpers          |
+
+## Code organisation patterns
+
+Describe how the team structures features, hooks, components, modules — observed from
+the codebase. Descriptive ("the project does X"), not imperative ("you must do X" →
+that belongs in the rule file).
 
 ## Verify Commands
 
@@ -56,32 +64,18 @@ when the tool genuinely is not configured.
 - a `lint` script in `package.json` → `pnpm lint` (prefer this — it encodes the team's choice)
 - If the project ships **both** Biome and ESLint config, list both commands and note which paths each owns.
 
+## Binding rules
+
+The enforced law (folder / naming / mandatory patterns / forbidden patterns / domain
+rules) lives in `.claude/rules/project.md` — monorepo: the per-area rule files. It is
+auto-injected on every code edit, so agents cannot skip it. This section is only a
+pointer; do not restate the rules here (no rule should appear in both files).
+
 ## Agent Resolution Rule
 
-1. Read this file before designing architecture, code, or review feedback.
-2. Apply precedence: `Optional Overrides` → this file → skills (auto-loaded) → generic project docs.
-3. Mark non-applicable rules `not-applicable` in the task's Convention Resolution section.
-4. Treat `Forbidden Patterns` as review failures unless an override explicitly allows them.
-
-## Optional Overrides
-
-Use this section for project-specific decisions that should override a generic archetype or pattern.
-
-### Frontend
-
-- Data/state pattern: `[react-query-with-zustand | rtk-query | custom]`
-- Feature root: `[e.g. src/features or src/modules]`
-- API client entrypoint: `[e.g. src/lib/api/client.ts]`
-
-### Backend
-
-- Response contract strategy: `[e.g. stable DTOs mirrored to typed client]`
-- Module root: `[e.g. src/modules or app/services]`
-
-### Integrate task
-
-- Contract verification focus: `[e.g. endpoint adapters, cache tags, invalidation rules]`
-
-### Review
-
-- Convention compliance priority: `[e.g. folder contract is blocking, naming is warning]`
+1. Read this file before designing architecture, code, or review feedback — it is the
+   descriptive map of the project shape.
+2. The binding rule file (`.claude/rules/project.md`) is auto-injected and takes
+   precedence; this file never overrides it.
+3. Mark non-applicable descriptive notes `not-applicable` in the task's Convention
+   Resolution section.

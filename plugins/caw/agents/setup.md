@@ -1,6 +1,6 @@
 ---
 name: setup
-description: PROACTIVELY activate when user runs /caw:setup. Detects project tech stack, verifies the durable harness, and generates conventions.md + project.yaml. Framework docs come live from Context7; workflow skills from Superpowers — caw no longer installs vendored skills. Required as first step after /init.
+description: PROACTIVELY activate when user runs /caw:setup. Detects project tech stack, verifies the durable harness, and generates conventions.md + the auto-injected project rule file(s). Framework docs come live from Context7; workflow skills from Superpowers — caw no longer installs vendored skills. Required as first step after /init.
 model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 memory: project
@@ -20,7 +20,7 @@ workflow:
 
 1. Detect tech stack from `CLAUDE.md` + `package.json` + file scan
 2. Verify the durable harness (`harness-cli`) is operational
-3. Generate `docs/caw/conventions.md`, `.claude/project.yaml`, and `.claude/rules/project.md`
+3. Generate `docs/caw/conventions.md` and `.claude/rules/project.md` (the auto-injected rule file; monorepo → one per area)
 
 You run **once** per project (and on-demand via `--refresh`).
 
@@ -52,8 +52,8 @@ You run **once** per project (and on-demand via `--refresh`).
 
 | Invocation | Behavior |
 |---|---|
-| `/caw:setup` (no flags) | First-run: detect stack, verify harness, generate conventions + project.yaml + project rules |
-| `/caw:setup --refresh` | Re-sync the read-only UPPER_CASE policy docs (`HARNESS.md`, `GLOSSARY.md`, …) to the installed plugin version, re-detect stack, and regenerate `project.yaml` + `.claude/rules/project.md`. Leaves project-owned prose (`conventions.md`, `knowledge.md`, `harness-backlog.md`) untouched. Run after `/plugin update`. |
+| `/caw:setup` (no flags) | First-run: detect stack, verify harness, generate conventions + project rule file(s) |
+| `/caw:setup --refresh` | Re-sync the read-only UPPER_CASE policy docs (`HARNESS.md`, `GLOSSARY.md`, …) to the installed plugin version, re-detect stack, and regenerate `.claude/rules/project.md`. Leaves project-owned prose (`conventions.md`, `knowledge.md`, `harness-backlog.md`) untouched. Run after `/plugin update`. |
 
 ## Memory (project-scoped)
 
@@ -93,7 +93,7 @@ mkdir -p "$DEST/templates" "$DEST/decisions" "$DEST/advisories" "$DEST/stories/e
 # Detect the project name once, up front — used to substitute {{PROJECT_NAME}} in the
 # raw-cp'd seeds (knowledge.md here, AGENTS.md in the next block). Prefer package.json's
 # "name" (Node), then pyproject.toml's [project] name (Python), else the repo dir name.
-# Keep it the SAME name you write into project.yaml/project.md/conventions.md. The python
+# Keep it the SAME name you write into project.md/conventions.md. The python
 # helper is stdlib-only (the harness already requires python3).
 _CAW_NAMEPY="$(mktemp -t caw-name.XXXXXX.py)"
 cat > "$_CAW_NAMEPY" <<'PY'
@@ -131,8 +131,6 @@ done
 # knowledge.md is a lower-case seed (cp'd raw, not Write-rendered), so its
 # `# Knowledge — {{PROJECT_NAME}}` title keeps the placeholder. Substitute it in
 # place — guarded on the marker so a member's edited knowledge.md is never touched.
-# (project.yaml.schema intentionally KEEPS its placeholders — it is a fill-in mthat
-# agents read; do not substitute there.)
 if grep -qF "{{PROJECT_NAME}}" "$DEST/knowledge.md" 2>/dev/null; then
   sed -i.bak "s/{{PROJECT_NAME}}/${PROJECT_NAME}/g" "$DEST/knowledge.md" && rm -f "$DEST/knowledge.md.bak"
 fi
@@ -185,7 +183,7 @@ rm -f "$_CAW_NAMEPY"
 
 # Project config (do not clobber existing)
 # AGENTS.md ships with a {{PROJECT_NAME}} placeholder (it is cp'd raw, not Write-rendered
-# like project.yaml/project.md), so substitute the detected name after copying. Only touch
+# like project.md/conventions.md), so substitute the detected name after copying. Only touch
 # a file we just created — never rewrite an AGENTS.md the member already had.
 if [[ ! -e AGENTS.md ]]; then
   cp "$PROJ/AGENTS.md" AGENTS.md
@@ -336,7 +334,7 @@ harness.db-shm
 .claude/settings.local.json
 .claude/settings.json.sample
 .mcp.json
-# (committed, team-shared: .claude/rules/, .claude/agent-memory/, .claude/project.yaml)
+# (committed, team-shared: .claude/rules/, .claude/agent-memory/)
 # <<< caw (machine-local) <<<
 GITIGNORE
   echo "✓ .gitignore updated (harness.db, .claude/settings*.json, .mcp.json are machine-local)"
@@ -403,7 +401,7 @@ continue** (do NOT abort setup):
    can ignore this — the probe can't always see them.)
 ```
 
-Record the preflight result in the Phase 6 report (`companions: ok` or
+Record the preflight result in the Phase 5 report (`companions: ok` or
 `companions: warned — see above`). This is advisory only — setup still completes.
 
 ### Phase 1 — Read context
@@ -420,6 +418,33 @@ Record the preflight result in the Phase 6 report (`companions: ok` or
 
 3. **Cross-reference CLAUDE.md narrative vs deps.** If CLAUDE.md says "uses Prisma"
    but no `@prisma/client`, flag it for the user.
+
+4. **Learn the codebase by reading real code — not just the manifest.** CLAUDE.md and
+   package.json tell you the *stack*; the actual source tells you the *conventions the
+   team already follows*. Open a representative sample and extract the patterns that a
+   new contributor would have to match. Concretely:
+   - **Folder structure** — how is `src/` organised? Feature-based (`src/features/<x>/`)?
+     Layer-based? Where do shared vs feature-local things live? `find src -maxdepth 3 -type d`.
+   - **Naming conventions** — read 5–10 real files across stores, hooks, components,
+     types, schemas. Note casing (`use-foo.ts` vs `useFoo.ts`), file suffixes
+     (`*.store.ts`, `*.types.ts`, `*.spec.ts`), and any project-specific tokens
+     (e.g. a store devtools prefix, a barrel `index.ts` convention).
+   - **Component & hook patterns** — open 2–3 components and 2–3 hooks. How are they
+     structured? Server vs client components? Custom hook return shapes? Is there a
+     factory the team always routes through (e.g. a `createBaseStore`, a `fetcher()`
+     client) instead of calling the library directly?
+   - **Cross-cutting wiring** — the API client, auth, state, theming/preferences entry
+     points. Note the ONE blessed way to do each (e.g. "all HTTP goes through
+     `fetcher()`", "stores never call `create()` directly").
+
+   These observations split two ways downstream:
+   - **descriptive** ("this project organises code as X, names files as Y") → goes into
+     `conventions.md` (Phase 3) — the map an agent reads to *imitate* the codebase.
+   - **prescriptive** ("agents MUST route HTTP through `fetcher()`; MUST NOT call
+     `create()` directly") → goes into `.claude/rules/project.md` (Phase 4) — the
+     enforced law. Every "blessed way" you find becomes a lock-in there.
+
+   Record the concrete patterns; do not invent rules the code doesn't actually follow.
 
 > No skill catalog, no `match-skills.py`, no install list. Framework knowledge is
 > pulled on demand from Context7 by the downstream agents (planner/coder/tester/
@@ -460,18 +485,32 @@ project root, report it as a **blocking** finding — do NOT mark setup complete
    caw plugin is enabled; the DB must resolve to ./harness.db (project root).
 ```
 
-### Phase 3 — Fill in conventions
+### Phase 3 — Fill in conventions (DESCRIPTIVE reference, not law)
 
-Phase 0 seeded `docs/caw/conventions.md` from the plugin template. **Fill it in**
-with the detected stack (don't recreate from scratch — edit the seeded file). Base
-"best practice" defaults on the detected stack; downstream agents enrich via
-Context7 at code time. The filled file should look like:
+Phase 0 seeded `docs/caw/conventions.md`. **Fill it in** from the Phase 1 scan (edit
+the seeded file, don't recreate). This file is the **descriptive map** an agent reads
+to *understand and imitate* the codebase — the project shape, folder layout, and the
+commands to verify work. It is **not** the law.
+
+> **Division of responsibility (important — this is what prevents the old duplication):**
+> - **Binding rules** an agent MUST obey — folder/naming/pattern/forbidden/domain LAW
+>   → go in the **Phase 4 rule file(s)** (`.claude/rules/…`, auto-injected).
+> - **Descriptive context** — archetype, stack list, folder contract detail, the
+>   verify commands, narrative — stay **here**.
+>
+> Do NOT put a `## Forbidden patterns` or `## Stack overrides` section here — those are
+> law and belong in the rule file. Here you may *describe* the shape and **point to** the
+> rule file for the binding list. No rule should appear in both files.
+
+The filled file should look like:
 
 ```markdown
 # Project Conventions
 
-> Generated by /caw:setup. Edit freely — re-run /caw:setup --refresh to regenerate.
-> Extends CLAUDE.md (high-level project doc) with caw-specific archetype + folder contract.
+> Generated by /caw:setup. Descriptive reference — the project "shape" agents read to
+> imitate the codebase. Binding rules (folder/naming/forbidden) live in
+> `.claude/rules/project.md` (auto-injected law); this file does not duplicate them.
+> Edit freely — re-run /caw:setup --refresh to regenerate.
 
 ## Archetype
 
@@ -490,15 +529,13 @@ Context7 at code time. The filled file should look like:
 
 ## Folder contract
 
-[Detected from project structure]
+[Detected from project structure — the descriptive map of where things live. The
+ BINDING "code MUST go here" version is in the rule file; this is the fuller reference.]
 
-## Code Organization patterns
+## Code organisation patterns
 
-[Inferred from existing code]
-
-## Forbidden patterns
-
-[Inferred from CLAUDE.md + stack best practices]
+[Inferred from existing code — how the team structures features, hooks, components.
+ Descriptive ("the project does X"), not imperative ("you must do X" → that's the rule file).]
 
 ## Verify commands
 
@@ -510,75 +547,101 @@ Context7 at code time. The filled file should look like:
     a `lint` script → `pnpm lint` (prefer this). List both if the project ships both.]
 - Unit test (single file): [e.g. `pnpm exec jest <file> --maxWorkers=2`]
 
-## Stack overrides
+## Binding rules
 
-[CLAUDE.md custom instructions that override defaults]
+> The enforced law (folder/naming/patterns/forbidden/domain) lives in
+> `.claude/rules/project.md` (monorepo: the per-area rule files). It is auto-injected
+> on every code edit. This section is just a pointer — do not restate the rules here.
 ```
 
-### Phase 4 — Generate `.claude/project.yaml`
+### Phase 4 — Generate the project rule file(s) — THE LAW (auto-injected)
 
-Write machine-readable stack metadata that downstream tooling reads instead of
-regex-parsing `conventions.md`. Emit one stack row per detected technology, with
-the Context7 library name where applicable:
+This is the **single source of truth for the conventions agents MUST obey** — folder
+structure, naming, mandatory patterns, forbidden patterns, domain rules. Unlike
+`conventions.md` (descriptive reference, read per-lane), a rule file carries a `paths:`
+frontmatter so Claude Code **auto-injects it whenever an agent edits a matching file** —
+the agent cannot skip it. That is the enforcement mechanism: put here only what is
+genuinely binding.
 
-```yaml
-# Generated by /caw:setup — re-run /caw:setup --refresh to regenerate.
+This phase is **dynamic in two dimensions**:
 
-detected_stack:
-  backend: nestjs
-  frontend: nextjs
-  mobile: expo
-  database: prisma + postgres
-  monorepo: turborepo
+1. **Dynamic by content** — DON'T template canned rules. Derive every rule from the
+   Phase 1 codebase scan. A rule must be backed by evidence: a pattern you observed
+   **repeated ≥2× in real code** (5 files named `*.store.ts` → a naming rule; every
+   HTTP call routed through one client → a "must use that client" rule). CLAUDE.md
+   only *confirms* intent — it is not the primary source. **Never invent a rule the
+   code doesn't actually follow.** Leave a section out entirely if there's no evidence.
 
-# Context7 libraries the downstream agents query for live framework docs.
-context7_libraries:
-  - next.js
-  - prisma
-  - tanstack-query
-  - tailwindcss
+2. **Dynamic by stack** — DON'T assume a Next.js/React shape. Detect the
+   archetype/language/framework in Phase 1, then pick the rule groups that *fit this
+   stack* from the catalog below. A Python FastAPI service and a Next.js app produce
+   different groups with different contents. Omit any group that doesn't apply.
 
-authored_skills:   # always available via the caw plugin — no install
-  - caw:api-contract
-  - caw:error-handling-patterns
-  - caw:nextjs-feature
-  - caw:react-component-testing
-```
+**Rule-group catalog** (include the ones the detected stack warrants; the example
+contents are illustrative — replace with what you actually observed):
 
-### Phase 5 — Generate `.claude/rules/project.md`
+| Group | Applies to | Example contents (stack-specific) |
+|---|---|---|
+| **Folder / module structure** | all | FE: `src/features/<x>/`, route groups · NestJS: `src/<module>/{controller,service,module}` · FastAPI: `app/routers/`, `app/schemas/`, `app/services/` |
+| **Naming conventions** | all | FE: `*.store.ts`, `use-foo.ts`, store prefix · BE-TS: `*.service.ts`, `*.dto.ts` · Python: `snake_case` modules, `*_service.py` |
+| **Layering & boundaries** | mostly BE | controller→service→repo direction; no cross-feature imports; thin route handlers |
+| **Mandatory patterns** (the one blessed way) | all | "all HTTP via `fetcher()`" · "stores via `createBaseStore`, never `create()`" · "DI via Nest providers" · "DB via the repository, not raw client" |
+| **Data & validation** | most | Zod request/response schemas · class-validator DTOs · Pydantic models |
+| **Component / hook structure** | **FE only** | server vs client components; React Compiler on → no manual memo; custom-hook return shape |
+| **Error handling** | if a convention exists | error envelope shape; exception filter / middleware; never swallow errors |
+| **Forbidden patterns** | all | the explicit ❌ list (e.g. ESLint when project is Biome-only; `any` in non-test; hardcoded URLs) |
+| **Domain rules** | all | business invariants that constrain code changes |
 
-Write **project-specific non-overridable rules** discovered during stack detection.
+**Frontmatter & file layout — single-app vs monorepo:**
+
+- **Single app / single stack** → one file `.claude/rules/project.md`, with `paths:`
+  globbing the source roots (e.g. `src/**/*.{ts,tsx}`; add `tests/**` only if test
+  conventions are binding).
+- **Monorepo / multiple stacks** → **one rule file per app/area**, each scoped to its
+  own paths so the right law auto-injects for the file being edited. E.g.
+  `.claude/rules/web.md` (`paths: ["apps/web/**/*.{ts,tsx}"]`) for the FE app and
+  `.claude/rules/api.md` (`paths: ["apps/api/**/*.ts"]`) for the BE app. Put rules that
+  apply repo-wide (commit conventions, security invariants) in `project.md` with a
+  broad `paths:`. Do NOT cram two stacks' rules into one file — split by path so an
+  agent editing `apps/api` never sees FE component rules.
+
+**Template (single-app shape — adapt groups/contents to the detected stack):**
 
 ```markdown
-# Project Rules — {{PROJECT_NAME}}
+---
+description: Project-specific non-overridable rules for {{PROJECT_NAME}} — folder,
+  naming, pattern, and domain LAW. Auto-injected on every matching code-file edit.
+  Agents MUST comply; violations block commit.
+paths:
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+---
 
-> Generated by /caw:setup. Project-specific rules that override generic defaults.
-> Edit freely; re-run `/caw:setup --refresh` to regenerate from stack detection.
+# Project Rules — {{PROJECT_NAME}}  (THE LAW — comply, don't merely "reference")
 
-## Stack lock-ins
+> Generated by /caw:setup from a scan of the actual codebase. Single source of truth
+> for binding conventions. Edit freely; re-run `/caw:setup --refresh` to regenerate.
+> Forbidden/lock-in rules live ONLY here — `conventions.md` is descriptive and points
+> back to this file.
 
-> Hard constraints derived from CLAUDE.md + package.json. Agents must respect these.
-<!-- e.g. Database: Drizzle only — ignore transitive @prisma/client. HTTP: ofetch, not axios. -->
+## Folder / module structure
+<!-- Only the groups the stack warrants. Each bullet = an observed, repeated pattern. -->
+
+## Naming conventions
+
+## Mandatory patterns
 
 ## Forbidden patterns
 
-> Things this project has explicitly rejected. Cite the reason if known.
-
-## Conventions overrides
-
-> Where this project deviates from caw defaults.
-
 ## Domain rules
-
-> Business / domain constraints agents must respect when changing code.
 ```
 
-**How to fill it:** pull stack lock-ins and forbidden patterns from the CLAUDE.md
-narrative ("we use Drizzle, not Prisma" → "Stack lock-ins"). Leave sections with
-`<!-- examples -->` if nothing project-specific was detected — the user fills them
-in over time. This file is the per-project counterpart to the generic coding rules.
+> The `paths:` lazy-load works at the **project `.claude/rules/` level** (it does NOT
+> work for rules left inside the plugin) — that's why this file is written into the
+> project, not referenced from the plugin. Keep it tight: it loads on every code edit,
+> so long narrative belongs in `conventions.md`/`CLAUDE.md`, not here.
 
-### Phase 6 — Report
+### Phase 5 — Report
 
 ```
 ✅ /caw:setup complete
@@ -609,9 +672,8 @@ Skills:
   ✓ Framework docs → Context7 (live); workflow skills → Superpowers
 
 Generated:
-  ✓ docs/caw/conventions.md
-  ✓ .claude/project.yaml
-  ✓ .claude/rules/project.md
+  ✓ docs/caw/conventions.md (descriptive)
+  ✓ .claude/rules/project.md (the LAW — auto-injected on code edits; monorepo → one per area)
   ✓ .mcp.json (Context7 server override — gitignored, holds your key)
 
 Context7 (optional — for your own rate-limit quota):
@@ -649,6 +711,5 @@ Next: /caw:plan "<feature description>"
 ## Output
 
 This agent writes project-level config (no task file):
-- `docs/caw/conventions.md`
-- `.claude/project.yaml`
-- `.claude/rules/project.md`
+- `docs/caw/conventions.md` (descriptive reference)
+- `.claude/rules/project.md` — the auto-injected LAW (monorepo: one rule file per area)

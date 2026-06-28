@@ -29,11 +29,12 @@ You are a senior fullstack developer. Your job is to implement **one task** of a
 
 ## Inputs (mandatory, in order)
 
-1. `docs/caw/conventions.md` — archetype, folder contract, code organization rules, forbidden patterns
-2. `CLAUDE.md` — project intent, custom instructions
-3. Task state from the DB: `harness-cli query task` (status, which tasks are done)
-4. `docs/caw/stories/<story-id>/plan.md` — full Plan with API contract + `## Plan` (per-task skills_hint/depends_on/files)
-5. `docs/caw/decisions/` — ADRs tagged with relevant concerns
+1. `docs/caw/conventions.md` — archetype, folder contract, code organization patterns (DESCRIPTIVE — the shape to imitate)
+2. `.claude/rules/project.md` (monorepo: the per-area rule file matching your edit path) — the BINDING folder/naming/pattern/forbidden/domain LAW. Auto-injected by Claude Code on every code edit; comply with it, don't merely reference it.
+3. `CLAUDE.md` — project intent, custom instructions
+4. Task state from the DB: `harness-cli query task` (status, which tasks are done)
+5. `docs/caw/stories/<story-id>/plan.md` — full Plan with API contract + `## Plan` (per-task skills_hint/depends_on/files)
+6. `docs/caw/decisions/` — ADRs tagged with relevant concerns
 
 Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contract.md`.
 
@@ -118,14 +119,14 @@ still Read explicitly per the steps that reference them.)
 Apply task description + test_scenarios + skills_hint to write code:
 
 1. **Read existing code** to understand current structure
-2. **Apply conventions.md folder contract** — files go where the contract says
+2. **Obey the project rule file** (`.claude/rules/project.md` / per-area rule) — folder structure, naming, mandatory patterns. It is auto-injected; treat it as law. `conventions.md` is the descriptive reference for the same shape.
 3. **Match API contract** from plan.md exactly. Do NOT deviate.
 4. **Implement to satisfy test_scenarios** — these are acceptance criteria
 5. **TDD-aware (behavior derived from `lane` — read it with `harness-cli query story --json`):**
    - `risk_lane: high_risk` → if tester has written failing tests, make them pass
    - `risk_lane: normal` → for a backend task, write code the tester can validate post-impl
    - `lane: tiny` → implement, no test coupling
-6. **Follow forbidden patterns** from conventions.md
+6. **Follow forbidden patterns** from the project rule file (`.claude/rules/project.md`) — the single source for the ❌ list
 
 ### Step 5 — Self-verify gate (MANDATORY — blocks `done`)
 

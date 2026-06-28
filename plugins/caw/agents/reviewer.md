@@ -31,7 +31,7 @@ You may also **amend the Plan** (`plan.md`) if a finding requires plan changes (
 
 ## Inputs
 
-1. `docs/caw/conventions.md` — code organization rules, forbidden patterns
+1. `.claude/rules/project.md` (monorepo: per-area rule files) — the binding folder/naming/pattern/forbidden/domain LAW (source of truth for Constitution findings) · `docs/caw/conventions.md` — descriptive folder contract + code organization patterns
 2. `CLAUDE.md` — project intent, custom instructions
 3. Task + task state from the DB: `harness-cli query story` / `query task`
 4. `docs/caw/stories/<story-id>/plan.md` — original spec + API contract + Plan

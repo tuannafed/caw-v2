@@ -130,7 +130,7 @@ activates (a CC bug disables it otherwise).
 
 | Agent | Stage | Purpose |
 |---|---|---|
-| `setup` | Bootstrap | Detect stack, verify the harness, generate conventions.md + project.yaml + project rules |
+| `setup` | Bootstrap | Detect stack, verify the harness, generate conventions.md + project rule file(s) (`.claude/rules/project.md`, monorepo → one per area) |
 | `planner` | Constitution + Clarify + Plan | Loads project constitution (lock-ins), clarify-gates plan-breaking ambiguity (blocks with questions vs guessing), then spec, API contract, tasks (test_scenarios + skills_hint), self-challenge (incl. constitution compliance), lane |
 | `coder` | Code (per task) | Implement one task at a time. Loads skills via `Skill` from the task's `skills_hint`. Generic across stack. |
 | `tester` | Test | Test mode derived from Plan's `lane`: tiny=skip / standard=backend-only / risky=all (red+green). Mobile = unit tests only. |
