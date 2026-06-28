@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.3] — 2026-06-27
+
+### Fixed
+- **Context7 API key now actually reaches the server.** The key is consumed by the
+  context7 MCP server, and a top-level `settings.json` `env` is not documented to
+  propagate into MCP subprocesses — so the old "put the key in settings.json env" guidance
+  likely left every project on the anonymous tier. `/caw:setup` now scaffolds a project
+  `.mcp.json` that overrides the plugin's context7 server with
+  `"env": { "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:}" }` (committable — a `${VAR}` ref,
+  never the key; empty default → anonymous fallback). Provide the real key via the shell
+  (`export CONTEXT7_API_KEY=…`) or `.claude/settings.local.json`. README/CLAUDE/settings
+  notes rewritten; the plugin validator now JSON-checks the `.mcp.json` template.
+
 ## [2.4.2] — 2026-06-27
 
 Found by a real-world end-to-end verification on a throwaway sample project.
