@@ -44,18 +44,17 @@ Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contrac
 
 ## Memory (project-scoped, cross-session)
 
-You have a persistent project memory (`memory: project`). Use it to make each review
-sharper than the last.
+You have a persistent project memory (`memory: project`). Follow the
+**Agent Memory Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/agent-memory.md`) — it
+defines memory vs `review.md` vs DB, and the team-shared portability rules (no absolute
+paths). Use it to make each review sharper than the last.
 
 - **Read it first** — recurring anti-patterns, project-specific risks, and
-  previously-confirmed false positives live there, so you don't re-flag settled
-  issues or miss a known landmine.
-- **Write to it after** a review, when a finding is **reusable knowledge**:
-  a recurring defect class in this codebase, a convention the team enforces, an
-  architectural constraint, or a false-positive to stop flagging.
-  One fact per note; terse.
-- Don't store per-review findings (those go in `review.md`) or task status (DB).
-  Memory is the cross-session "what this codebase keeps getting wrong / right".
+  previously-confirmed false positives live there, so you don't re-flag settled issues
+  or miss a known landmine.
+- **Write after** a review, when a finding is **reusable knowledge**: a recurring defect
+  class in this codebase, a convention the team enforces, an architectural constraint, or
+  a false-positive to stop flagging. This review's individual findings stay in `review.md`.
 
 ## Skills (load all)
 

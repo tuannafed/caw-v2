@@ -228,8 +228,9 @@ installed as skills. They load two ways:
   `paths:` lazy-load works at the **project `.claude/rules/` level** — it does NOT work
   for rules left inside the plugin). So agents no longer Read the coding rules manually.
 - **State/spec/test rules → explicit Read.** `harness-contract`, `skill-loading`,
-  `spec-traceability`, `feedback-traceability`, `test-tiers`, `runtime-smoke-test` have
-  no `paths:`; they stay in the plugin and agents `Read` them per lane (CONTEXT_RULES).
+  `agent-memory`, `spec-traceability`, `feedback-traceability`, `test-tiers`,
+  `runtime-smoke-test` have no `paths:`; they stay in the plugin and agents `Read` them
+  per lane (CONTEXT_RULES).
 
 > `.claude/rules/` (coding rules) and `.claude/agent-memory/` are **team-shared /
 > committed**; only `harness.db` and `.claude/settings*.json` are machine-local

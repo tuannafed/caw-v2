@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.8] — 2026-06-29
+
+### Changed
+- **Agent memory has one shared contract (`rules/common/agent-memory.md`).** All five
+  agents run with `memory: project` but each inlined its own (drifting) memory guidance,
+  and none warned that `.claude/agent-memory/` is **committed and team-shared**. Real use
+  surfaced two issues: an agent wrote per-story content into memory (duplicating
+  `plan.md`) and embedded an absolute plugin-cache path (`/Users/<you>/.claude/…`) that
+  is meaningless on a teammate's machine. New contract states once: memory holds only
+  **durable, cross-story lessons** (not per-story/per-task prose, not DB state), and —
+  because it is team-shared — **no absolute paths, no secrets, nothing machine-local**.
+  Each agent's Memory section now points at the contract instead of restating it.
+
 ## [2.4.7] — 2026-06-28
 
 ### Fixed

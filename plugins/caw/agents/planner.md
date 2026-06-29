@@ -98,11 +98,14 @@ Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contrac
 
 ## Memory (project-scoped)
 
-You have a persistent project memory (`memory: project`). **Read it before planning**
-— it holds reusable lessons (recurring scope traps, estimation misses, decisions that
-shaped this codebase) that make the plan sharper. **Write to it** only when you learn
-something durable about planning *this* project (not per-story content — that's `plan.md`).
-One terse fact per note.
+You have a persistent project memory (`memory: project`). Follow the
+**Agent Memory Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/agent-memory.md`) for
+what belongs in memory vs `plan.md` / the DB, and for the team-shared portability rules
+(no absolute paths, no per-story content). **Read it before planning** — it holds
+reusable lessons (recurring scope traps, estimation misses, cross-cutting invariants
+that shape this codebase). **Write** only durable, cross-story planning lessons — a
+single story's token names, route choices, and scope decisions stay in `plan.md`, not
+memory.
 
 ## Workflow
 

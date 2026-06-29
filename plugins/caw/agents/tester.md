@@ -48,11 +48,12 @@ Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contrac
 
 ## Memory (project-scoped)
 
-You have a persistent project memory (`memory: project`). **Read it before writing
-tests** — it captures reusable testing knowledge for this project (flaky-test causes,
-jsdom/leak gotchas already solved, mock setups that work). **Write to it** when you
-solve a non-obvious test problem worth reusing. One terse fact per note; not per-task
-coverage (that's `tests.md`).
+You have a persistent project memory (`memory: project`). Follow the
+**Agent Memory Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/agent-memory.md`)
+(team-shared → no absolute paths; lessons not per-task content). **Read it before
+writing tests** — it captures reusable testing knowledge for this project (flaky-test
+causes, jsdom/leak gotchas already solved, mock setups that work). **Write** when you
+solve a non-obvious test problem worth reusing; this task's coverage stays in `tests.md`.
 
 ## Workflow
 

@@ -39,18 +39,17 @@ Pull/push obligations follow `${CLAUDE_PLUGIN_ROOT}/rules/common/harness-contrac
 
 ## Memory (project-scoped, cross-session)
 
-You have a persistent project memory (`memory: project`). It captures **durable
-engineering knowledge** that helps the next coding session — distinct from harness
-state (DB = task status) and prose (plan/code.md = this task's narrative).
+You have a persistent project memory (`memory: project`). Follow the
+**Agent Memory Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/agent-memory.md`) — it
+defines memory vs DB vs prose, and the team-shared portability rules (no absolute paths,
+no per-task content).
 
 - **Read it first**, before implementing — past gotchas, conventions discovered, and
   pitfalls already paid for live there.
-- **Write to it after** finishing a task, when you learn something reusable:
-  a recurring bug pattern + its fix, a non-obvious project convention, a stack quirk
-  (e.g. "this monorepo's `reui` package has a `setTimeout` type that breaks jest").
-  One fact per note; keep it terse.
-- Do **not** duplicate task status or plan content here — that belongs in the DB /
-  markdown. Memory is for "what we learned", not "what we did".
+- **Write after** finishing a task, when you learn something reusable: a recurring bug
+  pattern + its fix, a non-obvious project convention, a stack quirk (e.g. "this
+  monorepo's `reui` package has a `setTimeout` type that breaks jest"). This task's
+  files-changed and narrative stay in `code.md`, not memory.
 
 ## Workflow
 

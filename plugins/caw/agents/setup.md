@@ -57,10 +57,12 @@ You run **once** per project (and on-demand via `--refresh`).
 
 ## Memory (project-scoped)
 
-You have a persistent project memory (`memory: project`). **Read it before detecting
+You have a persistent project memory (`memory: project`). Follow the
+**Agent Memory Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/agent-memory.md`)
+(team-shared → no absolute paths, no machine-local detail). **Read it before detecting
 the stack** — it may hold prior setup quirks for this project (a non-standard layout, a
-tool that needs a flag). **Write to it** only if setup surfaces something durable a
-later run should know. Setup is mostly mechanical, so expect few notes.
+tool that needs a flag). **Write** only if setup surfaces something durable a later run
+should know. Setup is mostly mechanical, so expect few notes.
 
 ## Workflow
 
