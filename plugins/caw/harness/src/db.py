@@ -47,13 +47,22 @@ def migrate(conn):
     return _current_version(conn)
 
 
-def connect(db_path=None):
-    """Open (creating if needed) the durable DB and ensure it is migrated.
+def connect(db_path=None, create=True):
+    """Open the durable DB and ensure it is migrated.
 
     Pass ":memory:" for tests. Returns a sqlite3.Connection with Row factory and
     foreign keys enforced.
+
+    `create=True` (default) creates the DB file if absent — used by writes (`init`,
+    `story/task add`, etc.). `create=False` opens read-only and returns None if the
+    file does not exist yet, so a READ on a project that never ran `/caw:setup`
+    returns "no data" instead of silently materializing an empty `harness.db` at the
+    repo root (the harness.db-in-every-git-repo leak).
     """
     target = ":memory:" if db_path == ":memory:" else str(db_path or DEFAULT_DB_NAME)
+    if not create and target != ":memory:":
+        if not Path(target).is_file():
+            return None
     conn = sqlite3.connect(target)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
@@ -69,7 +78,11 @@ def find_project_root(start=None):
     Marker priority, checked at each ancestor from the deepest up:
       1. an existing `harness.db`  — already-initialized project DB wins
       2. `docs/caw/`               — a caw-scaffolded project
-      3. `.git/`                   — the repo root
+
+    `.git/` is deliberately NOT a marker: it would make EVERY git repo look like a
+    caw project, so a stray harness-cli call (a hook, an agent in another repo) would
+    create a `harness.db` at that repo's root even though caw was never set up there.
+    A caw project is one that ran `/caw:setup` (has `docs/caw/`) or already has a DB.
     Returns the matched directory, or None if no marker is found anywhere up the tree.
     """
     here = (start or Path.cwd()).resolve()
@@ -77,8 +90,6 @@ def find_project_root(start=None):
         if (d / DEFAULT_DB_NAME).is_file():
             return d
         if (d / "docs" / "caw").is_dir():
-            return d
-        if (d / ".git").exists():
             return d
     return None
 

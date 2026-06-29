@@ -7,6 +7,22 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.16] — 2026-06-29
+
+### Fixed
+- **`harness.db` was created in any git repo, even one that never ran `/caw:setup`.**
+  Two root causes, both fixed: (1) `find_project_root` treated `.git/` as a project-root
+  marker, so a stray `harness-cli` call (a hook, an agent working in another repo) saw
+  any git repo as a caw project; (2) `connect()` always created the SQLite file, so even
+  a read (`harness-cli query …`) materialized an empty 86KB `harness.db` at that repo
+  root. Now: `.git/` is no longer a marker (a caw project is one with `docs/caw/` or an
+  existing `harness.db`), and read-only commands (`query`, `matrix`, `audit`, `lint`,
+  `maturity`, `score-*`, `propose`) open the DB read-only — if it doesn't exist they
+  return empty (`[]` / "no harness.db — run /caw:setup first") instead of creating it.
+  Only writes (`init`, `story/task/decision/backlog/trace …`) create the DB. Regression
+  tests added in `test_db.py` (`.git` alone is not a marker; read-only connect doesn't
+  materialize the file).
+
 ## [2.4.15] — 2026-06-29
 
 ### Fixed

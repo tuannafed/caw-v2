@@ -261,7 +261,19 @@ def main(argv=None):
         default_conductor = Path.cwd() / "docs" / "caw"
         args.conductor = str(default_conductor) if default_conductor.is_dir() else None
 
-    conn = db.connect(db.resolve_db_path(args.db))
+    # Read-only commands must NOT materialize an empty harness.db on a project that
+    # never ran /caw:setup (the harness.db-in-every-git-repo leak). Open read-only;
+    # if the DB doesn't exist yet, report "no data" and exit 0 instead of creating it.
+    READ_ONLY = {
+        "query", "matrix", "audit", "lint", "maturity",
+        "score-trace", "score-context", "propose",
+    }
+    is_read = args.command in READ_ONLY
+    conn = db.connect(db.resolve_db_path(args.db), create=not is_read)
+    if conn is None:
+        # No DB yet and this is a read — nothing to return.
+        print("[]" if getattr(args, "json", False) else "(no harness.db — run /caw:setup first)")
+        return 0
     try:
         print(args._fn(conn, args))
     except domain.ValidationError as e:

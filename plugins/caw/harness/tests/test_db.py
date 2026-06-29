@@ -30,11 +30,15 @@ def test_find_project_root_by_docs_caw(tmp_path):
     assert dbmod.find_project_root(sub) == tmp_path
 
 
-def test_find_project_root_by_git(tmp_path):
+def test_git_alone_is_not_a_marker(tmp_path):
+    # Regression: `.git` must NOT be a project-root marker. If it were, a stray
+    # harness-cli read in ANY git repo (a hook, an agent in another repo) would
+    # create a harness.db at that repo's root even though caw was never set up.
+    # A caw project is one with docs/caw/ (ran /caw:setup) or an existing harness.db.
     (tmp_path / ".git").mkdir()
     sub = tmp_path / "src"
     sub.mkdir()
-    assert dbmod.find_project_root(sub) == tmp_path
+    assert dbmod.find_project_root(sub) is None
 
 
 def test_find_project_root_none_when_no_marker(tmp_path):
@@ -65,3 +69,18 @@ def test_resolve_db_path_uses_project_root(tmp_path, monkeypatch):
     monkeypatch.chdir(sub)
     # DB resolves to the project ROOT, not the nested cwd — the scattered-DB fix.
     assert dbmod.resolve_db_path() == tmp_path / dbmod.DEFAULT_DB_NAME
+
+
+def test_connect_create_false_does_not_materialize_db(tmp_path):
+    # Regression: a READ on a project with no DB must NOT create the file.
+    missing = tmp_path / dbmod.DEFAULT_DB_NAME
+    assert dbmod.connect(str(missing), create=False) is None
+    assert not missing.exists(), "read-only connect must not create harness.db"
+
+
+def test_connect_create_true_makes_db(tmp_path):
+    target = tmp_path / dbmod.DEFAULT_DB_NAME
+    conn = dbmod.connect(str(target), create=True)
+    assert conn is not None
+    conn.close()
+    assert target.is_file()
