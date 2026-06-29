@@ -133,8 +133,9 @@ export function ActivityFeed({ tasks }: ActivityFeedProps) {
                   <span
                     className="text-[10px] font-semibold rounded px-2 py-0.5 shrink-0"
                     style={{
-                      backgroundColor: ev.lane === 'risky' ? '#fc818122' : ev.lane === 'standard' ? '#63b3ed22' : '#68d39122',
-                      color: ev.lane === 'risky' ? '#fc8181' : ev.lane === 'standard' ? '#63b3ed' : '#68d391',
+                      // laneColor handles both v1 (standard/risky) and v2 (normal/high_risk) lanes
+                      backgroundColor: `${laneColor(ev.lane)}22`,
+                      color: laneColor(ev.lane),
                     }}
                   >
                     {ev.lane.charAt(0).toUpperCase() + ev.lane.slice(1)}

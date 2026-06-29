@@ -33,7 +33,6 @@ interface RuleGroup {
 }
 
 interface ProjectFilesResponse {
-  conventions: FileEntry;
   knowledge: FileEntry;
   claudeMd: FileEntry;
   rules: RuleGroup[];

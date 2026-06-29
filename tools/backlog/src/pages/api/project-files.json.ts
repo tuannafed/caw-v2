@@ -20,7 +20,6 @@ interface RuleGroup {
 }
 
 interface ProjectFilesResponse {
-  conventions: FileEntry;
   knowledge: FileEntry;
   claudeMd: FileEntry;
   rules: RuleGroup[];
@@ -121,14 +120,13 @@ export const GET: APIRoute = async () => {
   }
 
   try {
-    const [conventions, knowledge, claudeMd, rules] = await Promise.all([
-      readEntry(root, 'docs/caw/conventions.md'),
+    const [knowledge, claudeMd, rules] = await Promise.all([
       readEntry(root, 'docs/caw/knowledge.md'),
       readEntry(root, 'CLAUDE.md'),
       readRules(root),
     ]);
 
-    const body: ProjectFilesResponse = { conventions, knowledge, claudeMd, rules };
+    const body: ProjectFilesResponse = { knowledge, claudeMd, rules };
     return new Response(JSON.stringify(body), {
       status: 200,
       headers: {

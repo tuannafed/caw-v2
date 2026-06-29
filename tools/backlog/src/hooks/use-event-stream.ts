@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export type EventTopic = 'tasks' | 'project-files' | 'skills';
+export type EventTopic = 'tasks' | 'project-files';
 
 interface SubscriberMap {
   [topic: string]: Set<() => void>;
@@ -35,7 +35,6 @@ function ensureSource() {
   };
   wire('tasks');
   wire('project-files');
-  wire('skills');
 
   source.onerror = () => {
     // EventSource auto-reconnects; nothing to do. If browser permanently

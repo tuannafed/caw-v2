@@ -1,25 +1,14 @@
-import { Calendar, FileText, Layers } from 'lucide-react'
-import type { ReactNode } from 'react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { renderMarkdown } from '@/lib/markdown'
-import {
-  laneColor,
-  phaseProgress,
-  shortDate,
-  stageColor,
-  statusLabel,
-} from '@/lib/status'
-import type { Task } from '@/lib/task-parser'
+import { Calendar, FileText, Layers } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { renderMarkdown } from '@/lib/markdown';
+import { laneColor, phaseProgress, shortDate, stageColor, statusLabel } from '@/lib/status';
+import type { Task } from '@/lib/task-parser';
 
 interface SectionDef {
-  key: 'plan' | 'code' | 'tests' | 'review'
-  label: string
+  key: 'plan' | 'code' | 'tests' | 'review';
+  label: string;
 }
 
 const SECTIONS: SectionDef[] = [
@@ -27,12 +16,12 @@ const SECTIONS: SectionDef[] = [
   { key: 'code', label: 'Code' },
   { key: 'tests', label: 'Tests' },
   { key: 'review', label: 'Review' },
-]
+];
 
 interface TaskDialogProps {
-  task: Task | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  task: Task | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 function MetaCell({ label, children }: { label: string; children: ReactNode }) {
@@ -41,20 +30,16 @@ function MetaCell({ label, children }: { label: string; children: ReactNode }) {
       <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
         {label}
       </p>
-      <div className="text-[14px] font-semibold text-foreground">
-        {children}
-      </div>
+      <div className="text-[14px] font-semibold text-foreground">{children}</div>
     </div>
-  )
+  );
 }
 
 function OverviewInfo({ task }: { task: Task }) {
-  const progress = phaseProgress(task)
-  const pct = progress
-    ? Math.round((progress.done / Math.max(1, progress.total)) * 100)
-    : 0
-  const stageClr = stageColor(task)
-  const laneClr = laneColor(task.lane)
+  const progress = phaseProgress(task);
+  const pct = progress ? Math.round((progress.done / Math.max(1, progress.total)) * 100) : 0;
+  const stageClr = stageColor(task);
+  const laneClr = laneColor(task.lane);
 
   return (
     <div className="rounded-xl border border-border/60 bg-muted/10 overflow-hidden mb-6">
@@ -96,9 +81,7 @@ function OverviewInfo({ task }: { task: Task }) {
         <div className="px-4 py-4">
           <MetaCell label="Next Phase">
             {task.next_phase ? (
-              <code className="font-mono text-[12px] text-primary">
-                {task.next_phase}
-              </code>
+              <code className="font-mono text-[12px] text-primary">{task.next_phase}</code>
             ) : (
               <span className="text-muted-foreground/40">—</span>
             )}
@@ -123,9 +106,7 @@ function OverviewInfo({ task }: { task: Task }) {
           <MetaCell label="Created">
             <span className="flex items-center gap-1.5">
               <Calendar className="size-3.5 text-muted-foreground" />
-              <span className="font-mono text-[13px]">
-                {shortDate(task.created) || '—'}
-              </span>
+              <span className="font-mono text-[13px]">{shortDate(task.created) || '—'}</span>
             </span>
           </MetaCell>
         </div>
@@ -133,9 +114,7 @@ function OverviewInfo({ task }: { task: Task }) {
           <MetaCell label="Updated">
             <span className="flex items-center gap-1.5">
               <Calendar className="size-3.5 text-muted-foreground" />
-              <span className="font-mono text-[13px]">
-                {shortDate(task.updated) || '—'}
-              </span>
+              <span className="font-mono text-[13px]">{shortDate(task.updated) || '—'}</span>
             </span>
           </MetaCell>
         </div>
@@ -156,10 +135,7 @@ function OverviewInfo({ task }: { task: Task }) {
                 <span className="text-[12px] text-muted-foreground font-mono">
                   {progress.label}
                 </span>
-                <span
-                  className="text-[13px] font-bold font-mono"
-                  style={{ color: stageClr }}
-                >
+                <span className="text-[13px] font-bold font-mono" style={{ color: stageClr }}>
                   {pct}%
                 </span>
               </div>
@@ -170,7 +146,7 @@ function OverviewInfo({ task }: { task: Task }) {
         </MetaCell>
       </div>
     </div>
-  )
+  );
 }
 
 function PhasesTable({ task }: { task: Task }) {
@@ -180,7 +156,7 @@ function PhasesTable({ task }: { task: Task }) {
         <Layers className="size-4" />
         <span>No phases defined.</span>
       </div>
-    )
+    );
   }
 
   return (
@@ -198,17 +174,15 @@ function PhasesTable({ task }: { task: Task }) {
       </div>
       <div className="divide-y divide-border/40">
         {task.phases.map((p) => {
-          const status = (p.status || 'pending').toLowerCase()
-          const isDone = status === 'done' || status === 'completed'
-          const isBlocked = status === 'blocked' || status === 'needs-rework'
+          const status = (p.status || 'pending').toLowerCase();
+          const isDone = status === 'done' || status === 'completed';
+          const isBlocked = status === 'blocked' || status === 'needs-rework';
           const isInProgress =
-            status === 'in-progress' ||
-            status === 'coding' ||
-            status === 'in_progress'
+            status === 'in-progress' || status === 'coding' || status === 'in_progress';
           const files = (p.files || '')
             .split(',')
             .map((f) => f.trim())
-            .filter(Boolean)
+            .filter(Boolean);
 
           const badgeStyle = isDone
             ? { bg: '#48bb7820', color: '#48bb78' }
@@ -216,16 +190,14 @@ function PhasesTable({ task }: { task: Task }) {
               ? { bg: '#fc818120', color: '#fc8181' }
               : isInProgress
                 ? { bg: '#dd6b2020', color: '#dd6b20' }
-                : { bg: '#71809620', color: '#a0aec0' }
+                : { bg: '#71809620', color: '#a0aec0' };
 
           return (
             <div
               key={p.id}
               className="grid grid-cols-[220px_150px_1fr] gap-4 px-4 py-3 items-start hover:bg-muted/20 transition-colors"
             >
-              <code className="font-mono text-[12.5px] text-foreground pt-0.5">
-                {p.id}
-              </code>
+              <code className="font-mono text-[12.5px] text-foreground pt-0.5">{p.id}</code>
               <div className="pt-0.5">
                 <span
                   className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full capitalize"
@@ -238,9 +210,7 @@ function PhasesTable({ task }: { task: Task }) {
                 </span>
               </div>
               {files.length === 0 ? (
-                <span className="text-muted-foreground/40 text-[12px] pt-0.5">
-                  —
-                </span>
+                <span className="text-muted-foreground/40 text-[12px] pt-0.5">—</span>
               ) : (
                 <ul className="space-y-1 min-w-0">
                   {files.map((f, i) => (
@@ -254,11 +224,11 @@ function PhasesTable({ task }: { task: Task }) {
                 </ul>
               )}
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
 function MarkdownPanel({ content, path }: { content: string; path?: string }) {
@@ -268,7 +238,7 @@ function MarkdownPanel({ content, path }: { content: string; path?: string }) {
         <FileText className="size-4" />
         <span>Not yet written.</span>
       </div>
-    )
+    );
   }
   return (
     <div>
@@ -284,19 +254,16 @@ function MarkdownPanel({ content, path }: { content: string; path?: string }) {
         dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
       />
     </div>
-  )
+  );
 }
 
 export function TaskDialog({ task, open, onOpenChange }: TaskDialogProps) {
-  if (!task) return null
-  const laneClr = laneColor(task.lane)
-  const stageClr = stageColor(task)
+  if (!task) return null;
+  const laneClr = laneColor(task.lane);
+  const stageClr = stageColor(task);
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[1200px] w-[95vw] h-[88vh] p-0 gap-0 overflow-hidden flex flex-col card-border-glow">
         {/* Header */}
         <div className="px-6 py-5 border-b border-border/60 space-y-3 shrink-0">
@@ -356,7 +323,7 @@ export function TaskDialog({ task, open, onOpenChange }: TaskDialogProps) {
                 Overview
               </TabsTrigger>
               {SECTIONS.map((s) => {
-                const empty = !task.sections[s.key]?.trim()
+                const empty = !task.sections[s.key]?.trim();
                 return (
                   <TabsTrigger
                     key={s.key}
@@ -365,17 +332,14 @@ export function TaskDialog({ task, open, onOpenChange }: TaskDialogProps) {
                   >
                     {s.label}
                   </TabsTrigger>
-                )
+                );
               })}
             </TabsList>
           </div>
 
           {/* Tab content pane */}
           <div className="flex-1 min-w-0 min-h-0 overflow-hidden">
-            <TabsContent
-              value="overview"
-              className="h-full overflow-y-auto px-6 py-5 m-0"
-            >
+            <TabsContent value="overview" className="h-full overflow-y-auto px-6 py-5 m-0">
               <OverviewInfo task={task} />
               <div className="flex items-center gap-2 mb-4">
                 <Layers className="size-4 text-muted-foreground/60" />
@@ -395,15 +359,12 @@ export function TaskDialog({ task, open, onOpenChange }: TaskDialogProps) {
                 value={s.key}
                 className="h-full overflow-y-auto px-6 py-5 m-0"
               >
-                <MarkdownPanel
-                  content={task.sections[s.key] || ''}
-                  path={`${s.key}.md`}
-                />
+                <MarkdownPanel content={task.sections[s.key] || ''} path={`${s.key}.md`} />
               </TabsContent>
             ))}
           </div>
         </Tabs>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

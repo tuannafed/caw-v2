@@ -7,24 +7,21 @@ import type { Task } from '@/lib/task-parser';
 import { fetchJson } from '@/lib/utils';
 import { BoardView } from './board-view';
 import { Dashboard } from './dashboard';
-import { SkillsView } from './skills-view';
 import { TaskDialog } from './task-dialog';
 import { TasksHeader } from './tasks-header';
 import { TasksSidebar } from './tasks-sidebar';
 
-type View = 'dashboard' | 'board' | 'skills';
+type View = 'dashboard' | 'board';
 
 function readHashView(): View {
   if (typeof window === 'undefined') return 'dashboard';
   const h = window.location.hash;
   if (h === '#/board') return 'board';
-  if (h === '#/skills') return 'skills';
   return 'dashboard';
 }
 
 function viewToHash(view: View): string {
   if (view === 'board') return '#/board';
-  if (view === 'skills') return '#/skills';
   return '#/';
 }
 
@@ -106,8 +103,6 @@ export function App() {
         <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
           {view === 'board' ? (
             <BoardView tasks={tasks} onOpen={onOpen} />
-          ) : view === 'skills' ? (
-            <SkillsView />
           ) : (
             <Dashboard tasks={tasks} />
           )}

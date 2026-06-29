@@ -1,4 +1,4 @@
-import { Kanban, LayoutGrid, Sparkles } from 'lucide-react';
+import { Kanban, LayoutGrid } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   Sidebar,
@@ -64,7 +64,7 @@ function ClaudeLogo({ className }: { className?: string }) {
   );
 }
 
-type View = 'dashboard' | 'board' | 'skills';
+type View = 'dashboard' | 'board';
 
 const APP_VERSION = 'v2.0.0';
 
@@ -78,14 +78,11 @@ interface TasksSidebarProps {
 const menuItems: { id: View; label: string; icon: typeof LayoutGrid }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutGrid },
   { id: 'board', label: 'Board', icon: Kanban },
-  { id: 'skills', label: 'Skills', icon: Sparkles },
 ];
 
 interface WorkspaceStats {
-  agents: number;
   tasks: number;
-  skills: number;
-  commands: number;
+  decisions: number;
   rules: number;
 }
 
@@ -109,10 +106,8 @@ export function TasksSidebar({
   const ws = useWorkspaceStats();
 
   const metrics = [
-    { label: 'Agents', value: ws?.agents ?? taskCount, color: 'var(--primary)' },
-    { label: 'Tasks', value: taskCount, color: 'var(--primary)' },
-    { label: 'Skills', value: ws?.skills ?? '—', color: '#a78bfa' },
-    { label: 'Commands', value: ws?.commands ?? '—', color: '#f6ad55' },
+    { label: 'Tasks', value: ws?.tasks ?? taskCount, color: 'var(--primary)' },
+    { label: 'Decisions', value: ws?.decisions ?? '—', color: '#a78bfa' },
     { label: 'Rules', value: ws?.rules ?? '—', color: '#68d391' },
   ];
 

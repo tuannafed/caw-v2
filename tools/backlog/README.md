@@ -52,7 +52,7 @@ pnpm build:vercel
 # output: ../.vercel/output/  (copied to repo root for Vercel pickup)
 ```
 
-**Deploy:** Connect the repo gốc to Vercel. The `vercel.json` at repo root
+**Deploy:** Connect the repo root to Vercel. The `vercel.json` at repo root
 already points Vercel to run `pnpm build:vercel` inside this folder. Every
 push to the linked branch rebuilds the snapshot.
 
@@ -70,19 +70,18 @@ Static mode trade-offs:
 
 ## Data model
 
-Each task folder holds one `overview.yaml` (structured state) plus four
-stage markdown files. The parser reads `overview.yaml` as YAML; a folder
-without `overview.yaml` is skipped as not a valid caw task.
+A story folder is valid if it has **`plan.md`** (pure caw v2 stories) **or**
+`overview.yaml` (legacy). Pure-v2 stories carry only `plan.md` and are NOT
+skipped. Structured execution state — `status` and `lane` — comes from
+**`harness.db`** when present; otherwise the parser falls back to any
+`status:` / `lane:` in the story's markdown.
 
 | Field | Source |
 |---|---|
-| `status`     | `status:` in `overview.yaml` |
-| `lane`       | `lane:` in `overview.yaml` (`tiny` / `standard` / `risky`) |
-| `type`       | `type:` in `overview.yaml` |
-| `next_phase` | `next_phase:` in `overview.yaml` |
-| `phases[]`   | `phases:` list in `overview.yaml` |
+| `status`     | `harness.db` `story.status` → fallback markdown `status:` |
+| `lane`       | `harness.db` `story.risk_lane` → fallback markdown `lane:` (`tiny` / `normal` / `high_risk`) |
+| `type`       | story markdown |
 | `sections.{plan,code,tests,review}` | `plan.md`, `code.md`, `tests.md`, `review.md` |
-| `sections.overview` | raw `overview.yaml` content |
 
 The status→stage mapping (Pending → Planning → Coding → Testing → Review →
 Blocked → Done) lives in [src/lib/status.ts](src/lib/status.ts).

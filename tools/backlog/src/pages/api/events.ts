@@ -11,7 +11,7 @@ export const prerender = IS_STATIC;
 
 // Topics surface as event names on the client. Each watched path falls under
 // exactly one topic; the client decides what to refetch when each fires.
-type Topic = 'tasks' | 'project-files' | 'skills';
+type Topic = 'tasks' | 'project-files';
 
 interface WatchSpec {
   path: string; // relative to projectRoot
@@ -20,15 +20,13 @@ interface WatchSpec {
 }
 
 const WATCH_SPECS: WatchSpec[] = [
-  // Story lifecycle: docs/caw/stories/<story-id>/{overview.yaml, plan.md, code.md, tests.md, review.md}
+  // Story lifecycle: docs/caw/stories/<story-id>/{plan.md, code.md, tests.md, review.md}
   { path: 'docs/caw/stories', topic: 'tasks', recursive: true },
   // Project knowledge files served via /api/project-files.json
-  { path: 'docs/caw/conventions.md', topic: 'project-files' },
   { path: 'docs/caw/knowledge.md', topic: 'project-files' },
   { path: 'CLAUDE.md', topic: 'project-files' },
+  // Recursive — also covers .claude/rules/project.md, the v2 Overview source.
   { path: '.claude/rules', topic: 'project-files', recursive: true },
-  // Skills installed via /caw-setup
-  { path: '.claude/skills', topic: 'skills', recursive: true },
 ];
 
 const DEBOUNCE_MS = 250;

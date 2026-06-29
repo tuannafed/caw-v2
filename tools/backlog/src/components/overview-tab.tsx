@@ -3,13 +3,11 @@ import { useCallback, useEffect, useState } from 'react';
 import * as simpleIcons from 'simple-icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useEventSubscribe } from '@/hooks/use-event-stream';
-import { renderMarkdown } from '@/lib/markdown';
 import { fetchJson } from '@/lib/utils';
 import type { ProjectOverview, StackItem } from '@/pages/api/project-overview.json';
 
 interface OverviewData {
   overview: ProjectOverview;
-  conventionsContent: string;
 }
 
 // One simple-icon record: title, brand hex (no '#'), and the SVG path.
@@ -31,7 +29,7 @@ function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
-// Tech names in conventions.md don't always match simple-icons titles 1:1.
+// Stack tech names don't always match simple-icons titles 1:1.
 // Map a stack item's name → the simple-icons title to look up.
 const NAME_ALIASES: Record<string, string> = {
   nextjs: 'nextdotjs',
@@ -161,15 +159,9 @@ export function OverviewTab() {
 
   const load = useCallback(() => {
     setError(false);
-    Promise.all([
-      fetchJson<ProjectOverview>('/api/project-overview.json'),
-      fetchJson<{ conventions?: { content?: string } }>('/api/project-files.json'),
-    ])
-      .then(([overview, files]) => {
-        setData({
-          overview,
-          conventionsContent: files?.conventions?.content ?? '',
-        });
+    fetchJson<ProjectOverview>('/api/project-overview.json')
+      .then((overview) => {
+        setData({ overview });
       })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
@@ -202,7 +194,7 @@ export function OverviewTab() {
     );
   }
 
-  const { overview, conventionsContent } = data;
+  const { overview } = data;
 
   const ProjectLogo = getProjectLogo(overview.archetype);
 
@@ -272,27 +264,6 @@ export function OverviewTab() {
           </div>
         </div>
       )}
-
-      {/* Conventions full content — strip the auto-generated header block */}
-      {conventionsContent.trim() &&
-        (() => {
-          // Drop everything before the first ## heading (the generated preamble)
-          const firstSection = conventionsContent.indexOf('\n## ');
-          const body =
-            firstSection !== -1 ? conventionsContent.slice(firstSection + 1) : conventionsContent;
-          return (
-            <div className="space-y-2.5 pt-2 border-t border-border/60">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground pt-2">
-                Conventions
-              </p>
-              <div
-                className="prose-task max-w-none"
-                // eslint-disable-next-line react/no-danger
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(body) }}
-              />
-            </div>
-          );
-        })()}
     </div>
   );
 }

@@ -9,21 +9,10 @@ import { getProjectName } from '@/lib/task-parser';
 
 export const prerender = IS_STATIC;
 
-// Legacy fallback — only used when project.yaml is absent (project hasn't
-// re-run /caw-setup --refresh since the YAML pipeline shipped).
+// Fallback — used when project.yaml is absent (the common case in caw v2, where
+// project.yaml was removed). Derive the project name from CLAUDE.md's H1.
 async function resolveNameLegacy(root: string): Promise<string> {
-  const [conventions, claudeMd] = await Promise.all([
-    readFile(join(root, 'docs', 'caw', 'conventions.md'), 'utf8').catch(() => ''),
-    readFile(join(root, 'CLAUDE.md'), 'utf8').catch(() => ''),
-  ]);
-  const convH1 = conventions.match(/^#\s+(.+?)\s*$/m);
-  if (convH1) {
-    const cleaned = convH1[1]
-      .replace(/^Project Conventions\s*[—\-:]\s*/i, '')
-      .replace(/^Conventions\s*[—\-:]\s*/i, '')
-      .trim();
-    if (cleaned && cleaned.toLowerCase() !== 'project conventions') return cleaned;
-  }
+  const claudeMd = await readFile(join(root, 'CLAUDE.md'), 'utf8').catch(() => '');
   const claudeH1 = claudeMd.match(/^#\s+(.+?)\s*$/m);
   if (claudeH1) {
     const cleaned = claudeH1[1].replace(/\s*[—\-:].*$/, '').trim();

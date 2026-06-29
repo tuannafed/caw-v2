@@ -5,7 +5,7 @@ import { ThemeToggle } from './theme-toggle';
 
 interface TasksHeaderProps {
   flashing: boolean;
-  view: 'dashboard' | 'board' | 'skills';
+  view: 'dashboard' | 'board';
 }
 
 function LiveClock() {
@@ -31,7 +31,7 @@ function LiveClock() {
 }
 
 export function TasksHeader({ flashing, view }: TasksHeaderProps) {
-  const title = view === 'board' ? 'Board' : view === 'skills' ? 'Skills' : 'Dashboard';
+  const title = view === 'board' ? 'Board' : 'Dashboard';
 
   return (
     <header className="border-b border-border">
