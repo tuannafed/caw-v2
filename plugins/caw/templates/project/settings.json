@@ -147,6 +147,10 @@
       "Bash(node_modules/.bin/playwright*)",
       "Bash(./node_modules/.bin/*)",
 
+      "Bash(scripts/caw/bin/harness-cli*)",
+      "Bash(./scripts/caw/bin/harness-cli*)",
+      "Bash(bash scripts/caw/bin/harness-cli*)",
+
       "Bash(uv run*)",
       "Bash(uv pip*)",
       "Bash(pytest*)",

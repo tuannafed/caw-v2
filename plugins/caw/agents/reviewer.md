@@ -155,9 +155,10 @@ planner must quote-back and wait. For any `*.db`/integration test, do **not** ce
 "no leak" from reading alone — require the delta-count evidence per [`${CLAUDE_PLUGIN_ROOT}/rules/common/test-tiers.md`](../rules/common/test-tiers.md)
 check #8, or downgrade the verdict to "leak not empirically verified".
 
-**Mechanical gate (caw v2).** If the durable CLI exists
-(`${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli`), the reviewer does not certify proof by reading.
-Run `harness-cli story gate --story-id <id>`: it exits 0 only when every task carrying
+**Mechanical gate (caw v2).** If the durable CLI exists (call it through the stable
+wrapper `scripts/caw/bin/harness-cli`, never the version-specific cache path), the
+reviewer does not certify proof by reading.
+Run `scripts/caw/bin/harness-cli story gate --story-id <id>`: it exits 0 only when every task carrying
 a `verify_command` recorded a `pass`. Exit 2 ⟶ the task is `proof-unverified` and
 CANNOT be approved until each unverified task is run with `harness-cli task verify`.
 A task that touches real I/O but has no `verify_command` is itself a finding — the

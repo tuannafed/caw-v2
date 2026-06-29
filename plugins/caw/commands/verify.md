@@ -35,7 +35,7 @@ ready-to-commit. dava2 shipped DB leaks past `/caw:verify` because the gate was 
 human reading code. The durable layer makes the gate mechanical: every task that
 carries a `verify_command` must have recorded a `pass`.
 
-If the durable CLI is present (`${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli`):
+If the durable CLI is present (call it via the stable wrapper `scripts/caw/bin/harness-cli`, not the version-specific cache path):
 
 1. For any task whose work touches real I/O (a DB/integration test, a smoke
    step), ensure it has a `verify_command` recorded:

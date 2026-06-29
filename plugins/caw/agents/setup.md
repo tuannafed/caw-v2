@@ -486,20 +486,27 @@ Record the preflight result in the Phase 4 report (`companions: ok` or
 ### Phase 2 — Verify the durable layer
 
 Every downstream agent reads/writes state via `harness-cli` (state lives in
-`harness.db`, not markdown). The harness binary ships in the plugin
-(`${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli`) but writes its DB to the
-**project root** (`./harness.db`, resolved from CWD). Confirm it works before
-handing off — a broken CLI silently pushes agents back onto markdown.
+`harness.db`, not markdown). The binary ships in the plugin, but agents call it
+through the **stable wrapper** `scripts/caw/bin/harness-cli` (written in Phase 0) so
+the invocation path is identical across tools and survives plugin-version bumps. The
+wrapper resolves the DB to the **project root** (`./harness.db`, from CWD). Confirm it
+works before handing off — a broken CLI silently pushes agents back onto markdown.
+
+> **Always call the wrapper `scripts/caw/bin/harness-cli`, never the version-specific
+> cache path** (`…/plugins/cache/caw/caw/<version>/harness/bin/harness-cli`). The
+> wrapper path is what the settings allowlist matches, so calling it avoids an approval
+> prompt on every harness call; the cache path changes each release and can't be
+> allowlisted.
 
 ```bash
-# CLI present + runnable (invoked from the plugin, DB resolves to project CWD)
-"${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli" --version    # expect: harness-cli <version>
+# CLI present + runnable (wrapper execs the plugin binary, DB resolves to project CWD)
+scripts/caw/bin/harness-cli --version    # expect: harness-cli <version>
 
 # DB initialized at project root (init is idempotent)
-"${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli" init
+scripts/caw/bin/harness-cli init
 
 # queryable (empty matrix is fine on a fresh project)
-"${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli" query matrix
+scripts/caw/bin/harness-cli query matrix
 ```
 
 Confirm `harness.db` was created at the **project root**, not in the plugin cache:

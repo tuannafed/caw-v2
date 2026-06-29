@@ -7,6 +7,24 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.12] — 2026-06-29
+
+### Fixed
+- **`harness-cli` prompted for approval on every call.** Agents were invoking the
+  version-specific cache binary
+  (`…/plugins/cache/caw/caw/<version>/harness/bin/harness-cli`), which can't be
+  allowlisted because the path changes each release — so every `query`/`task
+  update`/`story gate` triggered a permission prompt. caw already ships a stable
+  wrapper at `scripts/caw/bin/harness-cli`; the agent/command/rule prompts
+  (`setup.md`, `reviewer.md`, `verify.md`, `commands/setup.md`, `harness-contract.md`)
+  now all call that wrapper, and the settings template allowlists
+  `Bash(scripts/caw/bin/harness-cli*)`. Harness calls run without prompting.
+- **Made the flag-form invocation explicit to stop positional-arg retries.** A run was
+  seen calling `task update <story> <task> <status>` positionally (CLI requires
+  `--story-id … --task-key … --status …`), failing with exit 2 and retrying — i.e. the
+  command "ran twice." The harness-contract now states the flag form is required and
+  positional args are not accepted.
+
 ## [2.4.11] — 2026-06-29
 
 ### Fixed

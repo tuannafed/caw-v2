@@ -31,7 +31,7 @@ Spawn the **setup** agent: `"Run the setup flow with arguments: <args>"`
 Setup agent will:
 1. Read CLAUDE.md (project intent)
 2. Detect tech stack (package.json + file scan)
-3. Verify the durable harness (`${CLAUDE_PLUGIN_ROOT}/harness/bin/harness-cli`) — DB resolves to the project root
+3. Verify the durable harness (via the stable wrapper `scripts/caw/bin/harness-cli`) — DB resolves to the project root
 4. Generate `.claude/rules/project.md` — the single auto-injected source of truth (LAW + verify commands + Context7 names; monorepo: one rule file per area)
 
 After setup completes, the project is ready for `/caw:plan`.

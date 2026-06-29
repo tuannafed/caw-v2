@@ -4,6 +4,15 @@ The caw harness keeps living docs alive only if every agent both **reads** them
 before acting and **updates** them after acting. Docs are input, not output of a
 scan — an agent that finishes without pulling/pushing leaves the next agent blind.
 
+> **How to invoke `harness-cli`.** Everywhere below, `harness-cli` means the stable
+> project wrapper **`scripts/caw/bin/harness-cli`** (written by `/caw:setup`). ALWAYS
+> call that path — never the version-specific cache binary
+> (`…/plugins/cache/caw/caw/<version>/harness/bin/harness-cli`). The wrapper path is
+> what the settings allowlist matches, so calling it runs without an approval prompt;
+> the cache path changes every release and can't be allowlisted, so it prompts every
+> time. Also use the documented flag form (`--story-id … --task-key … --status …`),
+> not positional args.
+
 ## State vs prose — the ONE rule that prevents duplication
 
 caw v2 splits every artifact by who reads it (ADR-0001):
