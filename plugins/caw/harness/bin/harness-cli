@@ -248,7 +248,9 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
 
     if args.command == "init":
-        path = db.resolve_db_path(args.db)
+        # init is the ONLY command allowed to bootstrap a DB at cwd when no caw
+        # project marker exists yet — that's its whole job.
+        path = db.resolve_db_path(args.db, allow_cwd_fallback=True)
         conn = db.connect(path)
         ver = db.migrate(conn)
         conn.close()
@@ -261,17 +263,25 @@ def main(argv=None):
         default_conductor = Path.cwd() / "docs" / "caw"
         args.conductor = str(default_conductor) if default_conductor.is_dir() else None
 
-    # Read-only commands must NOT materialize an empty harness.db on a project that
-    # never ran /caw:setup (the harness.db-in-every-git-repo leak). Open read-only;
-    # if the DB doesn't exist yet, report "no data" and exit 0 instead of creating it.
+    # Resolve the project DB. If there's no caw project here (no docs/caw, no existing
+    # harness.db up the tree) resolve_db_path returns None — every non-init command then
+    # no-ops instead of creating a stray harness.db at cwd. This is the real fix for the
+    # DB-in-an-unrelated-repo leak: a `story gate`/`task update`/etc. for project A run
+    # with cwd inside project B must NOT seed a DB in B. (It also covers reads.)
+    db_path = db.resolve_db_path(args.db)
+    if db_path is None:
+        print("[]" if getattr(args, "json", False)
+              else "(not a caw project — no docs/caw or harness.db here; run /caw:setup first)")
+        return 0
+    # Read-only commands additionally must not create the file even when the path
+    # resolves (e.g. a marker dir exists but the DB was deleted) — return empty.
     READ_ONLY = {
         "query", "matrix", "audit", "lint", "maturity",
         "score-trace", "score-context", "propose",
     }
     is_read = args.command in READ_ONLY
-    conn = db.connect(db.resolve_db_path(args.db), create=not is_read)
+    conn = db.connect(db_path, create=not is_read)
     if conn is None:
-        # No DB yet and this is a read — nothing to return.
         print("[]" if getattr(args, "json", False) else "(no harness.db — run /caw:setup first)")
         return 0
     try:

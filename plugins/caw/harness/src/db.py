@@ -94,13 +94,19 @@ def find_project_root(start=None):
     return None
 
 
-def resolve_db_path(explicit=None):
+def resolve_db_path(explicit=None, allow_cwd_fallback=False):
     """Where harness.db lives for a project.
 
     caw v2 layout (mirrors repository-harness): harness.db lives at the project
     ROOT, alongside scripts/ and docs/ — not under .claude/.
-    Order: explicit arg > HARNESS_DB env > project root (walked up from cwd) >
-    cwd (only when no project marker is found anywhere up the tree).
+    Order: explicit arg > HARNESS_DB env > project root (walked up from cwd).
+
+    If NO caw project marker is found (no `docs/caw/`, no existing `harness.db`
+    anywhere up the tree), this returns None — the caller must NOT create a DB.
+    Falling back to cwd here is exactly what scattered an empty harness.db into the
+    root of unrelated git repos when a caw session (e.g. a `story gate` for another
+    project) happened to run with its cwd inside one. Only `init` passes
+    `allow_cwd_fallback=True` to bootstrap a brand-new project at cwd.
     """
     import os
 
@@ -110,4 +116,8 @@ def resolve_db_path(explicit=None):
     if env:
         return Path(env)
     root = find_project_root()
-    return (root or Path.cwd()) / DEFAULT_DB_NAME
+    if root is not None:
+        return root / DEFAULT_DB_NAME
+    if allow_cwd_fallback:
+        return Path.cwd() / DEFAULT_DB_NAME
+    return None

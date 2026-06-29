@@ -7,6 +7,21 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.17] — 2026-06-29
+
+### Fixed
+- **`harness.db` still appeared in unrelated repos via WRITE-ish commands (2.4.16 only
+  covered reads).** Real cause caught in the wild: a caw session running
+  `story gate --story-id <A>` for project A, but with its **cwd inside project B** (an
+  unrelated git repo), seeded an empty `harness.db` at B's root. 2.4.16 stopped reads
+  from creating the DB, but `story gate` (and other non-`init` commands) still hit
+  `resolve_db_path`'s old cwd fallback. Now `resolve_db_path` returns **None** when no
+  caw marker (`docs/caw/` or an existing `harness.db`) is found up the tree, and every
+  command except `init` no-ops with "(not a caw project …)" instead of creating a DB.
+  `init` alone opts into the cwd fallback (`allow_cwd_fallback=True`) to bootstrap a new
+  project. Regression test added (`resolve_db_path` is None with no marker; init still
+  bootstraps).
+
 ## [2.4.16] — 2026-06-29
 
 ### Fixed

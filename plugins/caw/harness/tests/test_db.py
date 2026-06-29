@@ -71,6 +71,19 @@ def test_resolve_db_path_uses_project_root(tmp_path, monkeypatch):
     assert dbmod.resolve_db_path() == tmp_path / dbmod.DEFAULT_DB_NAME
 
 
+def test_resolve_db_path_none_when_no_caw_project(tmp_path, monkeypatch):
+    # Regression: in a dir with NO caw marker (e.g. an unrelated git repo), resolve
+    # returns None so no command seeds a stray harness.db at cwd. This is what stopped
+    # a `story gate` for project A — run with cwd inside project B — from creating a DB
+    # in B. Only init opts into the cwd fallback.
+    monkeypatch.delenv("HARNESS_DB", raising=False)
+    sub = tmp_path / "unrelated" / "repo"
+    sub.mkdir(parents=True)
+    monkeypatch.chdir(sub)
+    assert dbmod.resolve_db_path() is None
+    assert dbmod.resolve_db_path(allow_cwd_fallback=True) == sub / dbmod.DEFAULT_DB_NAME
+
+
 def test_connect_create_false_does_not_materialize_db(tmp_path):
     # Regression: a READ on a project with no DB must NOT create the file.
     missing = tmp_path / dbmod.DEFAULT_DB_NAME
