@@ -7,6 +7,27 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.15] — 2026-06-29
+
+### Fixed
+- **`harness-cli` calls with a pipe/redirect re-prompted despite being allowlisted.**
+  Agents were writing `scripts/caw/bin/harness-cli query story --json 2>/dev/null |
+  head -100`. A piped/redirected command is a *composite* that the prefix-based
+  allowlist can't match, so it prompted on every call even though
+  `Bash(scripts/caw/bin/harness-cli*)` is allowed. The harness-contract now requires
+  bare single-command invocations — no `| head`/`| grep`/`2>/dev/null` — and points at
+  the CLI's own `--limit N` / `--json` / `--summary` flags for bounding output.
+
+### Changed
+- **`high_risk` review skips dimensions with zero applicable surface.** A high_risk
+  review ran all 7 dimensions at full depth regardless of what changed, so a
+  backend/logic story still triggered full Accessibility + Performance passes (Context7
+  queries + file re-reads) with nothing to review. Accessibility is now N/A when no
+  UI/markup file changed, and Performance is N/A when nothing touches a hot path —
+  Security, Architecture, Constitution, Harness-compliance, and Refactor are still
+  never skipped. Cuts review wall-clock on high_risk stories without lowering rigor on
+  the code that actually changed.
+
 ## [2.4.14] — 2026-06-29
 
 ### Fixed

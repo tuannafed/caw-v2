@@ -79,7 +79,7 @@ is the single biggest latency saving in the pipeline:
 | Lane | Dimensions reviewed | Skills to load |
 |---|---|---|
 | `normal` | Security, Architecture, Harness-compliance — **always**. Performance + Accessibility **only if** changed files touch a hot path (DB queries, loops, large payloads) or UI. Refactor: note in passing, don't deep-dive. | Superpowers `code-review` + `systematic-debugging`; query Context7 / Frontend Design for perf/a11y only when their dimension is in scope. |
-| `high_risk` | All 7 dimensions, full depth. | All sources below. |
+| `high_risk` | All 7 dimensions, full depth — **except a dimension with zero applicable surface in the changed files is a one-line "N/A (no <surface> changed)" instead of a full pass.** Accessibility is N/A when no UI/component/markup file changed; Performance is N/A when nothing touches a hot path (DB queries, loops, large payloads, render-critical code). Security, Architecture, Constitution, Harness-compliance, and Refactor are **never** N/A at high_risk. This skips wasted Context7 queries + re-reads on irrelevant dimensions without lowering rigor on what actually changed. | All sources below (load a dimension's skill only when that dimension is in scope, not N/A). |
 
 (`tiny` never reaches review — the pipeline skips this stage for it.)
 

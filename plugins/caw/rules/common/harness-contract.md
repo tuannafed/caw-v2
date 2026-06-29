@@ -12,6 +12,16 @@ scan — an agent that finishes without pulling/pushing leaves the next agent bl
 > the cache path changes every release and can't be allowlisted, so it prompts every
 > time. Also use the documented flag form (`--story-id … --task-key … --status …`),
 > not positional args.
+>
+> **Call it as a bare single command — NO pipes, NO redirects.** Write
+> `scripts/caw/bin/harness-cli query story --json`, never
+> `… query story --json 2>/dev/null | head -100`. A piped/redirected command is a
+> *composite* the allowlist can't prefix-match, so it re-prompts every time even though
+> the wrapper itself is allowlisted. The CLI already keeps output small and writes clean
+> errors — you don't need `| head`, `| grep`, or `2>/dev/null`. To bound rows use the
+> built-in `--limit N` (and `--json`/`--summary`) flags, not a pipe. If you truly must
+> post-process, run the bare harness-cli call first, then process its output in a
+> separate step.
 
 ## State vs prose — the ONE rule that prevents duplication
 
