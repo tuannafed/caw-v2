@@ -1,6 +1,6 @@
 {
   "name": "caw",
-  "version": "2.4.17",
+  "version": "2.4.18",
   "description": "Claude Agent Workflow — 5-agent pipeline (plan/code/test/review), durable SQLite harness, safety hooks, and authored skills.",
   "author": {
     "name": "tuannafed"

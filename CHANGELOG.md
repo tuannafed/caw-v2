@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.18] — 2026-06-29
+
+### Changed
+- **caw no longer commits on its own — commit/push now prompt and need an explicit
+  user instruction.** The settings template had `Bash(git commit*)` in the **allow**
+  list, so an agent could `git commit` with no prompt, and several command prompts said
+  "Proceed to commit" / "commit directly" / "Next: git commit" — wording an agent read
+  as a trigger. Now: `git commit` and `git push` moved from `allow` to a new
+  `permissions.ask` block (they prompt every time), the "proceed to commit" lines in
+  `code.md`/`verify.md` were reworded to "ready for YOU to commit — caw won't commit by
+  itself," and `CLAUDE.md` states commit happens ONLY on an explicit user instruction
+  (a "ready to commit" verdict is a status report, not a trigger). The human decides
+  when to commit.
+
 ## [2.4.17] — 2026-06-29
 
 ### Fixed

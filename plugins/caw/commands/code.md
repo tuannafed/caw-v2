@@ -73,7 +73,9 @@ After the task completes (next step depends on `lane` — read it from the DB,
 `harness-cli query story --json`, find the row for `<story-id>`):
 - Gate passed, more pending tasks → `/caw:code <story-id>` (next task)
 - Gate passed, all tasks done, `lane: tiny` → **done.** Skip test + review (the
-  self-verify gate is the proof for tiny). Proceed to commit.
+  self-verify gate is the proof for tiny). **Stop here and report ready — do NOT run
+  `git commit`.** caw never commits on its own; the user commits when they choose to
+  (they will say "commit"). Tell them the story is ready and that they can commit.
 - Gate passed, all tasks done, `risk_lane: normal` or `high_risk` → `/caw:verify
   <story-id>` (test + review parallel).
 - Gate failed (task `blocked`) → fix the reported type-check/lint errors, then
@@ -154,5 +156,5 @@ Parallel groups: [db] → [backend|frontend-skel] → [frontend-impl] → [integ
 Self-verify gate: all tasks type-check ✓ + lint ✓
 
 Next: /caw:verify <story-id>   (risk_lane: normal|high_risk)
-      — or commit directly if lane: tiny (test + review skipped)
+      — or, if lane: tiny, it's ready for YOU to commit (caw won't commit by itself)
 ```

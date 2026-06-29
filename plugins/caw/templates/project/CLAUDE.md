@@ -37,4 +37,11 @@ Also, do **not** auto-commit and do **not** pause to ask for design approval as 
 skill might instruct — caw has its own clarify gate (planner Step 0.7) and the user
 drives commits. (Per Superpowers' own rule, these user/project instructions take
 precedence over a skill's defaults.)
+
+**Commit only on an explicit user instruction.** Never run `git commit` (or `git push`)
+because a stage "finished" or a verdict said "ready to commit" — that wording is a
+status report to the human, not a trigger. Run `git commit` ONLY after the user
+explicitly tells you to (e.g. they say "commit"). When a story is ready, stop and say
+so; let the user decide when to commit. (Commit/push are also in the settings `ask`
+list, so they prompt — do not treat the prompt as license to commit unprompted.)
 <!-- HARNESS:END -->

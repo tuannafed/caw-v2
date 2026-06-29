@@ -86,7 +86,8 @@ Review:
 
 Verdict: ✅ Ready to commit
 
-Next: git commit (or address MEDIUM findings first)
+Next: ready for YOU to commit when you choose (caw does NOT run git commit itself;
+      commit only when the user says so) — or address MEDIUM findings first
 ```
 
 If reviewer found CRITICAL/HIGH, output:

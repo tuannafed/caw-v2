@@ -50,6 +50,11 @@
       "Bash(*DROP DATABASE*)",
       "Bash(*TRUNCATE TABLE*)"
     ],
+    "// ask note": "Commit/push are NOT auto-allowed — caw must never commit on its own. These prompt every time so the human stays in control: approve only when YOU decided to commit (e.g. you said 'commit'), reject otherwise. acceptEdits (above) covers file edits, not Bash, so these still ask.",
+    "ask": [
+      "Bash(git commit*)",
+      "Bash(git push*)"
+    ],
     "allow": [
       "Read(**)",
       "Write(.claude/**)",
@@ -59,7 +64,6 @@
       "Bash(git diff*)",
       "Bash(git log*)",
       "Bash(git add*)",
-      "Bash(git commit*)",
       "Bash(git checkout*)",
       "Bash(git branch*)",
       "Bash(git stash*)",
