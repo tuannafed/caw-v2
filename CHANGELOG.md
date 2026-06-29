@@ -7,6 +7,23 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.14] — 2026-06-29
+
+### Fixed
+- **`/caw:setup --refresh` never updated an existing `.claude/settings.json`.** Setup
+  only ever dropped a `settings.json.sample` beside the live file and refused to touch
+  it ("it carries the member's own permissions/env"), so every settings-template
+  improvement — the `acceptEdits` default, the `harness-cli` allowlist entries, new
+  deny rules — stranded any project that had run setup once. `--refresh` now **merges**
+  the caw-managed top-level keys (`permissions`, `statusLine`, `worktree`,
+  `extraKnownMarketplaces`, `enabledPlugins`) and the caw-specific env vars
+  (`CAW_HOOK_PROFILE`, `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE`) from the template into the
+  live file via a stdlib-json merge, **preserving every member-added key and env var**.
+  A first-time project (no settings.json) still gets the template wholesale; a
+  malformed live file falls back to a `.sample`. Same re-sync pattern as the CLAUDE.md
+  HARNESS block. (Mirrors the earlier HARNESS-block refresh fix — settings had the same
+  append-only-never-update gap.)
+
 ## [2.4.13] — 2026-06-29
 
 ### Changed

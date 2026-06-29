@@ -216,11 +216,53 @@ cp -n "$PROJ/gitleaks.toml" gitleaks.toml   2>/dev/null || true
 # — so .mcp.json is treated as SECRET and gitignored (below). Scaffolded with an empty
 # key (= anonymous tier); the member pastes their key from context7.com/dashboard.
 cp -n "$PROJ/.mcp.json"     .mcp.json       2>/dev/null || true
-# settings.json: drop a SAMPLE next to the live file (never overwrite an
-# existing .claude/settings.json — it carries the member's own permissions/env).
-# The member reviews and merges it (it enables plugins + sets the allowlist).
+# settings.json: caw-managed keys MUST reach existing projects on --refresh, or
+# template improvements (new permissions, defaultMode, allowlist entries, deny rules)
+# strand projects that ran setup once. But settings.json also carries the MEMBER's own
+# permissions/env, so we can't clobber the whole file. Strategy (mirrors the HARNESS
+# block re-sync):
+#   - no settings.json        → copy the template wholesale
+#   - settings.json + refresh → MERGE caw-managed keys from the template, preserving
+#                               every member-added key (and member env vars)
+#   - settings.json, no refresh → leave it; drop a .sample for first-time review
 mkdir -p .claude
-cp -n "$PROJ/settings.json" .claude/settings.json.sample 2>/dev/null || true
+if [[ ! -e .claude/settings.json ]]; then
+  cp "$PROJ/settings.json" .claude/settings.json
+  echo "✓ .claude/settings.json scaffolded (caw template)"
+elif [[ "$REFRESH" == "1" ]]; then
+  # Merge with stdlib json. caw OWNS these top-level keys (replace them with the
+  # template's current values); the member owns everything else. Inside `env`, only
+  # the caw-specific vars are synced — other env vars the member set are kept.
+  _CAW_MERGEPY="$(mktemp -t caw-settings.XXXXXX.py)"
+  cat > "$_CAW_MERGEPY" <<'PY'
+import json, sys
+tmpl_path, live_path = sys.argv[1], sys.argv[2]
+with open(tmpl_path) as f: tmpl = json.load(f)
+with open(live_path) as f: live = json.load(f)
+# Top-level keys caw fully manages — overwrite from template.
+OWNED = ["permissions", "statusLine", "worktree", "extraKnownMarketplaces", "enabledPlugins"]
+for k in OWNED:
+    if k in tmpl: live[k] = tmpl[k]
+# env: sync only the caw-specific vars, keep the member's other vars.
+CAW_ENV = ["CAW_HOOK_PROFILE", "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE"]
+if "env" in tmpl:
+    live.setdefault("env", {})
+    for k in CAW_ENV:
+        if k in tmpl["env"]: live["env"][k] = tmpl["env"][k]
+with open(live_path, "w") as f:
+    json.dump(live, f, indent=2); f.write("\n")
+PY
+  if python3 "$_CAW_MERGEPY" "$PROJ/settings.json" .claude/settings.json 2>/dev/null; then
+    echo "✓ .claude/settings.json caw-managed keys re-synced (member keys preserved)"
+  else
+    # Malformed live settings.json (or python error): don't lose it — drop a sample.
+    cp -f "$PROJ/settings.json" .claude/settings.json.sample 2>/dev/null || true
+    echo "⚠️ could not merge .claude/settings.json — wrote .sample for manual merge"
+  fi
+  rm -f "$_CAW_MERGEPY"
+else
+  cp -n "$PROJ/settings.json" .claude/settings.json.sample 2>/dev/null || true
+fi
 
 # CLAUDE.md: a member usually already has one from /init (richer than the caw
 # stub). DON'T overwrite the member's prose — but Claude Code does NOT auto-load
