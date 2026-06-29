@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.11] — 2026-06-29
+
+### Fixed
+- **`story.status` never advanced past `planned` → `record-trace` ran on empty data.**
+  On a real run, 11/12 tasks were `done` but the story stayed `planned` because no agent
+  was assigned the story-level transition (planner does `story add`, coder did only
+  `task update`, reviewer does `story gate` — the `planned → in_progress → implemented`
+  hops were nobody's job). Since `record-trace` no-ops while a story is `planned`, the
+  `trace` table stayed empty and `/caw:maintain`'s audit/propose/maturity layer had
+  nothing to work with. `commands/code.md`, `agents/coder.md`, and the harness-contract
+  Push table now make the coder responsible: `story update --status in_progress` before
+  the first task, `--status implemented` once every task is `done`. `implemented` only
+  means "all code landed" — `/caw:verify`'s `story gate` still owns proof.
+
 ## [2.4.10] — 2026-06-29
 
 ### Fixed

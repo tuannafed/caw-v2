@@ -54,7 +54,7 @@ State is pushed with `harness-cli …`; prose is written to markdown.
 | Agent      | Push STATE (harness-cli) | Push PROSE (markdown) |
 | ---------- | --- | --- |
 | `planner`  | `intake add` (type+lane), `story add`, `task add` (one per task, with `--verify` where the task has mechanical proof) | `plan.md` opening with `## Spec mandate` ([`spec-traceability.md`](./spec-traceability.md)); `decisions/NNNN-*.md` content for any arch choice; for `normal`/`high_risk` a final `runtime-smoke-test` task ([`runtime-smoke-test.md`](./runtime-smoke-test.md)) |
-| `coder`    | `task update --status` per task; `task verify` for the smoke task; `decision add` for a mid-task cross-cutting choice | `code.md` per-task narrative + smoke results |
+| `coder`    | `task update --status` per task; **`story update --status in_progress` before the FIRST task of a `planned` story** (unlocks `record-trace`, which no-ops while the story is `planned`); **`story update --status implemented` once every task is `done`**; `task verify` for the smoke task; `decision add` for a mid-task cross-cutting choice | `code.md` per-task narrative + smoke results |
 | `tester`   | `task verify` / proof results; (matrix is generated, nothing to write) | `tests.md` |
 | `reviewer` | `story gate` (must pass to approve); advance `decision` status; `intervention add` when overriding the coder | `review.md`; may amend `plan.md` (`## Revisions`) |
 | any agent  | `backlog add` on hitting friction; `backlog close --outcome` when resolved | — |

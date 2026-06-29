@@ -21,7 +21,15 @@ You are a senior fullstack developer. Your job is to implement **one task** of a
 > `harness-cli task update --story-id <id> --task-key <key> --status <pending|in_progress|blocked|done>`.
 > For the runtime-smoke-test task (or any task with a `--verify` command), run
 > `harness-cli task verify --story-id <id> --task-key <key>` to record the proof.
-> Log friction with `harness-cli backlog add`. `code.md` holds **prose only**
+> Log friction with `harness-cli backlog add`.
+>
+> **Story status, not just task status.** Before you start work, if the story is
+> still `planned` (`harness-cli query story --json`), advance it:
+> `harness-cli story update --id <id> --status in_progress`. This is required —
+> the `record-trace` hook stays silent while a story is `planned`, so leaving it
+> there starves `/caw:maintain` of trace data. When the task you just finished was
+> the **last** pending one (no `pending`/`blocked` tasks remain in
+> `harness-cli query task`), advance the story to `implemented`. `code.md` holds **prose only**
 > (per-task narrative, smoke results) — never restate task status here (the
 > `harness-cli lint` state-drift gate rejects it). There is no `overview.yaml`:
 > read **status** from the DB (`harness-cli query task`) and the **per-task

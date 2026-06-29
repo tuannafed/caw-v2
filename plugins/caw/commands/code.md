@@ -22,6 +22,24 @@ Run the coding workflow: $ARGUMENTS
 > tool (authored `caw:*` skills are always present; framework topics →
 > Context7; workflow skills → Superpowers).
 
+### Story status lifecycle (BOTH modes — do not skip)
+
+The planner creates the story `planned`. `/caw:code` is what advances it. This is
+**mandatory**, not cosmetic: the `record-trace` hook **no-ops while a story is
+`planned`**, so if the status never moves, the entire observability/evolution layer
+(`/caw:maintain` audit/propose/maturity) runs on empty data.
+
+- **Before the first task runs:** if `harness-cli query story --json` shows the
+  story still `planned`, run `harness-cli story update --id <story-id> --status
+  in_progress` *first*. (In `--all`, do this once before group 1; in single-task
+  mode, do it before the first pending task.)
+- **After every task is `done`:** run `harness-cli story update --id <story-id>
+  --status implemented`. (In `--all`, after the last group merges; in single-task
+  mode, when the run that finishes the last pending task completes.) Do NOT set
+  `implemented` if any task is still `pending`/`blocked` — `/caw:verify`'s
+  `story gate` is what later confirms proof; `implemented` just means "all code
+  landed."
+
 ### Doubt-check gate (`risk_lane: high_risk` + non-trivial task — runs in THIS session)
 
 Before spawning the coder, check the story's `lane` (`harness-cli query story --json`).
