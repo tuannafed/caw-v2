@@ -30,6 +30,8 @@
     "baseRef": "head"
   },
   "permissions": {
+    "// defaultMode note": "acceptEdits = auto-accept ALL file edits (Write/Edit/NotebookEdit) without a per-file prompt. caw agents write many files per run (docs/caw/ story+plan+code+tests+review, .claude/ rules+memory, and project source) — prompting each one is the main source of approval fatigue. This only affects file edits; Bash still obeys the allow/deny lists below, so the dangerous-command deny rules still protect you. To restore per-edit prompts, remove this line (defaults to 'default') or set 'plan' for read-only sessions.",
+    "defaultMode": "acceptEdits",
     "// deny note": "Native deny rules replace the old dangerous-actions-blocker hook. These are prefix-matched (not regex) so they are intentionally broad — Claude Code will refuse any Bash call matching them. Adjust per project if a legitimate command is caught.",
     "deny": [
       "Bash(rm -rf /*)",

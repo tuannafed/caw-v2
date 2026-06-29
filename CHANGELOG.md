@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.13] — 2026-06-29
+
+### Changed
+- **Auto-accept file edits by default (`permissions.defaultMode: "acceptEdits"`).** caw
+  writes many files per run — `docs/caw/` story/plan/code/tests/review, `.claude/`
+  rules + agent-memory, and project source — and the previous template only allowlisted
+  `Write/Edit(.claude/**)`, so every `docs/caw/` and source edit triggered a per-file
+  approval prompt. The settings template now sets `acceptEdits`, so file edits apply
+  without prompting. This affects **file edits only** — Bash still obeys the allow/deny
+  lists, so the dangerous-command deny rules (rm -rf, force-push, DROP TABLE, …) still
+  protect you. Remove the line to restore per-edit prompts.
+
 ## [2.4.12] — 2026-06-29
 
 ### Fixed
