@@ -7,6 +7,28 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.9] — 2026-06-29
+
+### Added
+- **`/caw:backlog` — install the backlog viewer into your project.** The Astro Kanban
+  viewer (`tools/backlog/`) ships outside `plugins/caw/` and so was never reachable from
+  a member project — you had to clone the marketplace repo. The new command scaffolds the
+  viewer **source only** (no `node_modules`, no build output) into `<project>/backlog/`,
+  seeds a local `.env`, and prints `pnpm install && pnpm dev`. Source is resolved from the
+  marketplace repo clone (`~/.claude/plugins/marketplaces/<name>/tools/backlog`), since the
+  plugin cache only contains `plugins/caw/`. The `backlog/` folder is committed with the
+  team (its `.gitignore` excludes `node_modules`/`dist`/`.env`); re-run after
+  `/plugin marketplace update caw` to pull a newer viewer. The lockfile + the
+  standalone `pnpm-workspace.yaml` marker are copied so `pnpm install` is reproducible and
+  doesn't climb into the member's own workspace.
+
+### Changed
+- **Backlog viewer fully adapted to caw v2** (in `tools/backlog/`, not the plugin):
+  removed the dead Skills view and the Conventions/project.yaml surfaces (all v1 paths
+  gone in v2); the Project Overview panel now reads `.claude/rules/project.md` (name from
+  the H1, stack from the `## Context7 libraries` list); workspace stats are now
+  `{tasks, decisions, rules}`; lane badges handle both v1 and v2 lane names.
+
 ## [2.4.8] — 2026-06-29
 
 ### Changed

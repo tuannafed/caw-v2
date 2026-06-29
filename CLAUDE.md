@@ -81,7 +81,7 @@ fixed — `claude-plugins-official` is built in, no `marketplace add`):
 plugins/caw/                    # THE plugin
   .claude-plugin/plugin.json         # plugin manifest
   agents/        # 5 agents: setup, planner, coder, tester, reviewer
-  commands/      # 8 commands: setup, plan, code, test, review, verify, maintain, spec (invoked as /caw:setup, /caw:plan, …)
+  commands/      # 9 commands: setup, plan, code, test, review, verify, maintain, spec, backlog (invoked as /caw:setup, /caw:plan, …)
   skills/        # 9 AUTHORED skills (namespaced caw:<name>): api-contract,
                  #   error-handling-patterns, nextjs-feature, react-component-testing,
                  #   doubt-check, security-hardening, performance-optimization,
@@ -136,7 +136,7 @@ activates (a CC bug disables it otherwise).
 | `tester` | Test | Test mode derived from Plan's `lane`: tiny=skip / standard=backend-only / risky=all (red+green). Mobile = unit tests only. |
 | `reviewer` | Review | Multi-dim review (security, perf, a11y, architecture, constitution, refactor, harness-compliance). Constitution flags violations of project invariants (`.claude/rules/project.md` lock-ins). Severity-based findings. May amend Plan. |
 
-### Commands (7)
+### Commands (9)
 
 | Command | Action |
 |---|---|
@@ -148,6 +148,7 @@ activates (a CC bug disables it otherwise).
 | `/caw:verify <id>` | Test + review parallel |
 | `/caw:maintain` | Harness self-maintenance: audit + maturity + propose (`--commit` files proposals) |
 | `/caw:spec [<capability>]` | Fold a capability's implemented stories into a canonical `docs/caw/specs/<capability>.md` (current-truth spec; prose-only, no DB) |
+| `/caw:backlog` | Scaffold the backlog viewer (Astro Kanban UI for `docs/caw/stories/` + `harness.db`) into `<project>/backlog/` as source-only; member runs `pnpm install && pnpm dev`. Source comes from the marketplace repo clone, not the plugin cache (`tools/backlog/` ships outside `plugins/caw/`). |
 
 Commands are namespaced `/caw:<name>` by the plugin, so they never collide with
 other Claude Code skills/commands.

@@ -22,6 +22,24 @@ Astro + React + shadcn UI app that renders caw stories
 - **lucide-react** icons
 - **marked** for rendering task stage markdown
 
+## Install into your project
+
+If you use caw via the plugin, scaffold the viewer into your project with one command:
+
+```
+/caw:backlog
+```
+
+It copies the viewer **source** (no `node_modules`, no build) into `<project>/backlog/`,
+seeds a local `.env`, and prints the next steps. The folder is committed with your team
+(its `.gitignore` excludes `node_modules/`, `dist/`, `.env`), so teammates who pull the
+repo just `cd backlog && pnpm install && pnpm dev`. Re-run `/caw:backlog` after
+`/plugin marketplace update caw` to pull a newer viewer.
+
+The source comes from the marketplace repo clone (`~/.claude/plugins/marketplaces/<name>/tools/backlog`),
+not the plugin cache — the viewer ships **outside** `plugins/caw/` because it's a Node
+app with a build step, which the plugin system doesn't install.
+
 ## Run
 
 Two build targets share one source tree.
@@ -34,11 +52,12 @@ UI as you commit caw work.
 ```bash
 cd backlog
 pnpm install
-CAW_PROJECT_ROOT="$(pwd)/.." pnpm dev
-# open http://localhost:4321
+pnpm dev
+# open http://localhost:4321 — the viewer walks up to find docs/caw/ automatically
 ```
 
-`CAW_PROJECT_ROOT` defaults to the current working directory if unset.
+`CAW_PROJECT_ROOT` overrides auto-detection; it defaults to walking up from cwd to find
+`docs/caw/`, then the current working directory.
 
 ### Vercel (static snapshot)
 
