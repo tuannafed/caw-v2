@@ -67,13 +67,20 @@ Read `parallelization_groups` from `plan.md`. For each group, in order:
 
 1. **Group of 1 task → spawn one coder agent, NO isolation** (it has the working
    tree to itself; a worktree would just add merge overhead).
-2. **Group of 2+ tasks → spawn coder agents in parallel, EACH in its own git
-   worktree** (Agent tool, multiple tool_use blocks in one message, each call with
-   `isolation: "worktree"`). Parallel coders editing the same working tree would
-   clobber each other; a per-agent worktree gives each an isolated checkout.
-3. Wait for all agents in the current group before starting the next group, then
-   **integrate the worktree results** (below) before the next group runs — later
-   groups (e.g. `integrate`) depend on the parallel group's files being merged in.
+2. **Group of 2+ tasks → spawn ALL of them in parallel, EACH in its own git
+   worktree.** This is a HARD requirement, not a preference: emit **one assistant
+   message containing one `Agent` tool_use block per task in the group** (N tasks →
+   N tool_use blocks in the SAME message), every call with `isolation: "worktree"`.
+   Do NOT spawn them one message at a time and wait between — that runs the group
+   serially and is the #1 cause of `--all` taking hours instead of minutes (each
+   serial coder re-reads the 24KB plan, re-loads rules + skills from a cold start).
+   Parallel coders editing the same working tree would clobber each other; a
+   per-agent worktree gives each an isolated checkout, which is the whole reason the
+   planner made the group file-disjoint.
+3. Wait for all agents in the current group, then **integrate AND clean up the
+   worktree results** (below) before the next group runs — later groups (e.g.
+   `integrate`) depend on the parallel group's files being merged in, and leftover
+   worktrees accumulate as full repo checkouts that slow every later git op.
 
 Example:
 
@@ -91,14 +98,28 @@ merge both back → run frontend-impl → wait → run integrate.
 Each spawned coder: `"Run the coder flow for story <story-id>, task <task-key>"`.
 For parallel tasks add `isolation: "worktree"` to the Agent call.
 
-> **Worktree base + merge.** Each `isolation: "worktree"` checkout branches from
-> the repo's default branch unless `worktree.baseRef` is set to `"head"` in settings
+> **Worktree base + merge + cleanup.** Each `isolation: "worktree"` checkout branches
+> from the repo's default branch unless `worktree.baseRef` is set to `"head"` in settings
 > (the caw settings template sets it, so worktrees fork from the CURRENT branch — what
-> you actually want). After a parallel group finishes, merge each worktree's changes
-> back into the working branch before the next group; a worktree with no changes is
-> auto-cleaned. If two parallel tasks turn out to touch the same files (they
-> shouldn't — the planner's `parallelization_groups` are meant to be file-disjoint),
-> the merge will conflict: stop and report it, the plan's grouping was wrong.
+> you actually want). After a parallel group finishes:
+>
+> 1. **Merge** each worktree's changes back into the working branch.
+> 2. **Remove** each worktree and delete its branch — ALWAYS, whether or not it had
+>    changes. The Agent tool auto-cleans a worktree only when it ends *unchanged*; a
+>    worktree that produced commits (the normal case) is NOT auto-removed, so you must
+>    remove it explicitly or it leaks. Run, per agent worktree:
+>    ```bash
+>    git worktree remove --force .claude/worktrees/<agent-dir>
+>    git branch -D worktree-<agent-dir> 2>/dev/null || true
+>    ```
+>    Then `git worktree prune` once at the end of the group. Verify with
+>    `git worktree list` — only the main checkout should remain before the next group.
+>
+> If two parallel tasks turn out to touch the same files (they shouldn't — the
+> planner's `parallelization_groups` are meant to be file-disjoint), the merge will
+> conflict: stop and report it, the plan's grouping was wrong. **Even when you stop
+> on a conflict or a blocked task, still remove the worktrees you created** so a
+> failed run doesn't leave orphaned checkouts behind.
 
 If any coder agent reports its task `blocked` (self-verify gate failed), **stop
 the run** — do not start later groups, and do not set status `code-done`. Report

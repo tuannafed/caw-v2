@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.10] — 2026-06-29
+
+### Fixed
+- **`/caw:code --all` leaked git worktrees.** A real `--all` run left **8+ orphaned
+  worktrees** under `.claude/worktrees/` plus dangling `worktree-agent-*` branches —
+  the Agent tool only auto-cleans a worktree that ends *unchanged*, so every worktree
+  that produced commits (the normal case) was never removed. `commands/code.md` now
+  mandates an explicit `git worktree remove --force` + `git branch -D` + `git worktree
+  prune` after each parallel group's merge, and removes worktrees even when a run stops
+  on a conflict or a blocked task. `git worktree list` must show only the main checkout
+  before the next group runs.
+- **`/caw:code --all` ran parallel groups serially (hours instead of minutes).** A 12-task
+  story took ~2h44 because the group tasks were spawned one message at a time. The plan's
+  `parallelization_groups` were correct; the runtime just didn't honor them. `code.md` now
+  states as a HARD requirement that a 2+ task group is spawned as **one assistant message
+  with one `Agent` tool_use block per task** (N tasks → N blocks in the same message), and
+  spells out that serial spawning is the #1 cause of slow `--all` runs (each cold coder
+  re-reads the plan + reloads rules/skills).
+
 ## [2.4.9] — 2026-06-29
 
 ### Added
