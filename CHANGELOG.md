@@ -7,6 +7,39 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
+## [2.4.19] — 2026-07-01
+
+### Fixed
+- **Coder/tester/reviewer never reliably saw `.claude/rules/project.md`.** All
+  three subagent prompts assumed Claude Code's `paths:` frontmatter auto-inject
+  would surface the project rule file, but that mechanism is not guaranteed to
+  fire inside a spawned subagent session — real-world use showed the coder
+  writing code that violated project.md entirely, with the reviewer not
+  catching it either. All three agents now `Read .claude/rules/project.md`
+  explicitly and unconditionally as an early, mandatory step, instead of relying
+  on auto-inject alone.
+- **Reviewer blanket-trusted green tests.** The constraint "don't second-guess
+  passing tests" let a false-green test (mock set at the wrong boundary, or a
+  mocked path that didn't match the real implementation) slip through review.
+  Replaced with an explicit check: verify mocks sit at the real system boundary,
+  verify mocked paths match real endpoint constants, and require smoke-test
+  evidence (not just green units) before accepting a runtime-wired feature as
+  done.
+
+### Changed
+- Coder now greps for sibling implementations of the same pattern (existing
+  endpoint constants, hooks, Provider usage) before writing new code of that
+  kind, to catch issues like duplicating an already-prefixed base URL.
+- Reviewer's Security dimension now explicitly checks object-level
+  ownership/role scoping on new or changed endpoints, and loads
+  `caw:security-hardening`.
+- Tester mocks at the system boundary instead of the unit under test — mounts
+  the real Context/Provider instead of mocking it, and matches mocked API paths
+  to the real path constant.
+- `caw:react-component-testing` skill documents mounting a real Provider for
+  Context-scoped behavior instead of mocking the Context directly (this is the
+  mechanism that was hiding Provider-scope bugs behind green tests).
+
 ## [2.4.18] — 2026-06-29
 
 ### Changed
