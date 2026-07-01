@@ -7,7 +7,54 @@ adheres to [Semantic Versioning](https://semver.org/). Versions are released by 
 to `main` (the marketplace `ref` tracks `main`); members pull them via
 `/plugin marketplace update`.
 
-## [2.4.19] — 2026-07-01
+## [2.4.20] — 2026-07-01
+
+### Added
+- **`caw:adversarial-test-design` skill** — senior-QA test-case checklist (boundary
+  values, malformed input, state/sequence abuse, authorization/IDOR, negative paths,
+  UI edge cases, idempotency) that a plan's `test_scenarios` alone rarely covers.
+  Tester now applies it to every field/endpoint/flow a `normal`/`high_risk` task
+  touches, alongside — not instead of — the Plan's own scenarios, with a hard cap
+  (~20-30 cases) to avoid combinatorial blowup on large tasks.
+- **`agent-skills` (addyosmani/agent-skills) added as a 4th required companion
+  plugin.** `planner`/`coder`/`tester`/`reviewer` now call several of its skills
+  **directly by name** — not vendored into caw: `spec-driven-development` /
+  `planning-and-task-breakdown` (planner), `test-driven-development` (tester),
+  `debugging-and-error-recovery` (coder, reviewer), `code-review-and-quality` /
+  `code-simplification` (reviewer), `frontend-ui-engineering` (coder, frontend
+  tasks). `templates/project/settings.json` now enables `agent-skills@addy-agent-skills`
+  by default; `templates/project/CLAUDE.md` and `AGENTS.md` document that `/caw:*`
+  remains the pipeline of record over agent-skills' own competing commands
+  (`/spec /plan /build /test /review /webperf /code-simplify /ship`).
+
+### Fixed
+- **`reviewer.md` called two Superpowers skills that don't exist.** A full
+  cross-reference of the actually-installed Superpowers 6.1.0 skill list found
+  `Skill({skill:"code-review"})` and `Skill({skill:"refactor"})` had no matching
+  skill in Superpowers — the "Refactor" review dimension had been running on a
+  dead reference. Fixed by wiring `reviewer.md` (and `coder.md`/`tester.md`) to
+  call agent-skills' real skills instead (see Added, above) — verified
+  character-for-character against the installed plugin's actual skill directory
+  listing before wiring, to avoid recreating the same class of bug.
+- **`caw:context-engineering` was a complete orphan.** The skill existed and was
+  well-written but zero agents referenced it (confirmed by repo-wide grep). Wired
+  into `coder.md`: load on large-monorepo detection or when a long session shows
+  drift symptoms (re-reading already-seen files, ignoring a stated convention).
+- **A stale, invented example in `planner.md`'s `plan.md` template.** The
+  `## Plan` skills-loaded example line listed `business-analyst, prd-development,
+  create-specification, user-story, user-story-splitting, prioritization-advisor,
+  roadmap-planning` — none of these correspond to any real skill in Superpowers,
+  caw, agent-skills, or Context7. Replaced with the actual skills the planner
+  loads.
+- **`VERSION` file (repo root) was missing**, causing
+  `test_validate_plugin.py`'s version-skew check to fail — `plugin.json` and
+  `marketplace.json` had no file to compare against. Restored and kept in sync.
+
+### Changed
+- Authored skill count: 9 → 10 (`adversarial-test-design` added; an earlier,
+  since-reverted approach had vendored 4 more skills from agent-skills directly
+  into caw — those were removed in favor of calling agent-skills directly, per
+  Added above).
 
 ### Fixed
 - **Coder/tester/reviewer never reliably saw `.claude/rules/project.md`.** All

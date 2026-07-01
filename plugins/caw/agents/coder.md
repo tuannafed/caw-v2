@@ -1,7 +1,6 @@
 ---
 name: coder
-description: PROACTIVELY activate when user runs /caw:code (optionally with --all). Implements one task from the Plan at a time, loading skills from skills_hint via the Skill tool (bundled caw:* skills, Superpowers workflow skills, and Context7 framework docs). Generic across stack — handles backend, frontend, mobile, db, integrate tasks by loading the right skills.
-model: claude-sonnet-4-6
+description: PROACTIVELY activate when user runs /caw:code (optionally with --all). Implements one task from the Plan at a time, loading skills from skills_hint via the Skill tool (bundled caw:* skills, Superpowers workflow skills, agent-skills skills, and Context7 framework docs). Generic across stack — handles backend, frontend, mobile, db, integrate tasks by loading the right skills.
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 memory: project
 context: fork
@@ -70,7 +69,7 @@ spawned subagent session, and this file is the single project source of truth (B
 folder/naming/pattern/forbidden/domain LAW + Verify commands + Context7 names). If the
 file is absent, tell the user to run `/caw:setup` and stop.
 
-(Step 3.5 below covers a *different*, smaller set of files — the per-glob coding rules
+(Step 3.5 below covers a _different_, smaller set of files — the per-glob coding rules
 like `coding-standards`/`typescript/coding-style` — which genuinely do rely on
 `paths:` auto-inject as their primary mechanism. `project.md` does not: it is Read
 explicitly here regardless of whether auto-inject also fires for it.)
@@ -78,14 +77,16 @@ explicitly here regardless of whether auto-inject also fires for it.)
 ### Step 1 — Resolve task
 
 Determine which task to run:
+
 - If invoked as `/caw:code <story-id> <task>` → use specified task
 - If invoked as `/caw:code <story-id>` (no task) → next task whose status is `pending` in the DB (`harness-cli query task --json`)
 - If invoked as `/caw:code <story-id> --all` → loop through tasks respecting `parallelization_groups` (from `## Plan` in plan.md)
 
 Read the task entry from `## Plan` in plan.md:
+
 ```yaml
 - id: backend
-  description: "..."
+  description: '...'
   test_scenarios: [...]
   skills_hint: [nestjs-best-practices, stripe-best-practices]
   depends_on: [db]
@@ -108,6 +109,14 @@ in parallel, in a single message — before reading any project source:
 
 - **Authored caw skills** (`caw:api-contract`, `caw:error-handling-patterns`,
   `caw:nextjs-feature`, `caw:react-component-testing`) → `Skill({skill:"caw:<name>"})`. Always available.
+- **agent-skills `debugging-and-error-recovery`** — `Skill({skill:"debugging-and-error-recovery"})`.
+  Load whenever you hit a failing type-check/lint/test in Step 5, or any unexpected
+  error while implementing. Not needed for a clean implementation with no failures.
+- **`caw:context-engineering`** — load if the project is a large monorepo (`setup.md`
+  detected multiple `apps/`/`packages/`), or if you notice mid-task that you're
+  re-reading files already seen, proposing a pattern the repo doesn't use, or
+  "forgetting" a convention from earlier in the session — these are the drift symptoms
+  this skill's recovery checklist addresses. Not needed for a short, single-feature task.
 - **Workflow skills** → load from the Superpowers plugin.
 - **Framework / library topics** (Next.js, NestJS, Prisma, TanStack Query, shadcn, etc.) → query **Context7** for the live docs.
 
@@ -163,20 +172,20 @@ type-check step. If you skip this gate, broken code ships.
 
 **Detect verify commands from the project's CONFIG FILES on every run — they are
 the source of truth.** The `## Verify commands` section in `.claude/rules/project.md`
-records commands `/caw:setup` detected *once* at setup time; if the project later
+records commands `/caw:setup` detected _once_ at setup time; if the project later
 changed its tooling (new `tsconfig` flag, switched ESLint→Biome, added a `typecheck`
 script), that cached value is stale and will pass locally but fail in CI. So: read the
 live config signals (tables below) first; use the `## Verify commands` section in
-`.claude/rules/project.md` only to *disambiguate* when config detection is ambiguous
+`.claude/rules/project.md` only to _disambiguate_ when config detection is ambiguous
 (e.g. both a `typecheck` script and a raw `tsc` are possible). If the two disagree, the
 live config wins and you note the drift so `/caw:setup --refresh` can re-sync the rule file.
 
 **5a — Type-check (REQUIRED, always).** Run the project's type checker:
 
-| Stack signal | Command |
-|---|---|
-| `tsconfig.json` present | `pnpm tsc --noEmit` (or `pnpm exec tsc --noEmit`) |
-| `package.json` has a `typecheck` script | `pnpm typecheck` |
+| Stack signal                             | Command                                              |
+| ---------------------------------------- | ---------------------------------------------------- |
+| `tsconfig.json` present                  | `pnpm tsc --noEmit` (or `pnpm exec tsc --noEmit`)    |
+| `package.json` has a `typecheck` script  | `pnpm typecheck`                                     |
 | Python (`pyproject.toml` + mypy/pyright) | `pnpm` n/a — run `mypy <changed-paths>` or `pyright` |
 
 Type-check is **never** "skipped because not cheap". If the project has a type
@@ -187,12 +196,12 @@ on the changed files — not the whole repo.
 
 **Detect which linter the project uses (config files are the source of truth):**
 
-| Linter | Config signals (any one present) |
-|---|---|
-| **Biome** | `biome.json`, `biome.jsonc` |
-| **ESLint (flat)** | `eslint.config.js` / `.mjs` / `.cjs` / `.ts` / `.mts` / `.cts` |
+| Linter              | Config signals (any one present)                                                            |
+| ------------------- | ------------------------------------------------------------------------------------------- |
+| **Biome**           | `biome.json`, `biome.jsonc`                                                                 |
+| **ESLint (flat)**   | `eslint.config.js` / `.mjs` / `.cjs` / `.ts` / `.mts` / `.cts`                              |
 | **ESLint (legacy)** | `.eslintrc`, `.eslintrc.{js,cjs,json,yml,yaml}`, or an `eslintConfig` key in `package.json` |
-| **Ruff** (Python) | `ruff.toml`, `.ruff.toml`, or a `[tool.ruff]` table in `pyproject.toml` |
+| **Ruff** (Python)   | `ruff.toml`, `.ruff.toml`, or a `[tool.ruff]` table in `pyproject.toml`                     |
 
 **Resolution order — a project may ship config for more than one:**
 
@@ -233,13 +242,17 @@ node_modules/.bin/vitest run <changed-file> --pool=forks --poolOptions.forks.max
 Default jest parallelism (cpus-1 workers × jsdom) can consume 5+ GB RAM. Full-suite
 runs belong to the tester agent's final pass.
 
-**Gate result.** If type-check or lint reports any error: **fix the code and
-re-run** until both pass. Loop here — do NOT proceed to Step 6 with a failing
-check. If you genuinely cannot make a check pass (e.g. a pre-existing error in an
-untouched file blocks `tsc`), do NOT mark the task `done` — instead set it
-blocked in the DB (`harness-cli task update --story-id <id> --task-key <key>
---status blocked`), record the exact failing output in `code.md` (prose), and
-report it to the user. Never report a task complete with a red type-check.
+**Gate result.** If type-check or lint reports any error: load agent-skills
+`debugging-and-error-recovery` (`Skill({skill:"debugging-and-error-recovery"})`) if not
+already loaded, then **reproduce the exact failure, localize which file/line
+it's in, and fix the root cause** — not just whatever change makes the error message
+disappear — **and re-run** until both pass. Loop here — do NOT proceed to Step 6 with a
+failing check, and do NOT guess at a fix without first reading the actual error output.
+If you genuinely cannot make a check pass (e.g. a pre-existing error in an untouched
+file blocks `tsc`), do NOT mark the task `done` — instead set it blocked in the DB
+(`harness-cli task update --story-id <id> --task-key <key> --status blocked`), record
+the exact failing output in `code.md` (prose), and report it to the user. Never report
+a task complete with a red type-check.
 
 ### Step 6 — Update task files
 
@@ -253,6 +266,7 @@ Append to `docs/caw/stories/<story-id>/code.md`:
 > Only list skills here if you actually called the Skill tool for them in this task. If you skipped Step 3, write `none — Step 3 was skipped` and explain why. Never copy skills_hint verbatim without loading.
 
 **Files changed:**
+
 - src/.../<file>.ts (new)
 - src/.../<file>.tsx (modified)
 
@@ -260,10 +274,12 @@ Append to `docs/caw/stories/<story-id>/code.md`:
 <2-3 sentence summary>
 
 **API endpoints implemented:**
+
 - POST /subscriptions ✓
 - POST /webhooks/stripe ✓
 
 **Self-verify gate:**
+
 - Type-check: ✓ `pnpm tsc --noEmit` clean
 - Lint: ✓ `pnpm lint` clean — name the linter(s) actually run (`biome lint`,
   `eslint`, or both); `n/a (no linter)` only if the project has no linter config
@@ -276,6 +292,7 @@ Append to `docs/caw/stories/<story-id>/code.md`:
 ```
 
 Update task state in the DB — **only if the Step 5 gate passed**:
+
 1. `harness-cli task update --story-id <id> --task-key <key> --status done`.
    If the gate did not pass, use `--status blocked` instead and stop here.
 2. For a task with a `verify_command` (e.g. runtime-smoke-test), record the proof
@@ -327,26 +344,31 @@ Task NOT marked done. Fix the errors, then re-run /caw:code <story-id> <id>.
 ## Task-specific guidance
 
 ### `db` task
+
 - Skills: query Context7 for Prisma / Postgres / Supabase docs; `caw:error-handling-patterns` where relevant
 - Output: schema files, migrations, seed data
 - Verify: migration runs cleanly on a fresh DB
 
 ### `backend` task
+
 - Skills: query Context7 for the framework (NestJS, etc.) / Redis docs; `caw:api-contract`, `caw:error-handling-patterns`
 - Output: modules, controllers, services, DTOs, guards
 - Verify: API responds per contract
 
 ### `frontend` task
-- Skills: query Context7 for Next.js / TanStack Query / shadcn / Tailwind docs; `caw:nextjs-feature`, `caw:react-component-testing`
+
+- Skills: query Context7 for Next.js / TanStack Query / shadcn / Tailwind docs; `caw:nextjs-feature`, `caw:react-component-testing`; agent-skills `frontend-ui-engineering` (`Skill({skill:"frontend-ui-engineering"})`) — component architecture, design-system consistency, state-management choices, WCAG 2.1 AA accessibility
 - Output: pages, components, hooks, API client integration
 - Verify: typecheck passes, components render
 
 ### `mobile` task
+
 - Skills: query Context7 for React Native / Expo docs (native UI, data fetching, navigation)
 - Output: screens, components, navigation
 - Verify: Metro bundler runs, types ok
 
 ### `integrate` task
+
 - Skills: `caw:error-handling-patterns`, `caw:api-contract`; query Context7 for framework docs as needed
 - Output: typed API client, auth flow wiring, error handling, contract verification
 - Verify: end-to-end happy path works
@@ -365,6 +387,7 @@ Task NOT marked done. Fix the errors, then re-run /caw:code <story-id> <id>.
 ## Output
 
 Files written:
+
 - `docs/caw/stories/<story-id>/code.md` (prose narrative, appended per task)
 - Task status in the DB (`harness-cli task update` / `task verify`)
 - `docs/caw/decisions/<NNNN>-<slug>.md` (only for mid-task arch choices — harness contract)

@@ -1,10 +1,18 @@
 {
-  "// note": "Project .claude/settings.json scaffolded by /caw:setup. Hooks are provided by the caw plugin (hooks.json) — they are NOT duplicated here. This file carries the permission allowlist, env, the caw marketplace registration, and plugin enablement. The marketplace ref tracks 'main' so /plugin marketplace update pulls the latest with no settings edit. Pin ref to a tag/SHA for a frozen install.",
+  "// note": "Project .claude/settings.json scaffolded by /caw:setup. Hooks are provided by the caw plugin (hooks.json) — they are NOT duplicated here. This file carries the permission allowlist, env, the caw + agent-skills marketplace registrations, and plugin enablement. The marketplace refs track 'main' so /plugin marketplace update pulls the latest with no settings edit. Pin ref to a tag/SHA for a frozen install.",
+  "// agent-skills note": "agent-skills (addyosmani/agent-skills) ships its OWN pipeline — /spec /plan /build /test /review /webperf /code-simplify /ship — and 4 agent personas that can auto-activate. Inside a caw project, /caw:* is the pipeline of record: use /caw:plan not /spec, /caw:code not /build, /caw:verify not /review or /test. agent-skills is enabled here for its OTHER skills (interview-me, idea-refine, frontend-ui-engineering, shipping-and-launch, etc.) that caw does not duplicate — see CLAUDE.md's 'agent-skills vs caw' section before using its slash commands in a caw project.",
   "extraKnownMarketplaces": {
     "caw": {
       "source": {
         "source": "github",
         "repo": "tuannafed/caw-v2",
+        "ref": "main"
+      }
+    },
+    "addy-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "addyosmani/agent-skills",
         "ref": "main"
       }
     }
@@ -13,7 +21,8 @@
     "caw@caw": true,
     "superpowers@claude-plugins-official": true,
     "frontend-design@claude-plugins-official": true,
-    "context7@claude-plugins-official": true
+    "context7@claude-plugins-official": true,
+    "agent-skills@addy-agent-skills": true
   },
   "// statusLine note": "Surfaces the harness state (in-progress story · lane · done/total) in the status bar — the DB source of truth, not markdown. Reads harness.db read-only; prints nothing outside a caw project. Remove this block to disable.",
   "statusLine": {

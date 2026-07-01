@@ -11,7 +11,7 @@ application; there is no build step. Everything ships as markdown, shell, and
 Python stdlib.
 
 `caw` provides a 5-agent pipeline (plan → code → test → review), a durable
-SQLite harness, safety hooks, and 9 authored skills. Workflow knowledge, framework
+SQLite harness, safety hooks, and 10 authored skills. Workflow knowledge, framework
 docs, and UI quality come from companion plugins (Superpowers, Context7, Frontend
 Design) rather than vendored skills.
 
@@ -28,8 +28,17 @@ Design) rather than vendored skills.
 > - **Framework/library docs** (Next.js, Prisma, Stripe, TanStack, Supabase, …) →
 >   **Context7** (live docs, no static catalog)
 > - **Frontend UI quality** → **Frontend Design** plugin
-> - caw keeps a small set of **authored skills** (originally 4; now 9 after
->   cherry-picking quality/gap skills from addyosmani/agent-skills), bundled in `caw/skills/`.
+> - caw keeps a small set of **authored skills** (originally 4; now 10 after
+>   cherry-picking quality/gap skills from addyosmani/agent-skills, plus one
+>   caw-original test-design skill), bundled in `caw/skills/`.
+> - **The `agent-skills` plugin** (addyosmani/agent-skills) is also a required
+>   companion — not just a source caw cherry-picked FROM. After real-world use
+>   showed Superpowers underperforming for caw's coder/tester/reviewer, those 3
+>   agents now call 4 of agent-skills' skills **directly by name** (
+>   `test-driven-development`, `debugging-and-error-recovery`,
+>   `code-review-and-quality`, `code-simplification`) instead of vendoring copies —
+>   agent-skills must be installed and enabled for the pipeline to work, same as
+>   Superpowers/Context7/Frontend Design.
 
 ## Installing (how a team consumes this)
 
@@ -41,18 +50,39 @@ Design) rather than vendored skills.
 Or commit a `.claude/settings.json` into the member project so everyone is prompted
 to install on trust. The canonical sample is `plugins/caw/templates/project/settings.json`
 (also scaffolded into the project by `/caw:setup`). That settings file carries the
-permission allowlist, registers the `caw` marketplace, and enables `caw` plus 3
-companion plugins: `superpowers`, `frontend-design`, `context7`.
+permission allowlist, registers the `caw` + `addy-agent-skills` marketplaces, and
+enables `caw` plus 4 companion plugins: `superpowers`, `frontend-design`, `context7`,
+`agent-skills`.
 
-The companions are required — caw's agents load workflow skills from Superpowers and
-framework docs from Context7. A member who trusts the committed `settings.json` gets
-them via `enabledPlugins`. Without that file, install them by hand (the slugs are
-fixed — `claude-plugins-official` is built in, no `marketplace add`):
+The companions are required — caw's agents load workflow skills from Superpowers,
+framework docs from Context7, and `agent-skills` is called **directly** by
+`planner`/`coder`/`tester`/`reviewer` for several pipeline skills — none of these are
+vendored into caw, the `Skill()` calls resolve to agent-skills' own skill directories:
+`spec-driven-development`/`planning-and-task-breakdown` (planner),
+`test-driven-development` (tester), `debugging-and-error-recovery` (coder, reviewer),
+`code-review-and-quality`/`code-simplification` (reviewer), `frontend-ui-engineering`
+(coder, frontend tasks) — plus other non-pipeline skills caw doesn't cover
+(`interview-me`, `idea-refine`, `shipping-and-launch`, …).
+
+> **`agent-skills` ships its own competing pipeline** (`/spec`, `/plan`, `/build`,
+> `/test`, `/review`, `/webperf`, `/code-simplify`, `/ship`, plus 4 auto-activating agent
+> personas). Inside a caw project, `/caw:*` is the pipeline of record — the scaffolded
+> project `CLAUDE.md` tells the agent to prefer `/caw:plan`/`/caw:code`/`/caw:verify`
+> over `agent-skills`' equivalents. See
+> [`templates/project/CLAUDE.md`](plugins/caw/templates/project/CLAUDE.md)'s
+> "agent-skills vs caw" section.
+
+A member who trusts the committed `settings.json` gets all 4 companions via
+`enabledPlugins`. Without that file, install them by hand — `superpowers`/
+`frontend-design`/`context7` use the built-in `claude-plugins-official` marketplace
+(no `marketplace add`); `agent-skills` needs its own marketplace add (not built in):
 
 ```
 /plugin install superpowers@claude-plugins-official
 /plugin install frontend-design@claude-plugins-official
 /plugin install context7@claude-plugins-official
+/plugin marketplace add addyosmani/agent-skills
+/plugin install agent-skills@addy-agent-skills
 ```
 
 `/caw:setup` preflights for them and warns (does not block) if any are missing.
@@ -82,10 +112,13 @@ plugins/caw/                    # THE plugin
   .claude-plugin/plugin.json         # plugin manifest
   agents/        # 5 agents: setup, planner, coder, tester, reviewer
   commands/      # 9 commands: setup, plan, code, test, review, verify, maintain, spec, backlog (invoked as /caw:setup, /caw:plan, …)
-  skills/        # 9 AUTHORED skills (namespaced caw:<name>): api-contract,
+  skills/        # 10 AUTHORED skills (namespaced caw:<name>): api-contract,
                  #   error-handling-patterns, nextjs-feature, react-component-testing,
                  #   doubt-check, security-hardening, performance-optimization,
-                 #   observability, context-engineering
+                 #   observability, context-engineering, adversarial-test-design
+                 #   (4 pipeline roles — test-driven-development, debugging-and-
+                 #   error-recovery, code-review-and-quality, code-simplification —
+                 #   are called directly from the agent-skills companion, not vendored)
   hooks/         # hooks.json (uses ${CLAUDE_PLUGIN_ROOT}) + hook .js files
   rules/         # non-overridable rules agents Read explicitly (common/, react/, typescript/)
   harness/       # durable layer: bin/harness-cli (Python stdlib) + src/*.py + schema/*.sql + tests/
@@ -105,7 +138,7 @@ tools/backlog/                       # Astro + React + shadcn Kanban UI (vendore
 
 Caw uses a **skill-first architecture**: 5 generic agents load domain knowledge by
 invoking the `Skill` tool, not by recalling it from priors. Skills come from the
-caw plugin (9 authored), Superpowers (workflow), and Context7 (framework docs).
+caw plugin (10 authored), Superpowers (workflow), and Context7 (framework docs).
 See [docs/CONCEPT.md](docs/CONCEPT.md) for the full design.
 
 ### Agents (5)
@@ -209,8 +242,9 @@ enabled:
 
 | Source | Where | Role | Examples |
 |---|---|---|---|
-| **Authored (caw)** | `plugins/caw/skills/<name>/SKILL.md`, namespaced `caw:<name>` | Workflow/archetype + quality skills caw can't delegate | archetype: `caw:api-contract`, `caw:error-handling-patterns`, `caw:nextjs-feature`, `caw:react-component-testing`, `caw:doubt-check`; quality (cherry-picked from addyosmani/agent-skills, MIT): `caw:security-hardening`, `caw:performance-optimization`, `caw:observability`, `caw:context-engineering` |
-| **Workflow (Superpowers)** | external plugin | TDD, systematic debugging, verification, code review | loaded by their Superpowers namespace |
+| **Authored (caw)** | `plugins/caw/skills/<name>/SKILL.md`, namespaced `caw:<name>` | Workflow/archetype + quality skills caw can't delegate | archetype: `caw:api-contract`, `caw:error-handling-patterns`, `caw:nextjs-feature`, `caw:react-component-testing`, `caw:doubt-check`, `caw:adversarial-test-design`; quality (cherry-picked from addyosmani/agent-skills, MIT): `caw:security-hardening`, `caw:performance-optimization`, `caw:observability`, `caw:context-engineering` |
+| **Workflow (Superpowers)** | external plugin | Remaining workflow skills not covered by caw's own or agent-skills' pipeline skills (planning, verification) | loaded by their Superpowers namespace, e.g. `brainstorming`, `writing-plans` |
+| **Pipeline (agent-skills)** | external plugin, called directly (not vendored) | spec/task-breakdown for planner; TDD/debugging for coder/tester; code review/refactor for reviewer; UI engineering for frontend tasks | `spec-driven-development`, `planning-and-task-breakdown` (planner); `test-driven-development` (tester); `debugging-and-error-recovery` (coder, reviewer); `code-review-and-quality`, `code-simplification` (reviewer); `frontend-ui-engineering` (coder, frontend tasks) |
 | **Framework docs (Context7)** | external plugin | Live library docs (Next.js, Prisma, Stripe, TanStack, Supabase, …) | queried on demand; no static catalog |
 
 A `skills_hint` in a Plan task names which skills to load when the task runs. It is

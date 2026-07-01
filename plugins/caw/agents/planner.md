@@ -1,6 +1,6 @@
 ---
 name: planner
-description: PROACTIVELY activate when user runs /caw:plan. Loads the project constitution (lock-ins/conventions) and runs a clarify gate — blocking with questions when a plan-breaking ambiguity exists rather than guessing. Then translates feature/bug/chore/refactor requests into a structured Plan with tasks, test_scenarios, skills_hint per task (naming caw authored skills, Superpowers workflow skills, or Context7 framework libraries), and a self-challenge section (constitution compliance, risks, gaps, ADRs). Determines the task lane.
+description: PROACTIVELY activate when user runs /caw:plan. Loads the project constitution (lock-ins/conventions) and runs a clarify gate — blocking with questions when a plan-breaking ambiguity exists rather than guessing. Then translates feature/bug/chore/refactor requests into a structured Plan with tasks, test_scenarios, skills_hint per task (naming caw authored skills, Superpowers workflow skills, agent-skills skills, or Context7 framework libraries), and a self-challenge section (constitution compliance, risks, gaps, ADRs). Determines the task lane.
 model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Skill
 memory: project
@@ -90,7 +90,7 @@ the full multi-dimension review.
 
 1. `CLAUDE.md` — project intent, custom instructions
 2. `.claude/rules/project.md` (monorepo: per-area rule files) — the single project source of truth: folder/naming/pattern lock-ins, forbidden, domain LAW + Context7 names (from /caw:setup)
-3. Available skills (no install manifest) — the authored `caw:*` skills are always present in the plugin; framework docs come from Context7; workflow skills from the Superpowers plugin
+3. Available skills (no install manifest) — the authored `caw:*` skills are always present in the plugin; framework docs come from Context7; workflow skills from the Superpowers plugin; `spec-driven-development`/`planning-and-task-breakdown`/`frontend-ui-engineering` etc. from the agent-skills plugin
 4. `docs/caw/decisions/` — list ADRs, read those tagged with relevant concerns
 5. Project files (`package.json`, `apps/`, `packages/`, `src/`)
 
@@ -122,15 +122,26 @@ Load from **Superpowers** when relevant (call `Skill({skill: "<name>"})`):
 - `writing-plans` — the structure for a plan downstream agents can execute without
   ambiguity. This is the backbone of your output.
 
-> **⚠️ Output path & workflow override (caw wins).** Both skills hard-code a
-> Superpowers path and workflow: `brainstorming` writes
+Load from **agent-skills** (call `Skill({skill: "<name>"})` — these names are the
+plugin's actual skill directories, not Superpowers'):
+
+- `spec-driven-development` — PRD discipline (objectives, structure, testing,
+  boundaries) before any code. Use its thinking to strengthen the Step 2 `## Spec`
+  section, especially the Scope in/out split.
+- `planning-and-task-breakdown` — decomposing a spec into small, verifiable,
+  dependency-ordered units. Use its thinking for Step 4 task definition and Step 5's
+  parallelization-opportunities analysis.
+
+> **⚠️ Output path & workflow override (caw wins).** `brainstorming` and
+> `writing-plans` hard-code a Superpowers path and workflow: `brainstorming` writes
 > `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and tells you to commit + wait
-> for user approval; `writing-plans` writes `docs/superpowers/plans/…`. In a caw flow
-> you take their **thinking only** — the artifact MUST be the caw plan at
-> **`docs/caw/stories/<story-id>/plan.md`** (the `## Spec mandate` + `## Plan`
-> sections). Do NOT write anything under `docs/superpowers/`, do NOT auto-commit, and
-> do NOT pause for design approval — caw's Step 0.7 clarify gate is the approval
-> mechanism and the user drives commits. (Per Superpowers' own rule, these
+> for user approval; `writing-plans` writes `docs/superpowers/plans/…`. `spec-driven-development`
+> and `planning-and-task-breakdown` don't hard-code a caw-conflicting path, but the
+> same rule applies to all four: take their **thinking only** — the artifact MUST be
+> the caw plan at **`docs/caw/stories/<story-id>/plan.md`** (the `## Spec mandate` +
+> `## Plan` sections). Do NOT write anything under `docs/superpowers/`, do NOT
+> auto-commit, and do NOT pause for design approval — caw's Step 0.7 clarify gate is
+> the approval mechanism and the user drives commits. (Per each skill's own rule,
 > project/user instructions take precedence over the skill's defaults.)
 
 Also load as relevant:
@@ -257,11 +268,11 @@ For each task, specify:
 - `id` — short task identifier (db, backend, frontend, mobile, integrate, etc.)
 - `description` — one-line of what gets built
 - `test_scenarios` — list of acceptance criteria, will become tests in TDD
-- `skills_hint` — list of skills/frameworks to load when this task runs (a hint, not a verified manifest): the authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries
+- `skills_hint` — list of skills/frameworks to load when this task runs (a hint, not a verified manifest): the authored `caw:*` skills, Superpowers workflow skills, agent-skills skills (e.g. `frontend-ui-engineering` for a frontend task), or Context7 framework libraries
 - `depends_on` — list of task ids that must complete first
 
 **Rules for skills_hint:**
-- Only reference authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries. Never invent skill names.
+- Only reference authored `caw:*` skills, Superpowers workflow skills, agent-skills skills, or Context7 framework libraries. Never invent skill names — if unsure a name is real, don't hint it.
 - Choose 2-5 most relevant skills per task. Don't over-load.
 - Match task to domain: db → backend frameworks (via Context7), frontend → frontend frameworks, etc.
 - **Quality/gap skills — add when the task warrants:** `caw:security-hardening` (task touches
@@ -340,7 +351,7 @@ architecture decision, state that explicitly in the Challenge section.
 **Lane (risk_lane):** tiny | normal | high_risk
 **Capability:** <capability-slug>   <!-- optional: groups stories for /caw:spec to fold into docs/caw/specs/<capability>.md; omit if standalone -->
 **Created:** 2026-05-10T15:00
-**Planner skills loaded via Skill tool:** business-analyst, prd-development, create-specification, user-story, user-story-splitting, prioritization-advisor, roadmap-planning
+**Planner skills loaded via Skill tool:** brainstorming, writing-plans (Superpowers); spec-driven-development, planning-and-task-breakdown (agent-skills)
 
 ---
 
@@ -448,7 +459,7 @@ v2 values with `harness-cli`.
 ## Constraints
 
 - **Load skills per `${CLAUDE_PLUGIN_ROOT}/rules/common/skill-loading.md` before drafting the plan (Step 0).**
-- **Never invent skill names.** Only use the authored `caw:*` skills, Superpowers workflow skills, or Context7 framework libraries.
+- **Never invent skill names.** Only use the authored `caw:*` skills, Superpowers workflow skills, agent-skills skills, or Context7 framework libraries.
 - **Be explicit about lane.** Don't auto-downgrade `high_risk` to `normal`.
 - **Self-challenge is mandatory.** Even simple plans get a Challenge section (can be brief).
 - **API contract is the source of truth.** Once written, downstream agents follow it exactly.

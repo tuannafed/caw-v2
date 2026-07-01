@@ -44,4 +44,30 @@ status report to the human, not a trigger. Run `git commit` ONLY after the user
 explicitly tells you to (e.g. they say "commit"). When a story is ready, stop and say
 so; let the user decide when to commit. (Commit/push are also in the settings `ask`
 list, so they prompt — do not treat the prompt as license to commit unprompted.)
+
+### agent-skills is enabled too — /caw:* is still the pipeline of record
+
+This project also enables the `agent-skills` plugin (addyosmani/agent-skills) for its
+non-pipeline skills (`interview-me`, `idea-refine`, `frontend-ui-engineering`,
+`shipping-and-launch`, `documentation-and-adrs`, etc. — anything caw doesn't already
+cover). It ships its own competing pipeline and slash commands: `/spec`, `/plan`,
+`/build`, `/test`, `/review`, `/webperf`, `/code-simplify`, `/ship`, plus 4 auto-activating
+agent personas (`code-reviewer`, `test-engineer`, `security-auditor`,
+`web-performance-auditor`).
+
+**In this project, always prefer the caw equivalent:**
+
+| Instead of (agent-skills) | Use (caw) |
+|---|---|
+| `/spec`, `/plan` | `/caw:plan "<description>"` |
+| `/build`, `/build auto` | `/caw:code <story-id> [--all]` |
+| `/test` | `/caw:test <story-id>` |
+| `/review` | `/caw:review <story-id>` |
+| (no caw equivalent) | `/caw:verify <story-id>` runs test + review together |
+
+If a non-pipeline agent-skills skill activates automatically mid-flow and starts
+writing plan/spec/review artifacts, redirect it to the caw locations per "caw owns
+where work goes" above — the same override applies to agent-skills as to Superpowers.
+Do not let its `code-reviewer`/`test-engineer` personas replace caw's `reviewer`/`tester`
+agents inside a `/caw:*` flow.
 <!-- HARNESS:END -->

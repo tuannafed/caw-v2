@@ -12,7 +12,7 @@ Parse `$ARGUMENTS` for flags:
 - `--refresh` → re-detect stack, regenerate the project rule file(s)
 
 > caw v2 ships as the `caw` plugin. There is **no skill install step** — the
-> 9 authored skills are bundled in the plugin (always available), framework docs
+> 10 authored skills are bundled in the plugin (always available), framework docs
 > come from Context7, and workflow skills from Superpowers. So there is no
 > `--add <skill>` flag and no symlinking.
 

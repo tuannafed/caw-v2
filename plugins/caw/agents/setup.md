@@ -1,7 +1,6 @@
 ---
 name: setup
 description: PROACTIVELY activate when user runs /caw:setup. Detects project tech stack, verifies the durable harness, and generates the auto-injected project rule file(s) (`.claude/rules/project.md`) — the single project source of truth. Framework docs come live from Context7; workflow skills from Superpowers — caw no longer installs vendored skills. Required as first step after /init.
-model: claude-sonnet-4-6
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill
 memory: project
 context: fork
@@ -25,19 +24,28 @@ workflow:
 You run **once** per project (and on-demand via `--refresh`).
 
 > **What changed in caw v2 (plugin era):** caw no longer vendors or symlinks
-> framework/library skills. Three plugins cover that ground:
-> - **Context7** — live framework/library docs (Next.js, Prisma, Stripe, TanStack, Supabase, …). No static skill catalog to match against.
-> - **Superpowers** — workflow skills (TDD, systematic debugging, verification, code review).
-> - **Frontend Design** — UI/UX quality.
+> framework/library skills. Four plugins cover that ground:
 >
-> The only skills caw ships are the 4 **authored** ones bundled in this plugin
-> (`caw:api-contract`, `caw:error-handling-patterns`,
-> `caw:nextjs-feature`, `caw:react-component-testing`) — they are always
-> available once the plugin is enabled, no install step. Setup therefore does NOT
-> run a skill matcher, build an install list, or create symlinks. It DOES preflight
-> that the companion plugins (Superpowers, Context7, Frontend Design) are enabled —
-> see Phase 0.5 — and warns (without blocking) if they're missing, since the
-> downstream agents depend on them.
+> - **Context7** — live framework/library docs (Next.js, Prisma, Stripe, TanStack, Supabase, …). No static skill catalog to match against.
+> - **Superpowers** — remaining workflow skills (planning/brainstorming, verification) not covered by caw's own pipeline skills.
+> - **Frontend Design** — UI/UX quality.
+> - **agent-skills** (addyosmani/agent-skills) — non-pipeline engineering skills caw
+>   doesn't cover (`interview-me`, `idea-refine`, `shipping-and-launch`, …), **and**
+>   several pipeline skills caw calls directly by name — `spec-driven-development` /
+>   `planning-and-task-breakdown` (planner), `test-driven-development` (tester),
+>   `debugging-and-error-recovery` (coder, reviewer), `code-review-and-quality` /
+>   `code-simplification` (reviewer), `frontend-ui-engineering` (coder, frontend
+>   tasks). None of these are bundled/vendored in caw — every `Skill()` call
+>   resolves to agent-skills' own skill directories, so agent-skills is a hard
+>   dependency for the whole pipeline, not just the non-pipeline extras.
+>
+> The authored skills caw ships (bundled in this plugin, always available once the
+> plugin is enabled — no install step, no skill matcher, no install list, no
+> symlinks) include the core 4 (`caw:api-contract`, `caw:error-handling-patterns`,
+> `caw:nextjs-feature`, `caw:react-component-testing`) plus 6 more added since. Setup
+> DOES preflight that the companion plugins (Superpowers, Context7, Frontend Design,
+> agent-skills) are enabled — see Phase 0.5 — and warns (without blocking) if they're
+> missing, since the downstream agents depend on them.
 
 ## Inputs
 
@@ -50,10 +58,10 @@ You run **once** per project (and on-demand via `--refresh`).
 
 ## Modes
 
-| Invocation | Behavior |
-|---|---|
-| `/caw:setup` (no flags) | First-run: detect stack, verify harness, generate conventions + project rule file(s) |
-| `/caw:setup --refresh` | Re-sync the read-only UPPER_CASE policy docs (`HARNESS.md`, `GLOSSARY.md`, …) to the installed plugin version, re-detect stack, and regenerate `.claude/rules/project.md`. Leaves project-owned prose (`knowledge.md`, `harness-backlog.md`) untouched. Run after `/plugin update`. |
+| Invocation              | Behavior                                                                                                                                                                                                                                                                            |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/caw:setup` (no flags) | First-run: detect stack, verify harness, generate conventions + project rule file(s)                                                                                                                                                                                                |
+| `/caw:setup --refresh`  | Re-sync the read-only UPPER_CASE policy docs (`HARNESS.md`, `GLOSSARY.md`, …) to the installed plugin version, re-detect stack, and regenerate `.claude/rules/project.md`. Leaves project-owned prose (`knowledge.md`, `harness-backlog.md`) untouched. Run after `/plugin update`. |
 
 ## Memory (project-scoped)
 
@@ -447,33 +455,41 @@ echo "✓ coding rules scaffolded to .claude/rules/ (lazy-load via paths: frontm
 
 ### Phase 0.5 — Preflight companion plugins (warn, never block)
 
-The downstream agents depend on 3 official companion plugins: **Superpowers**
-(workflow skills), **Context7** (framework docs), **Frontend Design** (UI quality).
-If a member installed `caw` by hand and skipped them, agents fail mid-task with a
-"plugin not enabled" error. Catch that here, once, instead of silently mid-task.
+The downstream agents depend on 4 companion plugins: **Superpowers** (remaining
+workflow skills not covered by caw's own skills), **Context7** (framework docs),
+**Frontend Design** (UI quality), **agent-skills** — this one is a **hard dependency**,
+not optional-extras: planner/coder/tester/reviewer call several of its skills directly
+by name (`spec-driven-development`, `planning-and-task-breakdown`,
+`test-driven-development`, `debugging-and-error-recovery`, `code-review-and-quality`,
+`code-simplification`, `frontend-ui-engineering`), on top of its remaining non-pipeline
+skills (`interview-me`/`idea-refine`/`shipping-and-launch`/etc.). If a member installed
+`caw` by hand and skipped any of these, agents fail mid-task with a "plugin not
+enabled" error. Catch that here, once, instead of silently mid-task.
 
 There is no stable plugin-list API to query, so probe with a cheap skill load. Call:
 
 ```
-Skill({skill: "test-driven-development"})
+Skill({skill: "brainstorming"})
 ```
 
-(a Superpowers skill). If it loads, the companions are very likely present — proceed.
-If it errors with "plugin not enabled" / "skill not found", **print this warning and
-continue** (do NOT abort setup):
+(a Superpowers skill still used by the planner). If it loads, the companions are very
+likely present — proceed. If it errors with "plugin not enabled" / "skill not found",
+**print this warning and continue** (do NOT abort setup):
 
 ```
 ⚠️ Companion plugins may be missing — agents will be degraded until they're installed.
-   caw depends on these (official; `claude-plugins-official` is built in, no marketplace add):
+   caw depends on these:
 
-     /plugin install superpowers@claude-plugins-official
-     /plugin install frontend-design@claude-plugins-official
-     /plugin install context7@claude-plugins-official
+     /plugin install superpowers@claude-plugins-official       (official, built in)
+     /plugin install frontend-design@claude-plugins-official   (official, built in)
+     /plugin install context7@claude-plugins-official          (official, built in)
+     /plugin marketplace add addyosmani/agent-skills            (not built in — needs marketplace add)
+     /plugin install agent-skills@addy-agent-skills
 
-   Without them: Superpowers workflow skills and Context7 framework docs won't load,
-   and the coder/tester/reviewer will fall back to generic knowledge or fail mid-task.
-   (If a committed .claude/settings.json already enables them via enabledPlugins, you
-   can ignore this — the probe can't always see them.)
+   Without them: Superpowers/agent-skills workflow skills and Context7 framework docs
+   won't load, and the coder/tester/reviewer will fall back to generic knowledge or
+   fail mid-task. (If a committed .claude/settings.json already enables them via
+   enabledPlugins, you can ignore this — the probe can't always see them.)
 ```
 
 Record the preflight result in the Phase 4 report (`companions: ok` or
@@ -495,8 +511,8 @@ Record the preflight result in the Phase 4 report (`companions: ok` or
    but no `@prisma/client`, flag it for the user.
 
 4. **Learn the codebase by reading real code — not just the manifest.** CLAUDE.md and
-   package.json tell you the *stack*; the actual source tells you the *conventions the
-   team already follows*. Open a representative sample and extract the patterns that a
+   package.json tell you the _stack_; the actual source tells you the _conventions the
+   team already follows_. Open a representative sample and extract the patterns that a
    new contributor would have to match. Concretely:
    - **Folder structure** — how is `src/` organised? Feature-based (`src/features/<x>/`)?
      Layer-based? Where do shared vs feature-local things live? `find src -maxdepth 3 -type d`.
@@ -588,36 +604,36 @@ This phase is **dynamic in two dimensions**:
    Phase 1 codebase scan. A rule must be backed by evidence: a pattern you observed
    **repeated ≥2× in real code** (5 files named `*.store.ts` → a naming rule; every
    HTTP call routed through one client → a "must use that client" rule). CLAUDE.md
-   only *confirms* intent — it is not the primary source. **Never invent a rule the
+   only _confirms_ intent — it is not the primary source. **Never invent a rule the
    code doesn't actually follow.** Leave a section out entirely if there's no evidence.
 
 2. **Dynamic by stack** — DON'T assume a Next.js/React shape. Detect the
-   archetype/language/framework in Phase 1, then pick the rule groups that *fit this
-   stack* from the catalog below. A Python FastAPI service and a Next.js app produce
+   archetype/language/framework in Phase 1, then pick the rule groups that _fit this
+   stack_ from the catalog below. A Python FastAPI service and a Next.js app produce
    different groups with different contents. Omit any group that doesn't apply.
 
 **Rule-group catalog** (include the ones the detected stack warrants; the example
 contents are illustrative — replace with what you actually observed):
 
-| Group | Applies to | Example contents (stack-specific) |
-|---|---|---|
-| **Folder / module structure** | all | FE: `src/features/<x>/`, route groups · NestJS: `src/<module>/{controller,service,module}` · FastAPI: `app/routers/`, `app/schemas/`, `app/services/` |
-| **Naming conventions** | all | FE: `*.store.ts`, `use-foo.ts`, store prefix · BE-TS: `*.service.ts`, `*.dto.ts` · Python: `snake_case` modules, `*_service.py` |
-| **Layering & boundaries** | mostly BE | controller→service→repo direction; no cross-feature imports; thin route handlers |
-| **Mandatory patterns** (the one blessed way) | all | "all HTTP via `fetcher()`" · "stores via `createBaseStore`, never `create()`" · "DI via Nest providers" · "DB via the repository, not raw client" |
-| **Data & validation** | most | Zod request/response schemas · class-validator DTOs · Pydantic models |
-| **Component / hook structure** | **FE only** | server vs client components; React Compiler on → no manual memo; custom-hook return shape |
-| **Error handling** | if a convention exists | error envelope shape; exception filter / middleware; never swallow errors |
-| **Forbidden patterns** | all | the explicit ❌ list (e.g. ESLint when project is Biome-only; `any` in non-test; hardcoded URLs) |
-| **Domain rules** | all | business invariants that constrain code changes |
+| Group                                        | Applies to             | Example contents (stack-specific)                                                                                                                     |
+| -------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Folder / module structure**                | all                    | FE: `src/features/<x>/`, route groups · NestJS: `src/<module>/{controller,service,module}` · FastAPI: `app/routers/`, `app/schemas/`, `app/services/` |
+| **Naming conventions**                       | all                    | FE: `*.store.ts`, `use-foo.ts`, store prefix · BE-TS: `*.service.ts`, `*.dto.ts` · Python: `snake_case` modules, `*_service.py`                       |
+| **Layering & boundaries**                    | mostly BE              | controller→service→repo direction; no cross-feature imports; thin route handlers                                                                      |
+| **Mandatory patterns** (the one blessed way) | all                    | "all HTTP via `fetcher()`" · "stores via `createBaseStore`, never `create()`" · "DI via Nest providers" · "DB via the repository, not raw client"     |
+| **Data & validation**                        | most                   | Zod request/response schemas · class-validator DTOs · Pydantic models                                                                                 |
+| **Component / hook structure**               | **FE only**            | server vs client components; React Compiler on → no manual memo; custom-hook return shape                                                             |
+| **Error handling**                           | if a convention exists | error envelope shape; exception filter / middleware; never swallow errors                                                                             |
+| **Forbidden patterns**                       | all                    | the explicit ❌ list (e.g. ESLint when project is Biome-only; `any` in non-test; hardcoded URLs)                                                      |
+| **Domain rules**                             | all                    | business invariants that constrain code changes                                                                                                       |
 
 Then ALWAYS append these reference sections (not "law" but needed by downstream agents,
 and they have no other home now that `conventions.md` is gone):
 
-| Reference section | Contents |
-|---|---|
-| **Verify commands** | The real type-check / lint / format / test commands for THIS project (detected from `package.json` scripts + config files). The coder runs these as its self-verify gate before marking a task `done`. Detect lint precisely: `biome.json` → `pnpm exec biome lint`; `eslint.config.*` → `pnpm exec eslint`; a `lint` script → `pnpm lint`. |
-| **Context7 libraries** | The exact library names downstream agents pass to Context7 for live docs (e.g. "Next.js 16", "Zustand 5", "TanStack Query v5", "Zod 4"). One line per significant framework/lib detected. |
+| Reference section      | Contents                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Verify commands**    | The real type-check / lint / format / test commands for THIS project (detected from `package.json` scripts + config files). The coder runs these as its self-verify gate before marking a task `done`. Detect lint precisely: `biome.json` → `pnpm exec biome lint`; `eslint.config.*` → `pnpm exec eslint`; a `lint` script → `pnpm lint`. |
+| **Context7 libraries** | The exact library names downstream agents pass to Context7 for live docs (e.g. "Next.js 16", "Zustand 5", "TanStack Query v5", "Zod 4"). One line per significant framework/lib detected.                                                                                                                                                   |
 
 **Frontmatter & file layout — single-app vs monorepo:**
 
@@ -638,21 +654,23 @@ and they have no other home now that `conventions.md` is gone):
 
 ```markdown
 ---
-description: Project-specific rules + reference for {{PROJECT_NAME}} — folder, naming,
+description:
+  Project-specific rules + reference for {{PROJECT_NAME}} — folder, naming,
   pattern, and domain LAW, plus verify commands and Context7 names. Auto-injected on
   every matching code-file edit. Agents MUST comply with the LAW sections; violations block commit.
 paths:
-  - "src/**/*.ts"
-  - "src/**/*.tsx"
+  - 'src/**/*.ts'
+  - 'src/**/*.tsx'
 ---
 
-# Project Rules — {{PROJECT_NAME}}  (THE LAW — comply, don't merely "reference")
+# Project Rules — {{PROJECT_NAME}} (THE LAW — comply, don't merely "reference")
 
 > Generated by /caw:setup from a scan of the actual codebase. The single project source
 > of truth (no separate conventions.md). Edit freely; re-run `/caw:setup --refresh` to
 > regenerate. Do not restate README.md stack/structure prose.
 
 ## Folder / module structure
+
 <!-- Only the groups the stack warrants. Each bullet = an observed, repeated pattern. -->
 
 ## Naming conventions
@@ -664,13 +682,16 @@ paths:
 ## Domain rules
 
 ---
+
 <!-- Reference sections below — consumed by downstream agents, not "law". -->
 
 ## Verify commands
+
 <!-- coder's self-verify gate. e.g.: -->
 <!-- | Type-check | `pnpm exec tsc --noEmit` | · | Lint | `pnpm lint` | · | Test (single) | `pnpm test <file>` | -->
 
 ## Context7 libraries
+
 <!-- exact names downstream agents query, one per significant lib: Next.js 16, Zustand 5, … -->
 ```
 
@@ -698,16 +719,16 @@ Detected stack:
   - CLAUDE.md mentions Redis but no redis client in deps. Did you remove it?
 
 Companion plugins:
-  ✓ companions: ok    (Superpowers / Context7 / Frontend Design reachable)
-  — or —  ⚠️ companions: warned — install the 3 plugins above (agents degraded until then)
+  ✓ companions: ok    (Superpowers / Context7 / Frontend Design / agent-skills reachable)
+  — or —  ⚠️ companions: warned — install the 4 plugins above (agents degraded until then)
 
 Durable layer:
   ✓ harness-cli <version> operational (plugin binary → ./harness.db at project root)
   ✓ harness.db initialized + queryable
 
 Skills:
-  ✓ 9 authored skills available via caw plugin (no install needed)
-  ✓ Framework docs → Context7 (live); workflow skills → Superpowers
+  ✓ 10 authored skills available via caw plugin (no install needed)
+  ✓ Framework docs → Context7 (live); remaining workflow skills → Superpowers; non-pipeline skills → agent-skills
 
 Generated:
   ✓ .claude/rules/project.md (the single project source of truth — LAW + verify commands
@@ -736,9 +757,10 @@ Next: /caw:plan "<feature description>"
 
 ## Constraints
 
-- **No skill installation.** caw ships 9 authored skills via the plugin (always on);
-  framework docs come from Context7, workflow skills from Superpowers. There is no
-  catalog to match, no symlinks to create, no `skill-map.yaml` to write.
+- **No skill installation.** caw ships 10 authored skills via the plugin (always on);
+  framework docs come from Context7, remaining workflow skills from Superpowers,
+  non-pipeline skills from agent-skills. There is no catalog to match, no symlinks to
+  create, no `skill-map.yaml` to write.
 - **harness.db lives at the project root**, never in the plugin cache. The CLI binary
   runs from `${CLAUDE_PLUGIN_ROOT}` but resolves its DB to the project CWD.
 - **CLAUDE.md is read-only input.** Don't edit it. To change instructions, the user
@@ -749,6 +771,7 @@ Next: /caw:plan "<feature description>"
 ## Output
 
 This agent writes project-level config (no task file):
+
 - `.claude/rules/project.md` — the single auto-injected source of truth: LAW (folder/
   naming/patterns/forbidden/domain) + Verify commands + Context7 names (monorepo: one
   rule file per area)

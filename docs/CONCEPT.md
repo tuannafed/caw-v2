@@ -33,7 +33,7 @@ skills never fired. v2 deletes all of it and delegates:
 | Workflow (TDD, debugging, verify, review, worktrees, parallel) | **Superpowers** plugin | Anthropic-maintained, always current |
 | Framework/library docs (Next.js, Prisma, Stripe, …) | **Context7** MCP | Live docs, no static catalog to maintain |
 | Frontend UI quality | **Frontend Design** plugin | Specialized, maintained |
-| Archetype + quality skills caw can't delegate | **9 authored caw skills** | The irreducible core |
+| Archetype + quality skills caw can't delegate | **10 authored caw skills** | The irreducible core |
 
 The trade-off is explicit: caw gives up self-containment (it depends on three companion
 plugins being present, and Context7 needs network) in exchange for **zero catalog

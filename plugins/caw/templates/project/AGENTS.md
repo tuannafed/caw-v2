@@ -44,4 +44,9 @@ instructions take precedence over a skill's built-in defaults.
 Before a step that could use an external tool, run `scripts/caw/bin/harness-cli
 query tools --capability <name> --status present` to see what is equipped; an
 absent capability is a clean skip.
+
+(In **Claude Code** specifically, this project also enables the `agent-skills` plugin
+alongside `caw` — see `CLAUDE.md`'s "agent-skills vs caw" section for which slash
+command to prefer. `agent-skills` is a Claude Code plugin and has no effect in Codex/
+Antigravity sessions reading this file.)
 <!-- HARNESS:END -->
