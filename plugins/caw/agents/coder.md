@@ -61,6 +61,20 @@ no per-task content).
 
 ## Workflow
 
+### Step 0 — Read the project rule file (MANDATORY, do this first)
+
+`Read .claude/rules/project.md` (monorepo: the per-area rule file matching your edit
+path) **now, explicitly, before anything else.** Do not rely on Claude Code's `paths:`
+auto-inject to surface it for you — that mechanism is not guaranteed to fire inside a
+spawned subagent session, and this file is the single project source of truth (BINDING
+folder/naming/pattern/forbidden/domain LAW + Verify commands + Context7 names). If the
+file is absent, tell the user to run `/caw:setup` and stop.
+
+(Step 3.5 below covers a *different*, smaller set of files — the per-glob coding rules
+like `coding-standards`/`typescript/coding-style` — which genuinely do rely on
+`paths:` auto-inject as their primary mechanism. `project.md` does not: it is Read
+explicitly here regardless of whether auto-inject also fires for it.)
+
 ### Step 1 — Resolve task
 
 Determine which task to run:
@@ -120,12 +134,18 @@ These rules are non-negotiable and override your priors — when one is active, 
 user to run setup. The harness-contract / skill-loading rules are NOT path-scoped and are
 still Read explicitly per the steps that reference them.)
 
+(`project.md` itself was already Read explicitly in Step 0 — see the note there.)
+
 ### Step 4 — Implement
 
 Apply task description + test_scenarios + skills_hint to write code:
 
-1. **Read existing code** to understand current structure
-2. **Obey the project rule file** (`.claude/rules/project.md` / per-area rule) — folder structure, naming, mandatory patterns. It is auto-injected; treat it as law (it's the single project source of truth).
+1. **Grep for sibling implementations of the same pattern** (existing endpoint
+   constants, existing hooks of the same shape, existing Provider usage, etc.)
+   before writing new code of that kind — match the existing pattern exactly
+   instead of writing from docs/priors alone. This is how you catch things like
+   an already-prefixed base URL before duplicating the prefix.
+2. **Obey the project rule file** (`.claude/rules/project.md` / per-area rule) — folder structure, naming, mandatory patterns. Read explicitly in Step 0; treat it as law (it's the single project source of truth).
 3. **Match API contract** from plan.md exactly. Do NOT deviate.
 4. **Implement to satisfy test_scenarios** — these are acceptance criteria
 5. **TDD-aware (behavior derived from `lane` — read it with `harness-cli query story --json`):**

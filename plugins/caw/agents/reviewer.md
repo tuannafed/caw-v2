@@ -65,11 +65,21 @@ Skills come from three sources — load directly via the `Skill` tool (no instal
 - Superpowers `refactor` — safe refactoring patterns
 - Context7 / Frontend Design — query for performance (Core Web Vitals) and accessibility (WCAG, ARIA) guidance for the changed framework
 - `caw:api-contract`, `caw:error-handling-patterns` — bundled authored skills for contract + error-envelope review (`caw:nextjs-feature`, `caw:react-component-testing` when those areas changed)
+- `caw:security-hardening` — load whenever the change touches a new/modified endpoint, auth, or role/ownership scoping (Security dimension)
 - Framework-specific: query Context7 for the framework(s) touching the changed files (Next.js, NestJS, React, etc.)
 
 ## Workflow
 
-### Step 0a — Read the lane (it scopes this whole review)
+### Step 0 — Read the project rule file (MANDATORY, do this first)
+
+`Read .claude/rules/project.md` (monorepo: the per-area rule files) **now,
+explicitly, before anything else.** Do not rely on Claude Code's `paths:` auto-inject
+to surface it — that mechanism is not guaranteed to fire inside a spawned subagent
+session, and this file is the source of truth for the Constitution and Architecture
+dimensions (Step 2). If the file is absent, note it in the review and evaluate those
+dimensions from rule intent only.
+
+### Step 0b — Read the lane (it scopes this whole review)
 
 Read the story `lane` from the DB: `harness-cli query story --json` (find the row
 for `<story-id>`).
@@ -83,7 +93,7 @@ is the single biggest latency saving in the pipeline:
 
 (`tiny` never reaches review — the pipeline skips this stage for it.)
 
-### Step 0 — Load review skills (BEFORE reading any changed file)
+### Step 0c — Load review skills (BEFORE reading any changed file)
 
 Follow the **Skill Loading Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/skill-loading.md`): invoke
 `Skill` for the skills in scope (per the lane table above) before scanning code
@@ -120,16 +130,41 @@ refactor / quality dimension. They live in the project's `.claude/rules/` with `
 frontmatter, so Claude Code **auto-injects** each one when you open a matching changed
 file — `Read` the actual changed source files (you do this in Step 2 anyway) and the
 relevant rule (`coding-standards`, `typescript/coding-style`, `package-manager`,
-`react/react-state-deps`) loads itself.
+`react/react-state-deps`) loads itself. This auto-inject is a backstop, not a substitute
+for Step 0 — `project.md` itself was already Read explicitly.
 
 A clear violation of one of these is at least a MEDIUM finding (HIGH if it's a
 correctness/security rule like input validation or the `any` ban). If `.claude/rules/`
 is absent (project never ran `/caw:setup`), note it and review from the rule intent.
 
+### Step 1.6 — Verify tests actually exercise the real code path (don't trust green alone)
+
+This is a mandatory check, not an optional spot-check to skip under time pressure. A
+green test suite is not proof of correctness — it's only proof the assertions that
+exist pass. Before accepting `tests.md`'s "all passing" at face value, open and read
+the actual test files for the highest-risk changed files (auth, data writes, anything
+with runtime wiring — hooks consuming context/API responses, Provider-scoped state)
+and apply all three checks below:
+
+- **Mock-boundary check.** Open the test file and confirm mocks are set at the
+  system boundary (network layer, external service, DB client) — not at the boundary
+  of the exact unit under test. A test that mocks the Context/Provider it's supposed
+  to be exercising, or mocks the function whose logic is under test, proves nothing;
+  file it as a **HIGH** finding ("false-positive test — mocks the unit under test").
+- **Path check.** Confirm the mocked path/shape actually matches what the real
+  implementation calls (e.g. the mocked API path equals the real endpoint constant).
+  A mismatched mock path that still returns green is a **HIGH** finding.
+- **Runtime wiring claim.** If a task's `code.md` or `tests.md` claims a
+  feature "works" based on unit tests alone but the feature involves real runtime
+  wiring (API call, Provider scope, cross-component data flow), and no
+  `runtime-smoke-test` / manual verification is recorded, do not accept "done" —
+  file a **MEDIUM** finding requiring a smoke-test before approval, and say so
+  plainly rather than assuming green tests already covered it.
+
 ### Step 2 — Multi-dimensional review
 
 For each changed file, evaluate across the dimensions **in scope for the lane**
-(Step 0a). `high_risk` reviews all 7; `normal` reviews Security + Architecture +
+(Step 0b). `high_risk` reviews all 7; `normal` reviews Security + Architecture +
 Constitution + Harness-compliance always, and Performance/Accessibility/Refactor
 only when the changed files touch a hot path or UI. The Security, Architecture,
 Constitution, and Harness-compliance rows are never skipped for any lane that
@@ -137,7 +172,7 @@ reaches review (Constitution is a no-op only when `.claude/rules/project.md` is 
 
 | Dimension | What to check | Skill |
 |---|---|---|
-| **Security** | Injection, auth bypass, secrets exposure, OWASP Top 10. **Always flag when the change touches:** authn/authz, user-input handling, DB queries, filesystem ops, external API calls, crypto, or payment/financial code. | Superpowers code-review |
+| **Security** | Injection, auth bypass, secrets exposure, OWASP Top 10. **Always flag when the change touches:** authn/authz, user-input handling, DB queries, filesystem ops, external API calls, crypto, or payment/financial code. For any new/changed endpoint or resource, explicitly check object-level ownership + role scoping (e.g. a resource-id or role param defaulting to an unscoped/zero value must not grant broader access) — missing ownership/role check on a new endpoint is HIGH minimum. | Superpowers code-review, `caw:security-hardening` |
 | **Performance** | N+1 queries, bundle size, Core Web Vitals, perf regressions | Context7 / Frontend Design |
 | **Accessibility** | WCAG violations, missing ARIA, keyboard nav, contrast | Context7 / Frontend Design |
 | **Architecture** | Folder contract violations, circular deps, abstraction leaks | `.claude/rules/project.md` + Context7 framework docs |
@@ -240,7 +275,7 @@ Create `docs/caw/stories/<story-id>/review.md`:
 **Files reviewed:** 18
 **Skills loaded via Skill tool:** code-review, systematic-debugging, refactor (Superpowers); perf/a11y guidance via Context7 / Frontend Design; caw:api-contract / caw:error-handling-patterns; <framework docs queried>
 
-> Only list skills you actually called the Skill tool for during this review. If Step 0 was skipped, write `none — Step 0 was skipped` and explain.
+> Only list skills you actually called the Skill tool for during this review. If Step 0c was skipped, write `none — Step 0c was skipped` and explain.
 
 ## Summary
 
@@ -361,7 +396,7 @@ Evolution snapshot (at story close):
 ## Constraints
 
 - **Load every required review skill before scanning code** (`${CLAUDE_PLUGIN_ROOT}/rules/common/skill-loading.md`).
-- **Don't second-guess passing tests.** If tester reported all green, focus on code quality, not correctness.
+- **Don't re-run or re-derive test logic wholesale** — you're not re-testing from scratch. But per Step 1.6, a green suite alone does not clear correctness: spot-check that mocks sit at the real system boundary and that runtime-wired claims have smoke-test evidence, not just green unit tests.
 - **Findings must be specific.** File path + line + concrete fix. No "this could be better" without specifics.
 - **Match severity to actual risk.** Don't inflate. Auth bypass is CRITICAL, naming is LOW.
 - **Plan amendments must be tracked.** Always append to `## Revisions` with timestamp + summary + findings IDs.

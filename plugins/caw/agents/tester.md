@@ -57,6 +57,15 @@ solve a non-obvious test problem worth reusing; this task's coverage stays in `t
 
 ## Workflow
 
+### Step 0 — Read the project rule file (MANDATORY, do this first)
+
+`Read .claude/rules/project.md` (monorepo: the per-area rule file matching the
+task's area) **now, explicitly, before anything else.** Do not rely on Claude
+Code's `paths:` auto-inject to surface it — that mechanism is not guaranteed to
+fire inside a spawned subagent session. This file holds the testing conventions
+and `## Verify commands` you need in Step 1. If the file is absent, tell the user
+to run `/caw:setup` and proceed with framework defaults, noting the gap in `tests.md`.
+
 ### Step 1 — Read lane + task
 
 From the DB (`harness-cli query story --json` and `query task --json`):
@@ -74,6 +83,32 @@ Follow the **Skill Loading Contract** (`${CLAUDE_PLUGIN_ROOT}/rules/common/skill
 - For generic Jest / Vitest / Testing Library setup and framework-specific testing (Next.js, React Native / Expo, Playwright E2E): **query Context7** for the project's framework testing docs — there is no vendored `javascript-testing-patterns` / `webapp-testing` / `react-native-best-practices` skill anymore.
 
 After loading, restate: `Tester skills active: test-driven-development, caw:react-component-testing[ + Context7 framework testing docs]`.
+
+### Step 2.5 — Mock at the system boundary, never at the unit under test (MANDATORY check before writing mocks)
+
+Before writing any test with mocks, decide the mock boundary first: mock the
+**external** dependency (network layer, external service call, DB client, a
+Context/Provider the unit under test does NOT own) — never mock the thing whose
+behavior you're actually trying to prove. This is not a style preference — a
+test that violates it is a false positive and must not be written this way:
+
+- Testing a hook that consumes a Context/Provider for scope (e.g. `clinicId`,
+  auth scope, tenant scope)? **Mount the real Provider** in the test wrapper with
+  realistic values. **Do not** `jest.mock` the Context/Provider itself — if you
+  catch yourself doing this, stop and rewrite with a real Provider mount instead.
+  Mocking the Context directly hides exactly the class of bug this catches (wrong
+  scope, wrong default, missing provider nesting) — a green test in that setup
+  proves nothing about production behavior.
+- Testing a hook/service that calls an API? Mock at the network client (fetch/axios
+  interceptor, MSW) using the **real** endpoint path/constant the implementation
+  imports — grep the implementation file for the actual constant/path and use that
+  exact value in the mock, don't hand-write a similar-looking string. If the mock
+  path and the implementation's path constant can drift independently, the test
+  can go green while production is broken.
+- If you're unsure whether a mock sits at the right boundary, ask: "if the
+  production code called the wrong thing, would this test still pass?" If yes,
+  the mock is at the wrong boundary — move it further out before writing the test,
+  not after.
 
 ### Step 3 — Mode-specific behavior
 
@@ -405,6 +440,14 @@ This makes the link from Plan → tests obvious.
 - **Follow the project rule file's test conventions.** Don't invent new test layouts.
 - **Mobile = unit only.** No E2E for RN, ever.
 - **Verify tests run.** Never report "tests written" without confirming they execute.
+- **Mock the system boundary, never the unit under test.** See Step 2.5. A green
+  test whose mock hides the exact bug it should catch is worse than no test —
+  it tells the reviewer/coder the behavior is proven when it isn't.
+- **A green suite is not "done" for runtime-wired behavior.** If a task's
+  correctness depends on real wiring (API actually called, Provider actually
+  scoped correctly, cross-component data flow), say so explicitly in `tests.md`
+  rather than implying unit-test coverage already proves it works end-to-end —
+  flag it for a `runtime-smoke-test` / manual check instead of asserting "done".
 
 ## Output
 

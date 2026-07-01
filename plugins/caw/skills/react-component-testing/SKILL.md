@@ -130,6 +130,38 @@ useUpdateProfile.mockReturnValue({
 // see msw.io/docs — set up rest.post('/api/profile', ...) handlers
 ```
 
+### 3b. Mount the real Provider for Context-scoped behavior — never mock the Context itself
+
+If the component/hook under test reads scope (auth, tenant, `clinicId`, role, feature
+flags, etc.) from a Context, that Context is part of the unit under test — mocking it
+directly hides exactly the bugs you're trying to catch (wrong scope, wrong default
+value, Provider mounted at the wrong tree depth in production).
+
+❌ **WRONG** — mocks away the thing that can be broken:
+```tsx
+jest.mock("../contexts/ClinicContext", () => ({
+  useClinicContext: () => ({ clinicId: "clinic-123" }), // always "works", proves nothing
+}));
+```
+
+✅ **CORRECT** — mount the real Provider with realistic values in the wrapper:
+```tsx
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <ClinicProvider clinicId="clinic-123">
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  </ClinicProvider>
+);
+```
+
+This is the only way a test can catch a Provider mounted at the wrong scope, a
+`clinicId`/role defaulting to an unscoped value, or a consumer rendered outside its
+Provider. A test that mocks the Context can go green while the real component throws
+`must be used within Provider` or leaks data across scopes in production.
+
+Ask before mocking anything: *"if the real implementation called/scoped the wrong
+thing, would this test still pass?"* If yes, the mock is at the wrong boundary — move
+it further out (network/DB client), not onto the Context/hook under test.
+
 ### 4. Cap `waitFor` timeout when the assertion is fast
 
 Default `waitFor` timeout is 1000ms. If your assertion is for a synchronous re-render after a mocked mutation, use a short timeout to fail fast:
@@ -186,6 +218,7 @@ Cap at **5-7 `it()` blocks per component test file**. More than that = the compo
 - [ ] No `afterEach` cleanup of QueryClient — leak
 - [ ] `userEvent.setup()` without `delay: null` for non-debounce tests — slow
 - [ ] `jest.fn()` mock for mutation/query returning data — broken integration
+- [ ] Context/Provider mocked directly instead of mounted for real — hides scope bugs
 - [ ] No `gcTime: 0` on test QueryClient — 5-minute timer leak
 - [ ] `--forceExit` to hide handle leaks — masks bugs
 - [ ] More than 7 `it()` in one component test file — refactor signal (see cap above)
